@@ -1,8 +1,10 @@
 import { renderPaymentAgreementPdf } from "../../../../lib/payment-agreement";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
+import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
 
-export async function GET() {
-  const config = await getTemplatesConfig();
+export async function GET(request: Request) {
+  const unauthorized = requireAdminSession(request); if (unauthorized) return unauthorized;
+  const config = await getTemplatesConfig(breederSessionFromRequest(request)!.kennelId);
   const pdf = await renderPaymentAgreementPdf({
     buyerName: "____________________________________________",
     planType: "Pre-transfer purchase plan",

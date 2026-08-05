@@ -11,13 +11,16 @@ import {
   FileText,
   FileSignature,
   FolderOpen,
+  Globe2,
   HeartPulse,
   Headphones,
   LayoutDashboard,
   ListTree,
+  Mail,
   MessagesSquare,
   MonitorSmartphone,
   PackageSearch,
+  Palette,
   PawPrint,
   ClipboardCheck,
   MessageSquareText,
@@ -44,7 +47,8 @@ import { healthGuaranteeTerms } from "../lib/contract-templates";
 import { uploadDocumentDirect } from "../lib/direct-document-upload";
 import { defaultTemplatesConfig, type TemplatesConfig } from "../lib/template-defaults";
 import { TemplatesCenter } from "../components/templates-center";
-import { publicTenant, tenantInitials } from "../lib/public-tenant";
+import { publicTenant } from "../lib/public-tenant";
+import { useTenant } from "../components/tenant-runtime";
 
 type Resource = "dogs" | "litters" | "buyers" | "puppies" | "payment_plans" | "transactions" | "events" | "updates" | "dog_medical_records" | "dog_registrations";
 type BaseRecord = { id: number; created_at: string; updated_at: string };
@@ -458,6 +462,7 @@ function PortalPreviewView({ data }: { data: DataSet }) {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [inviteMessage, setInviteMessage] = useState("");
   const buyer = data.buyers.find((item) => item.id === buyerId) ?? null;
   const assigned = buyer ? data.puppies.filter((puppy) => puppy.buyer_id === buyer.id) : [];
 
@@ -473,14 +478,28 @@ function PortalPreviewView({ data }: { data: DataSet }) {
     finally { setBusy(false); }
   }
 
+  async function inviteFamily() {
+    if (!buyerId) return;
+    setBusy(true); setError(""); setInviteMessage("");
+    try {
+      const response = await fetch(`/api/buyers/${buyerId}/portal-invite`, { method: "POST" });
+      const payload = await response.json() as { error?: string; message?: string };
+      if (!response.ok) throw new Error(payload.error || "Unable to create portal access.");
+      setInviteMessage(payload.message || "Buyer Puppy Portal invitation created.");
+    } catch (failure) { setError(friendlyError(failure, "Unable to create portal access.")); }
+    finally { setBusy(false); }
+  }
+
   return <div className="portal-preview-workspace">
     <section className="portal-preview-console">
-      <header><span>CLIENT EXPERIENCE</span><h2>Puppy Portal simulator</h2><p>Select a family, then inspect the exact customer-facing account without leaving SWVAOS.</p></header>
+      <header><span>CLIENT EXPERIENCE</span><h2>Buyer Puppy Portals</h2><p>Select a family to send their account invitation or inspect their customer-facing portal.</p></header>
       <label><span>Family account</span><select value={buyerId ?? ""} onChange={(event) => { setBuyerId(Number(event.target.value) || null); setPortalUrl(""); }}><option value="">Choose a family</option>{data.buyers.map((item) => <option value={item.id} key={item.id}>{fullName(item)}{item.email ? ` — ${item.email}` : ""}</option>)}</select></label>
       <div className="portal-preview-account"><span><small>Selected family</small><b>{buyer ? fullName(buyer) : "None selected"}</b></span><span><small>Assigned puppies</small><b>{assigned.length ? assigned.map((puppy) => puppy.name).join(", ") : "None"}</b></span><span><small>Portal access</small><b>{buyer?.email ? "Email sign-in ready" : "Email required"}</b></span></div>
+      <button className="portal-preview-launch" disabled={!buyerId || !buyer?.email || busy} onClick={() => void inviteFamily()}><Mail size={17} /> {busy ? "Preparing portal…" : "Send buyer portal invitation"}</button>
       <button className="portal-preview-launch" disabled={!buyerId || busy} onClick={() => void loadPreview()}><MonitorSmartphone size={17} /> {busy ? "Opening simulator…" : "Load customer view"}</button>
+      {inviteMessage && <p className="portal-preview-success">{inviteMessage}</p>}
       {error && <p className="portal-preview-error">{error}</p>}
-      <div className="portal-preview-auth"><ShieldCheck size={18} /><span><b>Customer authentication</b><small>Customers sign in with the email on their family account. SWVAOS sends a short-lived secure link—there is no shared password.</small></span><a href="/portal/login" target="_blank" rel="noreferrer">Open customer sign-in <ExternalLink size={14} /></a></div>
+      <div className="portal-preview-auth"><ShieldCheck size={18} /><span><b>Customer authentication</b><small>Each buyer creates their own password from the invitation sent by your kennel. There is no shared password.</small></span><a href="/portal/login" target="_blank" rel="noreferrer">Open customer sign-in <ExternalLink size={14} /></a></div>
     </section>
     <section className="portal-preview-stage">
       <header><div><i /><i /><i /><span>{portalUrl ? `${buyer ? fullName(buyer) : "Family"} / live portal` : "Customer portal / waiting"}</span></div><nav><button className={device === "desktop" ? "active" : ""} onClick={() => setDevice("desktop")}>Desktop</button><button className={device === "mobile" ? "active" : ""} onClick={() => setDevice("mobile")}>Mobile</button>{portalUrl && <a href={portalUrl} target="_blank" rel="noreferrer">Open full screen <ExternalLink size={14} /></a>}</nav></header>
@@ -1111,6 +1130,8 @@ function ContractModal({ modal, data, templates, saving, error, onClose, onSubmi
 }
 
 export default function Home() {
+  const tenant = useTenant();
+  const tenantInitials = tenant.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
   const [view, setView] = useState<View>("Command");
   const [data, setData] = useState<DataSet>(emptyData);
   const [templates, setTemplates] = useState<TemplatesConfig>(defaultTemplatesConfig);
@@ -1407,9 +1428,11 @@ export default function Home() {
 
   return <div className="bos-shell">
     <header className="bos-command-bar">
-      <button className="bos-brand" onClick={() => navigateTo("Command")}><span>{tenantInitials}</span><b>{publicTenant.name}</b><small>{publicTenant.shortName}</small></button>
+      <button className="bos-brand" onClick={() => navigateTo("Command")}><span>{tenantInitials}</span><b>{tenant.name}</b><small>{publicTenant.shortName}</small></button>
       <nav className="bos-workspaces" aria-label="Operating workspaces">{viewGroups.map((group) => <button key={group} className={activeGroup === group ? "active" : ""} onClick={() => navigateTo(views.find((item) => item.group === group)?.id ?? "Command")}><b>{groupLabels[group]}</b><small>{groupDescriptions[group]}</small></button>)}</nav>
       <div className="bos-search"><SearchIcon size={17} /><input ref={searchInputRef} aria-label="Search SWVAOS" value={search} onFocus={() => setCommandOpen(true)} onChange={(event) => { setSearch(event.target.value); setCommandOpen(true); }} placeholder="Find any dog, puppy, family, payment…" /><kbd><CommandIcon size={11} />K</kbd>{commandOpen && <div className="bos-search-menu"><header><span>Find or create</span><button onClick={() => { setCommandOpen(false); setSearch(""); }} aria-label="Close search"><X size={15} /></button></header>{search.trim() ? searchResults.length ? <div className="command-results">{searchResults.map((item) => <button key={`${item.view}-${item.label}`} onClick={() => navigateTo(item.view)}><span><b>{item.label}</b><small>{item.detail}</small></span><ChevronRight size={15} /></button>)}</div> : <div className="command-empty"><SearchIcon size={19} /><b>No matching records</b><small>Try a family name, puppy, transaction, or event.</small></div> : <div className="bos-create-menu"><button onClick={() => { setCommandOpen(false); openCreate("buyers", { application_status: "New" }); }}><ClipboardCheck size={17} /><span><b>New application</b><small>Start family screening</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("transactions", { type: "Payment" }); }}><ReceiptText size={17} /><span><b>Record payment</b><small>Credit a buyer account</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("events", { event_type: "Pickup", status: "Scheduled" }); }}><Route size={17} /><span><b>Schedule go-home</b><small>Pickup or delivery</small></span></button></div>}</div>}</div>
+      <a className="bos-domain-settings" href="/settings/branding"><Palette size={16}/><span>Brand</span></a>
+      <a className="bos-domain-settings" href="/settings/domain"><Globe2 size={16}/><span>Domain</span></a>
       <button className="bos-global-add" onClick={() => openCreate(quickResource)}><Plus size={17} /><span>Add record</span></button>
     </header>
 

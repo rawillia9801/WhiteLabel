@@ -1,6 +1,7 @@
 type PortalClaims = {
-  version: 1;
+  version: 2;
   buyerId: number;
+  kennelId: string;
   expiresAt: number;
 };
 
@@ -39,11 +40,14 @@ function timingSafeEqual(left: Uint8Array, right: Uint8Array) {
   return difference === 0;
 }
 
-export async function createPortalToken(buyerId: number, lifetimeDays = 730) {
+export async function createPortalToken(buyerId: number, lifetimeDays = 730, kennelId?: string) {
   if (!Number.isInteger(buyerId) || buyerId <= 0) throw new Error("A valid family is required.");
+  const tenantId = kennelId || "";
+  if (!/^[0-9a-f-]{36}$/i.test(tenantId)) throw new Error("A valid kennel workspace is required.");
   const claims: PortalClaims = {
-    version: 1,
+    version: 2,
     buyerId,
+    kennelId: tenantId,
     expiresAt: Math.floor(Date.now() / 1000) + lifetimeDays * 86400,
   };
   const payload = toBase64Url(JSON.stringify(claims));
@@ -58,7 +62,7 @@ export async function verifyPortalToken(token: string) {
     const supplied = new Uint8Array(Buffer.from(suppliedSignature, "base64url"));
     if (!timingSafeEqual(expected, supplied)) return null;
     const claims = JSON.parse(fromBase64Url(payload)) as Partial<PortalClaims>;
-    if (claims.version !== 1 || !Number.isInteger(claims.buyerId) || Number(claims.buyerId) <= 0) return null;
+    if (claims.version !== 2 || !Number.isInteger(claims.buyerId) || Number(claims.buyerId) <= 0 || !/^[0-9a-f-]{36}$/i.test(String(claims.kennelId || ""))) return null;
     if (!Number.isInteger(claims.expiresAt) || Number(claims.expiresAt) <= Math.floor(Date.now() / 1000)) return null;
     return claims as PortalClaims;
   } catch {

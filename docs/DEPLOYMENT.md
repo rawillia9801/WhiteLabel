@@ -2,23 +2,23 @@
 
 WhiteLabel is a standard Next.js application hosted on Vercel with Supabase providing Postgres and Storage. No OpenAI hosting or OpenAI service is part of the runtime architecture.
 
-## 1. Create an isolated Supabase project
+## 1. Create the platform Supabase project
 
-Create a new Supabase project for the breeder. In its SQL editor, run `supabase/schema.sql`. Create or confirm the `documents` Storage bucket and policies created by the schema. Record the project URL, anonymous key, and service-role key.
+Create the Supabase project for Breeder Portal. In its SQL editor, run `supabase/schema.sql`. Create or confirm the `documents` Storage bucket and policies created by the schema. Record the project URL, anonymous key, and service-role key.
 
-Never reuse another breeder's Supabase project. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
+The schema creates kennels, kennel memberships, tenant columns, and breeder records. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
 
 ## 2. Create the Vercel project
 
 Import the WhiteLabel GitHub repository into a new Vercel project. Vercel detects Next.js automatically. Keep the repository root as the project root and use the existing `npm run build` command.
 
-For a multi-breeder business, create one Vercel project per breeder. This keeps domains, deployment history, secrets, previews, and production data connections isolated.
+Add both `breederportal.site` and `*.breederportal.site` to this Vercel project. Vercel wildcard domains require the nameserver verification method. All kennel subdomains resolve to the same project and the signed session selects the kennel tenant.
 
 ## 3. Configure Vercel environment variables
 
 Copy every applicable variable from `.env.example` into Vercel Project Settings → Environment Variables. Apply production values to Production and safe test values to Preview and Development.
 
-Public branding variables start with `NEXT_PUBLIC_` and are included in the browser bundle. Supabase service-role keys, admin passwords, portal secrets, CRM keys, email credentials, and Twilio tokens are server-only secrets and must not use that prefix.
+Public branding variables start with `NEXT_PUBLIC_` and are included in the browser bundle. Supabase service-role keys, session secrets, portal secrets, CRM keys, email credentials, and Twilio tokens are server-only secrets and must not use that prefix.
 
 Required core variables:
 
@@ -26,10 +26,10 @@ Required core variables:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_STORAGE_BUCKET`
-- `ADMIN_PASSWORD`
+- `BREEDER_SESSION_SECRET`
 - `SWVAOS_PORTAL_SECRET`
 
-The remaining variables control branding, business rules, optional phone/email integrations, and feature availability.
+`NEXT_PUBLIC_PLATFORM_DOMAIN` must be `breederportal.site`. Custom-domain automation additionally requires server-only `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID`, and, for team projects, `VERCEL_TEAM_ID`.
 
 ## 4. Deploy and verify
 

@@ -4,6 +4,7 @@ import { getSupabaseConfig, supabaseRequest } from "../../../../db/supabase";
 import { sendApplicationJourneyEmail } from "../../../../lib/application-journey-email";
 import { sendOwnerNotification } from "../../../../lib/email-service";
 import { createPortalToken } from "../../../../lib/portal-token";
+import { findKennelByHost } from "../../../../lib/supabase-auth";
 import {
   applicationBuyerInput,
   isAllowedWebsiteOrigin,
@@ -22,8 +23,8 @@ function retainAdvancedStatus(status: unknown) {
   return ["Approved", "Waitlist", "Wait list", "Matched", "Placed"].includes(value) ? value : "Applied";
 }
 
-async function existingBuyer(email: string) {
-  const params = new URLSearchParams({ select: "*", email: `ilike.${email}`, limit: "1" });
+async function existingBuyer(email: string, kennelId: string) {
+  const params = new URLSearchParams({ select: "*", email: `ilike.${email}`, kennel_id: `eq.${kennelId}`, limit: "1" });
   const found = await supabaseRequest(`rest/v1/buyers?${params}`, { cache: "no-store" });
   if (!found.ok) throw new Error("Unable to check the family record.");
   return ((await found.json()) as BuyerRow[])[0] ?? null;
@@ -48,10 +49,13 @@ export async function POST(request: Request) {
     if (!getSupabaseConfig().serviceRoleKey) {
       return response(origin, { error: "Application intake is temporarily unavailable." }, 503);
     }
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+    const kennel = await findKennelByHost(host);
+    if (!kennel) return response(origin, { error: "This application form is not connected to a kennel." }, 404);
     const application = normalizeWebsiteApplication(await request.json());
     const receivedAt = new Date().toISOString();
     const input = applicationBuyerInput(application, receivedAt);
-    const current = await existingBuyer(String(input.email));
+    const current = await existingBuyer(String(input.email), kennel.id);
     let buyer: BuyerRow;
 
     if (current) {
@@ -59,9 +63,9 @@ export async function POST(request: Request) {
         ...input,
         application_status: retainAdvancedStatus(current.application_status),
         notes: [String(current.notes ?? "").trim(), String(input.notes)].filter(Boolean).join("\n\n---\n\n").slice(-30_000),
-      }) as BuyerRow;
+      }, kennel.id) as BuyerRow;
     } else {
-      buyer = await createSupabaseResource("buyers", input) as BuyerRow;
+      buyer = await createSupabaseResource("buyers", input, kennel.id) as BuyerRow;
     }
 
     let confirmationEmailSent = false;
@@ -71,7 +75,7 @@ export async function POST(request: Request) {
         .update(`${String(input.email)}|${JSON.stringify(application)}`)
         .digest("hex")
         .slice(0, 20);
-      const setupToken = await createPortalToken(Number(buyer.id), 7);
+      const setupToken = await createPortalToken(Number(buyer.id), 7, kennel.id);
       portalSetupUrl = `${new URL(request.url).origin}/portal/setup?token=${encodeURIComponent(setupToken)}`;
       const email = await sendApplicationJourneyEmail({
         buyerId: Number(buyer.id),

@@ -1,4 +1,4 @@
-import { requireAdminSession } from "../../../../lib/admin-session";
+import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
 import { sendTemplateEmail } from "../../../../lib/email-service";
 import { defaultTemplatesConfig, type EmailTemplateKey } from "../../../../lib/template-defaults";
 
@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const templateKey = String(body.templateKey ?? "application_received") as EmailTemplateKey;
     if (!(templateKey in defaultTemplatesConfig.emails)) return Response.json({ error: "Choose a valid email template." }, { status: 400 });
     const result = await sendTemplateEmail({
+      kennelId: breederSessionFromRequest(request)!.kennelId,
       templateKey,
       to: String(body.to ?? ""),
       variables: {

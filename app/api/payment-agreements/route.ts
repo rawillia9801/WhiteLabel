@@ -1,6 +1,7 @@
 import { getSupabaseConfig, supabaseRequest } from "../../../db/supabase";
 import { renderPaymentAgreementPdf, type PaymentAgreementInput } from "../../../lib/payment-agreement";
 import { getTemplatesConfig } from "../../../lib/templates-config";
+import { breederSessionFromRequest, requireAdminSession } from "../../../lib/admin-session";
 
 const cents = (value: unknown) => Math.max(0, Math.round((Number(value) || 0) * 100));
 const text = (value: unknown) => String(value ?? "").trim();
@@ -17,17 +18,20 @@ async function jsonRequest<T>(path: string, init: RequestInit = {}) {
 }
 
 export async function POST(request: Request) {
+  const unauthorized = requireAdminSession(request);
+  if (unauthorized) return unauthorized;
   try {
+    const session = breederSessionFromRequest(request)!;
     const body = await request.json() as Record<string, unknown>;
     const buyerId = positiveId(body.buyer_id);
     if (!buyerId) return Response.json({ error: "Choose a buyer." }, { status: 400 });
 
-    const buyers = await jsonRequest<Record<string, unknown>[]>(`rest/v1/buyers?select=*&id=eq.${buyerId}&limit=1`);
+    const buyers = await jsonRequest<Record<string, unknown>[]>(`rest/v1/buyers?select=*&id=eq.${buyerId}&kennel_id=eq.${encodeURIComponent(session.kennelId)}&limit=1`);
     const buyer = buyers[0];
     if (!buyer) return Response.json({ error: "The buyer was not found." }, { status: 404 });
 
     const puppyId = positiveId(body.puppy_id);
-    const puppy = puppyId ? (await jsonRequest<Record<string, unknown>[]>(`rest/v1/puppies?select=*&id=eq.${puppyId}&limit=1`))[0] : null;
+    const puppy = puppyId ? (await jsonRequest<Record<string, unknown>[]>(`rest/v1/puppies?select=*&id=eq.${puppyId}&kennel_id=eq.${encodeURIComponent(session.kennelId)}&limit=1`))[0] : null;
     const firstName = text(buyer.first_name);
     const lastName = text(buyer.last_name);
     const buyerName = [firstName, lastName].filter(Boolean).join(" ") || text(buyer.email) || `Buyer #${buyerId}`;
@@ -40,6 +44,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: { prefer: "return=representation" },
       body: JSON.stringify({
+        kennel_id: session.kennelId,
         buyer_id: buyerId,
         name: text(body.plan_name) || `Payment Agreement - ${buyerName}`,
         total_amount_cents: totalAmountCents,
@@ -55,7 +60,7 @@ export async function POST(request: Request) {
     const paymentPlanId = Number(planRows[0]?.id);
     if (!paymentPlanId) throw new Error("The payment plan could not be created.");
 
-    const templateConfig = await getTemplatesConfig();
+    const templateConfig = await getTemplatesConfig(session.kennelId);
     const input: PaymentAgreementInput = {
       buyerName,
       coBuyerName: text(body.co_buyer_name),
@@ -94,7 +99,7 @@ export async function POST(request: Request) {
 
     const pdf = await renderPaymentAgreementPdf(input);
     const fileName = `payment-agreement-${buyerName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`;
-    const objectKey = `buyers/${buyerId}/payment-agreements/${crypto.randomUUID()}-${fileName}`;
+    const objectKey = `kennels/${session.kennelId}/buyers/${buyerId}/payment-agreements/${crypto.randomUUID()}-${fileName}`;
     const { storageBucket } = getSupabaseConfig();
     const upload = await supabaseRequest(`storage/v1/object/${storageBucket}/${objectKey}`, {
       method: "POST",
@@ -107,6 +112,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: { prefer: "return=representation" },
       body: JSON.stringify({
+        kennel_id: session.kennelId,
         buyer_id: buyerId,
         payment_plan_id: paymentPlanId,
         document_type: "Payment Plan Agreement",
@@ -122,7 +128,7 @@ export async function POST(request: Request) {
     });
     const documentId = Number(docs[0]?.id);
     if (documentId && puppyId) {
-      await jsonRequest("rest/v1/buyer_document_puppies", { method: "POST", body: JSON.stringify({ document_id: documentId, puppy_id: puppyId }) });
+      await jsonRequest("rest/v1/buyer_document_puppies", { method: "POST", body: JSON.stringify({ kennel_id: session.kennelId, document_id: documentId, puppy_id: puppyId }) });
     }
 
     return Response.json({ paymentPlanId, documentId, fileName }, { status: 201 });

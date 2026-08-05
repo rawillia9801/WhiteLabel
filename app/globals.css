@@ -2377,6 +2377,9 @@ body {
 .portal-preview-launch { min-height: 45px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #197fbd; border-radius: 8px; background: linear-gradient(135deg,#008ea6,#315eea); color: white; font-weight: 800; cursor: pointer; box-shadow: 0 9px 24px rgba(29,99,178,.2); }
 .portal-preview-launch:disabled { opacity: .5; cursor: not-allowed; }
 .portal-preview-error { padding: 10px 12px; border: 1px solid #e1a7b0; border-radius: 8px; background: #ffebef; color: #9e2d42 !important; }
+.portal-preview-success { padding: 10px 12px; border: 1px solid #8dc9aa; border-radius: 8px; background: #eaf8f0; color: #176344 !important; }
+.bos-domain-settings { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; border: 1px solid rgba(119,175,181,.42); border-radius: 8px; color: #c9edf0; font-size: 11px; font-weight: 800; text-decoration: none; }
+.bos-domain-settings:hover { border-color: #58d4df; color: #fff; }
 .portal-preview-auth { display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 9px; padding: 13px; border: 1px solid #a9cbd3; border-radius: 9px; background: linear-gradient(140deg,#e9f6f7,#ebeffb); color: #19778b; }
 .portal-preview-auth b, .portal-preview-auth small { display: block; }
 .portal-preview-auth small { margin-top: 4px; color: #627c85; line-height: 1.45; }

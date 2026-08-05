@@ -1,9 +1,11 @@
 import { renderContractPdf, type ContractSnapshot } from "../../../../lib/contract-pdf";
 import { parseCombinedAgreementContent } from "../../../../lib/combined-agreement";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
+import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
 
-export async function GET() {
-  const config = await getTemplatesConfig();
+export async function GET(request: Request) {
+  const unauthorized = requireAdminSession(request); if (unauthorized) return unauthorized;
+  const config = await getTemplatesConfig(breederSessionFromRequest(request)!.kennelId);
   const createdAt = new Date().toISOString();
   const snapshot: ContractSnapshot = {
     version: 1,

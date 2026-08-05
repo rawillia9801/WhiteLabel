@@ -1,5 +1,5 @@
 import { prepareContractPackage } from "../../../db/contracts";
-import { requireAdminSession } from "../../../lib/admin-session";
+import { breederSessionFromRequest, requireAdminSession } from "../../../lib/admin-session";
 import { sendBuyerAutomation } from "../../../lib/automation-email";
 import { getTemplatesConfig } from "../../../lib/templates-config";
 
@@ -14,9 +14,11 @@ export async function POST(request: Request) {
   const unauthorized = requireAdminSession(request);
   if (unauthorized) return unauthorized;
   try {
+    const session = breederSessionFromRequest(request)!;
     const body = await request.json() as Record<string, unknown>;
-    const config = await getTemplatesConfig();
+    const config = await getTemplatesConfig(session.kennelId);
     const result = await prepareContractPackage({
+      kennelId: session.kennelId,
       buyerId: Number(body.buyer_id),
       puppyId: Number(body.puppy_id),
       salePriceCents: cents(body.sale_price),

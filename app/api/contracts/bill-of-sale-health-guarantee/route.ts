@@ -1,5 +1,5 @@
 import { prepareCombinedAgreement } from "../../../../db/combined-agreements";
-import { requireAdminSession } from "../../../../lib/admin-session";
+import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
 import { sendBuyerAutomation } from "../../../../lib/automation-email";
 import { parseCombinedAgreementContent, type CombinedAgreementDetails } from "../../../../lib/combined-agreement";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
@@ -13,8 +13,9 @@ export async function POST(request: Request) {
   if (unauthorized) return unauthorized;
 
   try {
+    const session = breederSessionFromRequest(request)!;
     const body = await request.json() as Record<string, unknown>;
-    const config = await getTemplatesConfig();
+    const config = await getTemplatesConfig(session.kennelId);
     const template = config.documents.bill_of_sale_health_guarantee;
     if (!template.enabled) return Response.json({ error: "The combined Bill of Sale and Health Guarantee template is disabled." }, { status: 400 });
 
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
     };
 
     const result = await prepareCombinedAgreement({
+      kennelId: session.kennelId,
       buyerId: Number(body.buyer_id),
       puppyId: Number(body.puppy_id),
       salePriceCents: cents(body.sale_price),

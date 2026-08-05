@@ -18,6 +18,6 @@ export async function portalSessionFromRequest(request: Request) {
   return token ? verifyPortalToken(token) : null;
 }
 
-export async function createPortalSession(buyerId: number) {
-  return createPortalToken(buyerId, 30);
+export async function createPortalSession(buyerId: number, kennelId: string) {
+  return createPortalToken(buyerId, 30, kennelId);
 }

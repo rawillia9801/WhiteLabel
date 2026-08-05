@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { findPortalBuyerByEmail } from "../../../../../db/contracts";
 import { createPortalSession, PORTAL_SESSION_COOKIE } from "../../../../../lib/portal-session";
-import { portalBuyerIdFromAuthUser, signInPortalPassword } from "../../../../../lib/supabase-auth";
+import { findKennelByHost, portalBuyerIdFromAuthUser, portalKennelIdFromAuthUser, signInPortalPassword } from "../../../../../lib/supabase-auth";
 
 export const runtime = "nodejs";
 
@@ -21,11 +21,14 @@ export async function POST(request: Request) {
       return Response.json({ error: "The email address or password is incorrect." }, { status: 401 });
     }
 
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+    const kennel = await findKennelByHost(host);
     let buyerId = portalBuyerIdFromAuthUser(user);
-    if (!buyerId) buyerId = (await findPortalBuyerByEmail(email))?.id ?? null;
-    if (!buyerId) return Response.json({ error: "This account is not connected to a Puppy Portal family record." }, { status: 403 });
+    const kennelId = portalKennelIdFromAuthUser(user) || kennel?.id || null;
+    if (!buyerId && kennelId) buyerId = (await findPortalBuyerByEmail(email, kennelId))?.id ?? null;
+    if (!buyerId || !kennelId) return Response.json({ error: "This account is not connected to a Puppy Portal family record." }, { status: 403 });
 
-    const session = await createPortalSession(buyerId);
+    const session = await createPortalSession(buyerId, kennelId);
     const response = NextResponse.json({ ok: true, redirect: "/portal/account" });
     response.cookies.set({
       name: PORTAL_SESSION_COOKIE,

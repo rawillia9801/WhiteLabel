@@ -49,7 +49,7 @@ const snapshot: ContractSnapshot = {
 };
 
 test("creates and verifies tamper-resistant puppy portal tokens", async () => {
-  const token = await createPortalToken(7, 1);
+  const token = await createPortalToken(7, 1, "7bf1b1fb-2222-4444-8888-0ca645db4111");
   assert.equal((await verifyPortalToken(token))?.buyerId, 7);
   const [payload, signature] = token.split(".");
   const tamperedSignature = `${signature[0] === "a" ? "b" : "a"}${signature.slice(1)}`;

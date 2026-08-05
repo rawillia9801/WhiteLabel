@@ -66,13 +66,15 @@ async function jsonRequest<T>(path: string, init: RequestInit = {}) {
   return json as T;
 }
 
-async function selectAll<T>(table: TableName, query = "select=*") {
-  return jsonRequest<T[]>(`rest/v1/${table}?${query}`);
+const tenantQuery = (query: string, kennelId: string) => `${query}&kennel_id=eq.${encodeURIComponent(kennelId)}`;
+
+async function selectAll<T>(table: TableName, kennelId: string, query = "select=*") {
+  return jsonRequest<T[]>(`rest/v1/${table}?${tenantQuery(query, kennelId)}`);
 }
 
-async function selectSafeAll<T>(table: TableName) {
+async function selectSafeAll<T>(table: TableName, kennelId: string) {
   try {
-    return await selectAll<T>(table);
+    return await selectAll<T>(table, kennelId);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.includes("Could not find the table") || message.includes("does not exist") || message.includes("schema cache")) {
@@ -82,34 +84,35 @@ async function selectSafeAll<T>(table: TableName) {
   }
 }
 
-async function insertRow<T>(table: TableName, row: Record<string, unknown>) {
+async function insertRow<T>(table: TableName, row: Record<string, unknown>, kennelId: string) {
   return jsonRequest<T[]>(`rest/v1/${table}`, {
     method: "POST",
     headers: { prefer: "return=representation" },
-    body: JSON.stringify(row),
+    body: JSON.stringify({ ...row, kennel_id: kennelId }),
   }).then((rows) => rows[0]);
 }
 
-async function updateRow<T>(table: TableName, recordId: number, row: Record<string, unknown>) {
-  return jsonRequest<T[]>(`rest/v1/${table}?id=eq.${recordId}`, {
+async function updateRow<T>(table: TableName, recordId: number, row: Record<string, unknown>, kennelId: string) {
+  return jsonRequest<T[]>(`rest/v1/${table}?id=eq.${recordId}&kennel_id=eq.${encodeURIComponent(kennelId)}`, {
     method: "PATCH",
     headers: { prefer: "return=representation" },
     body: JSON.stringify(row),
   }).then((rows) => rows[0]);
 }
 
-async function deleteWhere(table: TableName, query: string) {
-  await jsonRequest(`rest/v1/${table}?${query}`, { method: "DELETE" });
+async function deleteWhere(table: TableName, query: string, kennelId: string) {
+  await jsonRequest(`rest/v1/${table}?${tenantQuery(query, kennelId)}`, { method: "DELETE" });
 }
 
-async function replacePlanPuppies(paymentPlanId: number, puppyIds: number[]) {
-  await deleteWhere("payment_plan_puppies", `payment_plan_id=eq.${paymentPlanId}`);
+async function replacePlanPuppies(paymentPlanId: number, puppyIds: number[], kennelId: string) {
+  await deleteWhere("payment_plan_puppies", `payment_plan_id=eq.${paymentPlanId}`, kennelId);
   for (const puppyId of puppyIds) {
-    await insertRow("payment_plan_puppies", { payment_plan_id: paymentPlanId, puppy_id: puppyId });
+    await insertRow("payment_plan_puppies", { payment_plan_id: paymentPlanId, puppy_id: puppyId }, kennelId);
   }
 }
 
-export async function getKennelDataFromSupabase() {
+export async function getKennelDataFromSupabase(kennelId?: string) {
+  if (!kennelId) throw new Error("A kennel workspace is required for this data request.");
   const [
     dogs,
     dogMedicalRecords,
@@ -126,20 +129,20 @@ export async function getKennelDataFromSupabase() {
     buyerDocuments,
     buyerDocumentPuppies,
   ] = await Promise.all([
-    selectSafeAll<Record<string, unknown>>("dogs"),
-    selectSafeAll<Record<string, unknown>>("dog_medical_records"),
-    selectSafeAll<Record<string, unknown>>("dog_registrations"),
-    selectSafeAll<Record<string, unknown>>("dog_documents"),
-    selectSafeAll<Record<string, unknown>>("litters"),
-    selectSafeAll<Record<string, unknown>>("buyers"),
-    selectSafeAll<Record<string, unknown>>("puppies"),
-    selectSafeAll<Record<string, unknown>>("payment_plans"),
-    selectSafeAll<{ payment_plan_id: number; puppy_id: number }>("payment_plan_puppies"),
-    selectSafeAll<Record<string, unknown>>("transactions"),
-    selectSafeAll<Record<string, unknown>>("events"),
-    selectSafeAll<Record<string, unknown>>("puppy_updates"),
-    selectSafeAll<Record<string, unknown>>("buyer_documents"),
-    selectSafeAll<{ document_id: number; puppy_id: number }>("buyer_document_puppies"),
+    selectSafeAll<Record<string, unknown>>("dogs", kennelId),
+    selectSafeAll<Record<string, unknown>>("dog_medical_records", kennelId),
+    selectSafeAll<Record<string, unknown>>("dog_registrations", kennelId),
+    selectSafeAll<Record<string, unknown>>("dog_documents", kennelId),
+    selectSafeAll<Record<string, unknown>>("litters", kennelId),
+    selectSafeAll<Record<string, unknown>>("buyers", kennelId),
+    selectSafeAll<Record<string, unknown>>("puppies", kennelId),
+    selectSafeAll<Record<string, unknown>>("payment_plans", kennelId),
+    selectSafeAll<{ payment_plan_id: number; puppy_id: number }>("payment_plan_puppies", kennelId),
+    selectSafeAll<Record<string, unknown>>("transactions", kennelId),
+    selectSafeAll<Record<string, unknown>>("events", kennelId),
+    selectSafeAll<Record<string, unknown>>("puppy_updates", kennelId),
+    selectSafeAll<Record<string, unknown>>("buyer_documents", kennelId),
+    selectSafeAll<{ document_id: number; puppy_id: number }>("buyer_document_puppies", kennelId),
   ]);
 
   return {
@@ -168,8 +171,9 @@ export async function getKennelDataFromSupabase() {
   };
 }
 
-export async function getCallerActivityFromSupabase() {
-  const events = await selectSafeAll<Record<string, unknown>>("events");
+export async function getCallerActivityFromSupabase(kennelId?: string) {
+  if (!kennelId) throw new Error("A kennel workspace is required for caller activity.");
+  const events = await selectSafeAll<Record<string, unknown>>("events", kennelId);
   return events
     .filter((event) => ["Call", "Portal Request", "Transportation"].includes(textValue(event, "event_type")))
     .sort((left, right) => `${textValue(right, "event_date")}${textValue(right, "event_time")}${textValue(right, "created_at")}`.localeCompare(`${textValue(left, "event_date")}${textValue(left, "event_time")}${textValue(left, "created_at")}`));
@@ -201,21 +205,21 @@ function rowFor(resource: ResourceName, data: ResourceInput) {
   }
 }
 
-async function linkedBuyerId(table: "payment_plans" | "puppies", recordId: number | null) {
+async function linkedBuyerId(table: "payment_plans" | "puppies", recordId: number | null, kennelId: string) {
   if (!recordId) return null;
-  const rows = await selectAll<Record<string, unknown>>(table, `select=buyer_id&id=eq.${recordId}&limit=1`);
+  const rows = await selectAll<Record<string, unknown>>(table, kennelId, `select=buyer_id&id=eq.${recordId}&limit=1`);
   return id(rows[0] ?? {}, "buyer_id");
 }
 
-async function transactionRowFor(data: ResourceInput) {
+async function transactionRowFor(data: ResourceInput, kennelId: string) {
   const row = rowFor("transactions", data);
   const transactionType = str(data, "type");
   if (!row || !["Payment", "Deposit"].includes(transactionType)) return row;
 
   const specifiedBuyerId = id(data, "buyer_id");
   const [planBuyerId, puppyBuyerId] = await Promise.all([
-    linkedBuyerId("payment_plans", id(data, "payment_plan_id")),
-    linkedBuyerId("puppies", id(data, "puppy_id")),
+    linkedBuyerId("payment_plans", id(data, "payment_plan_id"), kennelId),
+    linkedBuyerId("puppies", id(data, "puppy_id"), kennelId),
   ]);
   const linkedBuyerIds = [...new Set([planBuyerId, puppyBuyerId].filter((value): value is number => Boolean(value)))];
 
@@ -231,31 +235,34 @@ async function transactionRowFor(data: ResourceInput) {
   return { ...row, buyer_id: buyerId };
 }
 
-async function preparedRowFor(resource: ResourceName, data: ResourceInput) {
-  return resource === "transactions" ? transactionRowFor(data) : rowFor(resource, data);
+async function preparedRowFor(resource: ResourceName, data: ResourceInput, kennelId: string) {
+  return resource === "transactions" ? transactionRowFor(data, kennelId) : rowFor(resource, data);
 }
 
-export async function createSupabaseResource(resource: ResourceName, data: ResourceInput) {
-  const row = { ...await preparedRowFor(resource, data), created_at: new Date().toISOString() };
-  const created = await insertRow<Record<string, unknown>>(tableFor(resource), row);
+export async function createSupabaseResource(resource: ResourceName, data: ResourceInput, kennelId?: string) {
+  if (!kennelId) throw new Error("A kennel workspace is required before saving records.");
+  const row = { ...await preparedRowFor(resource, data, kennelId), created_at: new Date().toISOString() };
+  const created = await insertRow<Record<string, unknown>>(tableFor(resource), row, kennelId);
   if (resource === "payment_plans") {
     const puppyIds = ids(data, "puppy_ids");
-    await replacePlanPuppies(Number(created.id), puppyIds);
+    await replacePlanPuppies(Number(created.id), puppyIds, kennelId);
     return { ...created, puppy_ids: puppyIds };
   }
   return created;
 }
 
-export async function updateSupabaseResource(resource: ResourceName, recordId: number, data: ResourceInput) {
-  const updated = await updateRow<Record<string, unknown>>(tableFor(resource), recordId, await preparedRowFor(resource, data));
+export async function updateSupabaseResource(resource: ResourceName, recordId: number, data: ResourceInput, kennelId?: string) {
+  if (!kennelId) throw new Error("A kennel workspace is required before updating records.");
+  const updated = await updateRow<Record<string, unknown>>(tableFor(resource), recordId, await preparedRowFor(resource, data, kennelId), kennelId);
   if (resource === "payment_plans") {
     const puppyIds = ids(data, "puppy_ids");
-    await replacePlanPuppies(recordId, puppyIds);
+    await replacePlanPuppies(recordId, puppyIds, kennelId);
     return { ...updated, puppy_ids: puppyIds };
   }
   return updated;
 }
 
-export async function deleteSupabaseResource(resource: ResourceName, recordId: number) {
-  await deleteWhere(tableFor(resource), `id=eq.${recordId}`);
+export async function deleteSupabaseResource(resource: ResourceName, recordId: number, kennelId?: string) {
+  if (!kennelId) throw new Error("A kennel workspace is required before deleting records.");
+  await deleteWhere(tableFor(resource), `id=eq.${recordId}`, kennelId);
 }

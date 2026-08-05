@@ -4,8 +4,10 @@ import { FormEvent, Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Dog, Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react";
+import { useTenant } from "../../../components/tenant-runtime";
 
 function SetupForm() {
+  const tenant = useTenant();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
   const [busy, setBusy] = useState(false);
@@ -38,7 +40,7 @@ function SetupForm() {
     `}</style>
     <section className="portal-auth-brand">
       <span className="portal-auth-logo"><Dog size={30}/></span>
-      <small>SOUTHWEST VIRGINIA CHIHUAHUA</small>
+      <small>{tenant.name.toUpperCase()}</small>
       <h1>Create your private family account.</h1>
       <p>Choose a secure password for the email address already connected to your application or puppy record.</p>
       <div className="portal-auth-benefits">

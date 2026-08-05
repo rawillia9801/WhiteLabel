@@ -1,6 +1,7 @@
 import { findPortalBuyerByEmail } from "../../../../../db/contracts";
 import { sendTemplateEmail } from "../../../../../lib/email-service";
 import { createPortalToken } from "../../../../../lib/portal-token";
+import { findKennelByHost } from "../../../../../lib/supabase-auth";
 
 export const runtime = "nodejs";
 
@@ -14,11 +15,14 @@ export async function POST(request: Request) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Response.json({ error: "Enter a valid email address." }, { status: 400 });
 
   try {
-    const buyer = await findPortalBuyerByEmail(email);
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+    const kennel = await findKennelByHost(host);
+    const buyer = kennel ? await findPortalBuyerByEmail(email, kennel.id) : null;
     if (buyer) {
-      const token = await createPortalToken(buyer.id, 20 / 1440);
+      const token = await createPortalToken(buyer.id, 20 / 1440, kennel!.id);
       const accessLink = `${new URL(request.url).origin}/api/portal/auth/verify?token=${encodeURIComponent(token)}`;
       const result = await sendTemplateEmail({
+        kennelId: kennel!.id,
         templateKey: "portal_sign_in",
         to: buyer.email,
         buyerId: buyer.id,

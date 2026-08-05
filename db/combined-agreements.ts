@@ -17,6 +17,7 @@ type DocumentRow = Row & {
 };
 
 export type CombinedAgreementInput = {
+  kennelId: string;
   buyerId: number;
   puppyId: number;
   salePriceCents?: number;
@@ -82,10 +83,10 @@ async function uploadPdf(objectKey: string, bytes: Uint8Array) {
   if (!response.ok) throw new Error((await response.text()) || "Unable to store the generated agreement.");
 }
 
-async function addPuppyLink(documentId: number, puppyId: number) {
+async function addPuppyLink(documentId: number, puppyId: number, kennelId: string) {
   await jsonRequest("rest/v1/buyer_document_puppies", {
     method: "POST",
-    body: JSON.stringify({ document_id: documentId, puppy_id: puppyId }),
+    body: JSON.stringify({ document_id: documentId, puppy_id: puppyId, kennel_id: kennelId }),
   });
 }
 
@@ -107,24 +108,26 @@ function fileSafe(value: string) {
 }
 
 export async function prepareCombinedAgreement(input: CombinedAgreementInput) {
+  const kennelId = input.kennelId.trim();
+  if (!/^[0-9a-f-]{36}$/i.test(kennelId)) throw new Error("A valid kennel workspace is required.");
   const buyerId = positiveId(input.buyerId);
   const puppyId = positiveId(input.puppyId);
   if (!buyerId || !puppyId) throw new Error("Choose a family and an assigned puppy.");
 
   const [buyer, puppy] = await Promise.all([
-    first<Row>("buyers", `select=*&id=eq.${buyerId}`),
-    first<Row>("puppies", `select=*&id=eq.${puppyId}&buyer_id=eq.${buyerId}`),
+    first<Row>("buyers", `select=*&id=eq.${buyerId}&kennel_id=eq.${kennelId}`),
+    first<Row>("puppies", `select=*&id=eq.${puppyId}&buyer_id=eq.${buyerId}&kennel_id=eq.${kennelId}`),
   ]);
   if (!buyer) throw new Error("The selected family was not found.");
   if (!puppy) throw new Error("The selected puppy is not assigned to this family.");
 
   const litterId = positiveId(puppy.litter_id);
-  const litter = litterId ? await first<Row>("litters", `select=*&id=eq.${litterId}`) : null;
+  const litter = litterId ? await first<Row>("litters", `select=*&id=eq.${litterId}&kennel_id=eq.${kennelId}`) : null;
   const parentIds = [positiveId(litter?.dam_id), positiveId(litter?.sire_id)].filter((id): id is number => Boolean(id));
   const [parents, parentRegistrations, payments] = await Promise.all([
-    parentIds.length ? select<Row>("dogs", `select=*&id=in.(${parentIds.join(",")})`) : Promise.resolve([]),
-    parentIds.length ? select<Row>("dog_registrations", `select=*&dog_id=in.(${parentIds.join(",")})&order=created_at.desc`) : Promise.resolve([]),
-    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}&type=in.(Payment,Deposit)&order=created_at.desc`),
+    parentIds.length ? select<Row>("dogs", `select=*&id=in.(${parentIds.join(",")})&kennel_id=eq.${kennelId}`) : Promise.resolve([]),
+    parentIds.length ? select<Row>("dog_registrations", `select=*&dog_id=in.(${parentIds.join(",")})&kennel_id=eq.${kennelId}&order=created_at.desc`) : Promise.resolve([]),
+    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}&type=in.(Payment,Deposit)&kennel_id=eq.${kennelId}&order=created_at.desc`),
   ]);
 
   const dam = parents.find((row) => Number(row.id) === Number(litter?.dam_id)) ?? null;
@@ -224,10 +227,11 @@ export async function prepareCombinedAgreement(input: CombinedAgreementInput) {
   };
 
   const pdf = await renderContractPdf(snapshot);
-  const objectKey = `buyers/${buyerId}/contracts/${groupId}-bill-of-sale-health-guarantee.pdf`;
+  const objectKey = `kennels/${kennelId}/buyers/${buyerId}/contracts/${groupId}-bill-of-sale-health-guarantee.pdf`;
   await uploadPdf(objectKey, pdf);
 
   const document = await insert<DocumentRow>("buyer_documents", {
+    kennel_id: kennelId,
     buyer_id: buyerId,
     payment_plan_id: null,
     document_type: "Bill of Sale and Health Guarantee",
@@ -240,10 +244,11 @@ export async function prepareCombinedAgreement(input: CombinedAgreementInput) {
     created_at: createdAt,
     updated_at: createdAt,
   });
-  await addPuppyLink(document.id, puppyId);
+  await addPuppyLink(document.id, puppyId, kennelId);
 
   try {
     await insert("events", {
+      kennel_id: kennelId,
       title: `${snapshot.title} prepared`,
       event_type: "Contract",
       event_date: createdAt.slice(0, 10),
@@ -260,7 +265,7 @@ export async function prepareCombinedAgreement(input: CombinedAgreementInput) {
     // The document record remains authoritative if activity logging is unavailable.
   }
 
-  const token = await createPortalToken(buyerId);
+  const token = await createPortalToken(buyerId, 730, kennelId);
   return {
     buyerId,
     puppyId,

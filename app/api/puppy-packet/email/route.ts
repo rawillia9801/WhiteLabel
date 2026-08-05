@@ -1,5 +1,5 @@
 import { getKennelDataFromSupabase } from "../../../../db/supabase-kennel";
-import { requireAdminSession } from "../../../../lib/admin-session";
+import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
 import { sendPuppyPacketEmail } from "../../../../lib/puppy-packet-email";
 import { renderPuppyPacketPdf } from "../../../../lib/puppy-packet-pdf";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
@@ -22,12 +22,13 @@ export async function POST(request: Request) {
   if (unauthorized) return unauthorized;
 
   try {
+    const session = breederSessionFromRequest(request)!;
     const body = await request.json() as PacketEmailBody;
     const puppyId = Number(body.puppyId);
     const testCopy = body.testCopy === true;
     if (!Number.isInteger(puppyId) || puppyId <= 0) return Response.json({ error: "Select a valid puppy before sending the packet." }, { status: 400 });
 
-    const [data, templates] = await Promise.all([getKennelDataFromSupabase(), getTemplatesConfig()]);
+    const [data, templates] = await Promise.all([getKennelDataFromSupabase(session.kennelId), getTemplatesConfig(session.kennelId)]);
     const rows = data as unknown as {
       puppies?: Row[];
       buyers?: Row[];

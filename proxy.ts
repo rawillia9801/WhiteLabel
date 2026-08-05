@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE, isValidAdminSessionToken } from "./lib/admin-session";
+import { BREEDER_SESSION_COOKIE, readBreederSessionToken, tenantUrl } from "./lib/breeder-session";
 
 const publicPath = (pathname: string) =>
   pathname === "/login"
+  || pathname === "/signup"
   || pathname.startsWith("/api/auth/")
   || pathname.startsWith("/portal/")
   || pathname.startsWith("/api/portal/")
@@ -11,13 +12,34 @@ const publicPath = (pathname: string) =>
   || pathname === "/api/caller-crm/lookup";
 
 export function proxy(request: NextRequest) {
-  if (publicPath(request.nextUrl.pathname)) return NextResponse.next();
-  const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  if (isValidAdminSessionToken(token)) return NextResponse.next();
+  const pathname = request.nextUrl.pathname;
+  if (publicPath(pathname)) {
+    const headers = new Headers(request.headers);
+    headers.set("x-public-surface", "1");
+    return NextResponse.next({ request: { headers } });
+  }
 
-  const loginUrl = new URL("/login", request.url);
-  loginUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
-  return NextResponse.redirect(loginUrl);
+  const session = readBreederSessionToken(request.cookies.get(BREEDER_SESSION_COOKIE)?.value);
+  if (!session) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").split(":")[0].toLowerCase();
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "breederportal.site";
+  const expectedSubdomain = `${session.kennelSlug}.${platformDomain}`;
+  const localOrPreview = host === "localhost" || host === "127.0.0.1" || host.endsWith(".vercel.app");
+  const expectedHost = session.plan === "custom_domain" && session.customDomain ? session.customDomain : expectedSubdomain;
+  if (!localOrPreview && host !== expectedHost && host !== `www.${expectedHost}`) {
+    return NextResponse.redirect(tenantUrl(session, `${pathname}${request.nextUrl.search}`));
+  }
+
+  const headers = new Headers(request.headers);
+  headers.set("x-kennel-id", session.kennelId);
+  headers.set("x-kennel-slug", session.kennelSlug);
+  headers.set("x-breeder-user-id", session.userId);
+  return NextResponse.next({ request: { headers } });
 }
 
 export const config = {

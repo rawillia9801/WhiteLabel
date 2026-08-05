@@ -2,10 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import { ArrowRight, BellRing, Dog, Eye, EyeOff, FileCheck2, HeartPulse, KeyRound, Mail, ShieldCheck, Sparkles, WalletCards } from "lucide-react";
+import { useTenant } from "../../../components/tenant-runtime";
+import { publicTenant } from "../../../lib/public-tenant";
 
 type Mode = "signin" | "register" | "email";
 
 export default function PortalLoginPage() {
+  const tenant = useTenant();
   const [mode, setMode] = useState<Mode>("signin");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -51,7 +54,7 @@ export default function PortalLoginPage() {
 
     <section className="portal-login-brand">
       <span className="portal-login-logo"><Dog size={31}/></span>
-      <small>SOUTHWEST VIRGINIA CHIHUAHUA</small>
+      <small>{tenant.name.toUpperCase()}</small>
       <h1>Your family’s puppy information, together and secure.</h1>
       <p>Follow your puppy’s milestones, review agreements, track payments, manage go-home plans, and reach the team from one private account.</p>
       <div className="portal-login-features">
@@ -89,7 +92,7 @@ export default function PortalLoginPage() {
           {mode === "email" && <><KeyRound size={15} style={{verticalAlign:"middle",marginRight:6}}/>The email link is a secure alternative when you cannot remember your password.</>}
         </div>
 
-        <footer>Need assistance? <a href="mailto:support@swvachihuahua.com">support@swvachihuahua.com</a> · <a href="tel:+18555065425">855-506-5425</a></footer>
+        <footer>Need assistance? <a href={`mailto:${publicTenant.email}`}>{publicTenant.email}</a> · <a href={`tel:${publicTenant.phone}`}>{publicTenant.phone}</a></footer>
       </div>
     </section>
   </main>;

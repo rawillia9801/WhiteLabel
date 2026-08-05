@@ -16,6 +16,7 @@ type DocumentRow = Row & {
 };
 
 export type ContractPackageInput = {
+  kennelId: string;
   buyerId: number;
   puppyId: number;
   salePriceCents?: number;
@@ -102,20 +103,21 @@ async function downloadObject(objectKey: string) {
   return supabaseRequest(`storage/v1/object/${storageBucket}/${objectKey}`, { cache: "no-store" });
 }
 
-async function addPuppyLink(documentId: number, puppyId: number) {
+async function addPuppyLink(documentId: number, puppyId: number, kennelId: string) {
   await jsonRequest("rest/v1/buyer_document_puppies", {
     method: "POST",
-    body: JSON.stringify({ document_id: documentId, puppy_id: puppyId }),
+    body: JSON.stringify({ document_id: documentId, puppy_id: puppyId, kennel_id: kennelId }),
   });
 }
 
-async function createContractDocument(snapshot: ContractSnapshot) {
+async function createContractDocument(snapshot: ContractSnapshot, kennelId: string) {
   const pdf = await renderContractPdf(snapshot);
   const fileStem = snapshot.kind === "bill_of_sale" ? "bill-of-sale" : "health-guarantee";
-  const objectKey = `buyers/${snapshot.buyerId}/contracts/${snapshot.groupId}-${fileStem}.pdf`;
+  const objectKey = `kennels/${kennelId}/buyers/${snapshot.buyerId}/contracts/${snapshot.groupId}-${fileStem}.pdf`;
   await uploadPdf(objectKey, pdf, false);
   const now = new Date().toISOString();
   const document = await insert<DocumentRow>("buyer_documents", {
+    kennel_id: kennelId,
     buyer_id: snapshot.buyerId,
     payment_plan_id: null,
     document_type: snapshot.kind === "bill_of_sale" ? "Bill of Sale" : "Health Guarantee",
@@ -128,7 +130,7 @@ async function createContractDocument(snapshot: ContractSnapshot) {
     created_at: now,
     updated_at: now,
   });
-  await addPuppyLink(document.id, snapshot.puppyId);
+  await addPuppyLink(document.id, snapshot.puppyId, kennelId);
   return document;
 }
 
@@ -152,22 +154,24 @@ function contractSummary(document: DocumentRow, puppyIds: number[] = []) {
 }
 
 export async function prepareContractPackage(input: ContractPackageInput) {
+  const kennelId = input.kennelId.trim();
+  if (!/^[0-9a-f-]{36}$/i.test(kennelId)) throw new Error("A valid kennel workspace is required.");
   const buyerId = positiveId(input.buyerId);
   const puppyId = positiveId(input.puppyId);
   if (!buyerId || !puppyId) throw new Error("Choose a family and an assigned puppy.");
   const [buyer, puppy] = await Promise.all([
-    first<Row>("buyers", `select=*&id=eq.${buyerId}`),
-    first<Row>("puppies", `select=*&id=eq.${puppyId}&buyer_id=eq.${buyerId}`),
+    first<Row>("buyers", `select=*&id=eq.${buyerId}&kennel_id=eq.${kennelId}`),
+    first<Row>("puppies", `select=*&id=eq.${puppyId}&buyer_id=eq.${buyerId}&kennel_id=eq.${kennelId}`),
   ]);
   if (!buyer) throw new Error("The selected family was not found.");
   if (!puppy) throw new Error("The selected puppy is not assigned to this family.");
 
   const litterId = positiveId(puppy.litter_id);
-  const litter = litterId ? await first<Row>("litters", `select=*&id=eq.${litterId}`) : null;
+  const litter = litterId ? await first<Row>("litters", `select=*&id=eq.${litterId}&kennel_id=eq.${kennelId}`) : null;
   const [dam, sire, payments] = await Promise.all([
-    positiveId(litter?.dam_id) ? first<Row>("dogs", `select=id,name,registered_name&id=eq.${litter?.dam_id}`) : Promise.resolve(null),
-    positiveId(litter?.sire_id) ? first<Row>("dogs", `select=id,name,registered_name&id=eq.${litter?.sire_id}`) : Promise.resolve(null),
-    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}&type=in.(Payment,Deposit)`),
+    positiveId(litter?.dam_id) ? first<Row>("dogs", `select=id,name,registered_name&id=eq.${litter?.dam_id}&kennel_id=eq.${kennelId}`) : Promise.resolve(null),
+    positiveId(litter?.sire_id) ? first<Row>("dogs", `select=id,name,registered_name&id=eq.${litter?.sire_id}&kennel_id=eq.${kennelId}`) : Promise.resolve(null),
+    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}&type=in.(Payment,Deposit)&kennel_id=eq.${kennelId}`),
   ]);
 
   const paidCents = payments.filter((payment) => isSettledRow(payment) && (!payment.puppy_id || Number(payment.puppy_id) === puppyId)).reduce((sum, payment) => sum + number(payment, "amount_cents"), 0);
@@ -183,6 +187,7 @@ export async function prepareContractPackage(input: ContractPackageInput) {
   const unloggedDepositCents = Math.max(0, depositCents - paidCents);
   if (unloggedDepositCents > 0) {
     await insert("transactions", {
+      kennel_id: kennelId,
       type: "Payment",
       dog_id: null,
       buyer_id: buyerId,
@@ -245,8 +250,8 @@ export async function prepareContractPackage(input: ContractPackageInput) {
     },
   ];
   const documents = [];
-  for (const snapshot of snapshots) documents.push(await createContractDocument(snapshot));
-  const token = await createPortalToken(buyerId);
+  for (const snapshot of snapshots) documents.push(await createContractDocument(snapshot, kennelId));
+  const token = await createPortalToken(buyerId, 730, kennelId);
   return {
     buyerId,
     puppyId,
@@ -296,18 +301,20 @@ export async function reconcileContractDeposits(buyerIdValue: number) {
   return missingDeposit;
 }
 
-export async function findPortalBuyerByEmail(value: string) {
+export async function findPortalBuyerByEmail(value: string, kennelId?: string) {
   const email = value.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
-  const buyer = await first<Row>("buyers", `select=id,first_name,last_name,email&email=ilike.${encodeURIComponent(email)}`);
+  const tenantFilter = kennelId ? `&kennel_id=eq.${encodeURIComponent(kennelId)}` : "";
+  const buyer = await first<Row>("buyers", `select=id,first_name,last_name,email,kennel_id&email=ilike.${encodeURIComponent(email)}${tenantFilter}`);
   if (!buyer || text(buyer, "email").toLowerCase() !== email) return null;
   return { id: Number(buyer.id), firstName: text(buyer, "first_name"), name: fullName(buyer), email: text(buyer, "email") };
 }
 
-export async function getPuppyPortalForBuyer(buyerIdValue: number) {
+export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: string) {
   const buyerId = positiveId(buyerIdValue);
   if (!buyerId) return null;
-  const buyer = await first<Row>("buyers", `select=*&id=eq.${buyerId}`);
+  const tenantFilter = kennelId ? `&kennel_id=eq.${encodeURIComponent(kennelId)}` : "";
+  const buyer = await first<Row>("buyers", `select=*&id=eq.${buyerId}${tenantFilter}`);
   if (!buyer) return null;
   const [puppies, transactions, documents] = await Promise.all([
     select<Row>("puppies", `select=*&buyer_id=eq.${buyerId}&order=created_at.desc`),
@@ -389,7 +396,7 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number) {
 export async function getPuppyPortal(token: string) {
   const claims = await verifyPortalToken(token);
   if (!claims) return null;
-  return getPuppyPortalForBuyer(claims.buyerId);
+  return getPuppyPortalForBuyer(claims.buyerId, claims.kennelId);
 }
 
 export async function createPortalRequest(token: string, input: PortalRequestInput) {

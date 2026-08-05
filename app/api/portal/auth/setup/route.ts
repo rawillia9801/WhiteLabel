@@ -22,17 +22,18 @@ export async function POST(request: Request) {
     if (!validPassword(password)) return Response.json({ error: "Use at least 10 characters with an uppercase letter, lowercase letter, and number." }, { status: 400 });
     if (password !== confirmation) return Response.json({ error: "The passwords do not match." }, { status: 400 });
 
-    const portal = await getPuppyPortalForBuyer(claims.buyerId);
+    const portal = await getPuppyPortalForBuyer(claims.buyerId, claims.kennelId);
     if (!portal?.buyer?.email) return Response.json({ error: "The family account could not be found." }, { status: 404 });
 
     await createOrUpdatePortalAuthUser({
       email: portal.buyer.email,
       password,
       buyerId: claims.buyerId,
+      kennelId: claims.kennelId,
       name: portal.buyer.name,
     });
 
-    const session = await createPortalSession(claims.buyerId);
+    const session = await createPortalSession(claims.buyerId, claims.kennelId);
     const response = NextResponse.json({ ok: true, redirect: "/portal/account" });
     response.cookies.set({
       name: PORTAL_SESSION_COOKIE,

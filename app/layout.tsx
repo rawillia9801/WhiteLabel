@@ -13,7 +13,9 @@ import { ProfilePhotoEnhancer } from "../components/profile-photo-enhancer";
 import { BreedingDogRosterEnhancer } from "../components/breeding-dog-roster-enhancer";
 import { DataReconciliationEnhancer } from "../components/data-reconciliation-enhancer";
 import { TenantTheme } from "../components/tenant-theme";
+import { TenantRuntimeProvider, type RuntimeTenant } from "../components/tenant-runtime";
 import { tenantConfig } from "../lib/tenant-config";
+import { findKennelByHost, findKennelById } from "../lib/supabase-auth";
 import "./globals.css";
 import "./breeder-os.css";
 import "./breeder-os-sidebar.css";
@@ -31,12 +33,28 @@ import "./swvaos-locked-theme.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+async function requestTenant(): Promise<RuntimeTenant | null> {
+  try {
+    const requestHeaders = await headers();
+    const kennelId = requestHeaders.get("x-kennel-id") || "";
+    const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "";
+    const kennel = kennelId ? await findKennelById(kennelId) : await findKennelByHost(host);
+    return kennel ? {
+      name: kennel.name, slug: kennel.slug, plan: kennel.plan,
+      primaryColor: kennel.primary_color || tenantConfig.theme.primary,
+      accentColor: kennel.accent_color || tenantConfig.theme.accent,
+      fontFamily: kennel.font_family || "Geist",
+    } : null;
+  } catch { return null; }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const imageUrl = new URL(tenantConfig.brand.socialImageUrl, `${protocol}://${host}`).toString();
-  const title = tenantConfig.brand.name;
+  const tenant = await requestTenant();
+  const title = tenant?.name || tenantConfig.brand.name;
   const description = tenantConfig.brand.description;
   return {
     title,
@@ -47,6 +65,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme /><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><CommandDashboardEnhancer /><NavigationGroupEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer />{children}</body></html>;
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const tenant = await requestTenant();
+  const publicSurface = (await headers()).get("x-public-surface") === "1";
+  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme primary={tenant?.primaryColor} accent={tenant?.accentColor} fontFamily={tenant?.fontFamily}/><TenantRuntimeProvider tenant={tenant}>{!publicSurface && <><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><CommandDashboardEnhancer /><NavigationGroupEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer /></>}{children}</TenantRuntimeProvider></body></html>;
 }

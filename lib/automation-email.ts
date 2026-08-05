@@ -30,14 +30,17 @@ export async function sendBuyerAutomation(templateKey: EmailTemplateKey, buyerId
 } = {}) {
   const buyer = (await rows(`rest/v1/buyers?select=*&id=eq.${buyerId}&limit=1`))[0];
   if (!buyer || !text(buyer, "email")) return { sent: false, skipped: "Buyer has no email address." };
-  const puppy = options.puppyId ? (await rows(`rest/v1/puppies?select=*&id=eq.${options.puppyId}&limit=1`))[0] : null;
+  const kennelId = text(buyer, "kennel_id");
+  if (!kennelId) return { sent: false, skipped: "Buyer is not assigned to a kennel workspace." };
+  const puppy = options.puppyId ? (await rows(`rest/v1/puppies?select=*&id=eq.${options.puppyId}&kennel_id=eq.${kennelId}&limit=1`))[0] : null;
   let portalUrl = String(options.variables?.portal_url ?? "");
   if (!portalUrl && options.origin) {
-    const token = await createPortalToken(buyerId);
+    const token = await createPortalToken(buyerId, 730, kennelId);
     portalUrl = `${options.origin}/portal/${token}`;
   }
   const puppyName = text(puppy, "name");
   return sendTemplateEmail({
+    kennelId,
     templateKey,
     to: text(buyer, "email"),
     buyerId,
