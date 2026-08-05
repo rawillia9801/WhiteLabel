@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { publicTenant } from "../lib/public-tenant";
 import {
   CalendarDays,
   ChartNoAxesCombined,
@@ -15,85 +16,82 @@ import {
   MessagesSquare,
   MonitorSmartphone,
   PackageSearch,
+  Palette,
   PawPrint,
   Route,
   UserRound,
   UsersRound,
   WalletCards,
   MessageSquareText,
+  Globe2,
   type LucideIcon,
 } from "lucide-react";
 
-type GroupKey = "Today" | "Breeding" | "Families" | "Business" | "Office";
+type GroupKey = "Kennel day" | "Breeding" | "Puppy families" | "Business" | "Operations";
 type NavItem = { label: string; view: string; icon: LucideIcon };
 type NavGroup = { label: GroupKey; description: string; icon: LucideIcon; items: NavItem[] };
 
 const groups: NavGroup[] = [
   {
-    label: "Today",
-    description: "Run sheet and schedule",
+    label: "Kennel day",
+    description: "Daily priorities and calendar",
     icon: LayoutDashboard,
     items: [
-      { label: "Today", view: "Command", icon: LayoutDashboard },
-      { label: "Schedule", view: "Calendar", icon: CalendarDays },
+      { label: "Daily overview", view: "Command", icon: LayoutDashboard },
+      { label: "Kennel calendar", view: "Calendar", icon: CalendarDays },
     ],
   },
   {
     label: "Breeding",
-    description: "Dogs, litters, puppies, and care",
+    description: "Dogs, litters, puppies, and health",
     icon: Dog,
     items: [
-      { label: "Dogs & breeding", view: "Breeding", icon: Dog },
+      { label: "Breeding dogs", view: "Breeding", icon: Dog },
       { label: "Litters", view: "Litters", icon: ListTree },
       { label: "Puppies", view: "Puppies", icon: PawPrint },
-      { label: "Health & care", view: "Care", icon: HeartPulse },
+      { label: "Health records", view: "Care", icon: HeartPulse },
     ],
   },
   {
-    label: "Families",
-    description: "Application through go-home",
+    label: "Puppy families",
+    description: "Application to puppy go-home",
     icon: UsersRound,
     items: [
-      { label: "Applications", view: "Applications", icon: ClipboardCheck },
-      { label: "Buyers & waitlist", view: "Families", icon: UsersRound },
-      { label: "Puppy placement", view: "Placement", icon: UserRound },
-      { label: "Pickup & delivery", view: "Delivery", icon: Route },
+      ...(publicTenant.features.applications ? [{ label: "Puppy applications", view: "Applications", icon: ClipboardCheck }] : []),
+      { label: "Families & waitlist", view: "Families", icon: UsersRound },
+      { label: "Puppy matching", view: "Placement", icon: UserRound },
+      ...(publicTenant.features.transportation ? [{ label: "Go-home planning", view: "Delivery", icon: Route }] : []),
     ],
   },
   {
     label: "Business",
-    description: "Money, communication, and reporting",
+    description: "Sales, expenses, and insights",
     icon: WalletCards,
     items: [
-      { label: "Payments & sales", view: "Finance", icon: WalletCards },
-      { label: "Costs", view: "Inventory", icon: PackageSearch },
-      { label: "Communications", view: "Comms", icon: MessagesSquare },
-      { label: "Automations & templates", view: "Templates", icon: MessageSquareText },
+      { label: "Sales & payments", view: "Finance", icon: WalletCards },
+      { label: "Kennel expenses", view: "Inventory", icon: PackageSearch },
       { label: "Reports", view: "Reports", icon: ChartNoAxesCombined },
     ],
   },
   {
-    label: "Office",
-    description: "Portal, phone, and documents",
+    label: "Operations",
+    description: "Messages, portals, and documents",
     icon: FolderOpen,
     items: [
-      { label: "Family portal", view: "Portal", icon: MonitorSmartphone },
-      { label: "Phone center", view: "CRM", icon: Headphones },
+      { label: "Family messages", view: "Comms", icon: MessagesSquare },
+      { label: "Templates & automation", view: "Templates", icon: MessageSquareText },
+      ...(publicTenant.features.familyPortal ? [{ label: "Family portal", view: "Portal", icon: MonitorSmartphone }] : []),
+      ...(publicTenant.features.phoneCenter ? [{ label: "Phone center", view: "CRM", icon: Headphones }] : []),
       { label: "Documents", view: "Vault", icon: FolderOpen },
     ],
   },
 ];
 
-const groupForView = (view: string): GroupKey => {
-  const match = groups.find((group) => group.items.some((item) => item.view === view));
-  return match?.label ?? "Today";
-};
-
 const itemForView = (view: string) => groups.flatMap((group) => group.items.map((item) => ({ ...item, group: group.label }))).find((item) => item.view === view) ?? null;
 
 export function NavigationGroupEnhancer() {
   const [host, setHost] = useState<HTMLElement | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState<GroupKey>("Today");
+  const [selectedGroup, setSelectedGroup] = useState<GroupKey>("Kennel day");
   const [currentView, setCurrentView] = useState("Command");
   const bypassGroupInterception = useRef(false);
   const initializedFromUrl = useRef(false);
@@ -204,11 +202,11 @@ export function NavigationGroupEnhancer() {
     const requestedView = new URLSearchParams(window.location.search).get("view") || "Command";
     const requestedItem = itemForView(requestedView);
     if (!requestedItem) return;
-    setSelectedGroup(requestedItem.group);
-    setCurrentView(requestedItem.view);
-    if (requestedItem.view !== "Command") {
-      window.setTimeout(() => openInternalView(requestedItem, requestedItem.group, false), 0);
-    }
+    window.setTimeout(() => {
+      setSelectedGroup(requestedItem.group);
+      setCurrentView(requestedItem.view);
+      if (requestedItem.view !== "Command") openInternalView(requestedItem, requestedItem.group, false);
+    }, 0);
   }, [host, openInternalView]);
 
   const selected = useMemo(() => groups.find((group) => group.label === selectedGroup) ?? groups[0], [selectedGroup]);
@@ -230,6 +228,9 @@ export function NavigationGroupEnhancer() {
         </button>;
       })}
     </nav>
-    <footer><i /><span><b>Connected</b><small>Select a page above to open it.</small></span></footer>
+    <footer>
+      <div className="navigation-group-settings"><a href="/settings/branding"><Palette size={15}/><span>Brand studio</span></a><a href="/settings/domain"><Globe2 size={15}/><span>Domain</span></a></div>
+      <div className="navigation-group-status"><i /><span><b>Kennel connected</b><small>Your records are synced and ready.</small></span></div>
+    </footer>
   </div>, host);
 }

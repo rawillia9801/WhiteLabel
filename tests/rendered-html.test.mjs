@@ -353,10 +353,10 @@ test("connects applications, placement, delivery, payments, and automated emails
     readFile(new URL("components/templates-center.tsx", root), "utf8"),
   ]);
 
-  assert.match(page, /id: "Applications", label: "Applications"/);
-  assert.match(page, /id: "Placement", label: "Puppy placement"/);
-  assert.match(page, /id: "Delivery", label: "Pickup & delivery"/);
-  assert.match(page, /id: "Templates", label: "Automations & templates"/);
+  assert.match(page, /id: "Applications", label: "Puppy applications"/);
+  assert.match(page, /id: "Placement", label: "Puppy matching"/);
+  assert.match(page, /id: "Delivery", label: "Go-home planning"/);
+  assert.match(page, /id: "Templates", label: "Templates & automation"/);
   assert.match(page, /function ApplicationsView/);
   assert.match(page, /function PlacementView/);
   assert.match(page, /function DeliveryView/);

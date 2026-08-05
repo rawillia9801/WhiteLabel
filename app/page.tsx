@@ -76,20 +76,20 @@ type ViewDefinition = { id: View; label: string; icon: LucideIcon; group: ViewGr
 
 const emptyData: DataSet = { dogs: [], litters: [], buyers: [], puppies: [], payment_plans: [], transactions: [], events: [], updates: [], dog_medical_records: [], dog_registrations: [], dog_documents: [], buyer_documents: [] };
 const allViews: ViewDefinition[] = [
-  { id: "Command", label: "Today", icon: LayoutDashboard, group: "Daily work", shortcut: "1" },
-  { id: "Calendar", label: "Schedule", icon: CalendarDays, group: "Daily work", shortcut: "C" },
-  { id: "Breeding", label: "Dogs & breeding", icon: DogIcon, group: "Breeding program", shortcut: "2" },
+  { id: "Command", label: "Daily overview", icon: LayoutDashboard, group: "Daily work", shortcut: "1" },
+  { id: "Calendar", label: "Kennel calendar", icon: CalendarDays, group: "Daily work", shortcut: "C" },
+  { id: "Breeding", label: "Breeding dogs", icon: DogIcon, group: "Breeding program", shortcut: "2" },
   { id: "Litters", label: "Litters", icon: ListTree, group: "Breeding program", shortcut: "L" },
   { id: "Puppies", label: "Puppies", icon: PawPrint, group: "Breeding program", shortcut: "P" },
-  { id: "Care", label: "Health & care", icon: HeartPulse, group: "Breeding program", shortcut: "4" },
-  { id: "Applications", label: "Applications", icon: ClipboardCheck, group: "Placement journey", shortcut: "A" },
-  { id: "Families", label: "Buyers & waitlist", icon: UsersRound, group: "Placement journey", shortcut: "3" },
-  { id: "Placement", label: "Puppy placement", icon: UserRound, group: "Placement journey", shortcut: "M" },
-  { id: "Delivery", label: "Pickup & delivery", icon: Route, group: "Placement journey", shortcut: "D" },
-  { id: "Finance", label: "Payments & sales", icon: WalletCards, group: "Business", shortcut: "5" },
-  { id: "Inventory", label: "Costs", icon: PackageSearch, group: "Business", shortcut: "6" },
-  { id: "Comms", label: "Communications", icon: MessagesSquare, group: "Business", shortcut: "7" },
-  { id: "Templates", label: "Automations & templates", icon: MessageSquareText, group: "Business", shortcut: "T" },
+  { id: "Care", label: "Health records", icon: HeartPulse, group: "Breeding program", shortcut: "4" },
+  { id: "Applications", label: "Puppy applications", icon: ClipboardCheck, group: "Placement journey", shortcut: "A" },
+  { id: "Families", label: "Families & waitlist", icon: UsersRound, group: "Placement journey", shortcut: "3" },
+  { id: "Placement", label: "Puppy matching", icon: UserRound, group: "Placement journey", shortcut: "M" },
+  { id: "Delivery", label: "Go-home planning", icon: Route, group: "Placement journey", shortcut: "D" },
+  { id: "Finance", label: "Sales & payments", icon: WalletCards, group: "Business", shortcut: "5" },
+  { id: "Inventory", label: "Kennel expenses", icon: PackageSearch, group: "Business", shortcut: "6" },
+  { id: "Comms", label: "Family messages", icon: MessagesSquare, group: "Tools", shortcut: "7" },
+  { id: "Templates", label: "Templates & automation", icon: MessageSquareText, group: "Tools", shortcut: "T" },
   { id: "Reports", label: "Reports", icon: ChartNoAxesCombined, group: "Business", shortcut: "R" },
   { id: "Portal", label: "Family portal", icon: MonitorSmartphone, group: "Tools", shortcut: "8" },
   { id: "CRM", label: "Phone center", icon: Headphones, group: "Tools", shortcut: "9" },
@@ -103,6 +103,13 @@ const views = allViews.filter((view) => {
   return true;
 });
 const viewGroups: ViewGroup[] = ["Daily work", "Breeding program", "Placement journey", "Business", "Tools"];
+const viewGroupIcons: Record<ViewGroup, LucideIcon> = {
+  "Daily work": LayoutDashboard,
+  "Breeding program": DogIcon,
+  "Placement journey": PawPrint,
+  Business: WalletCards,
+  Tools: FolderOpen,
+};
 
 const dogDocumentTypes = ["Registration Certificate", "Pedigree", "Embark Results", "OFA Test Results", "Genetic Test Results", "Health Test Results", "Health Certificate", "Medical Documentation", "Other"];
 const buyerDocumentTypes = ["Bill of Sale", "Health Guarantee", "Payment Plan Agreement", "Other"];
@@ -1131,7 +1138,6 @@ function ContractModal({ modal, data, templates, saving, error, onClose, onSubmi
 
 export default function Home() {
   const tenant = useTenant();
-  const tenantInitials = tenant.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
   const [view, setView] = useState<View>("Command");
   const [data, setData] = useState<DataSet>(emptyData);
   const [templates, setTemplates] = useState<TemplatesConfig>(defaultTemplatesConfig);
@@ -1417,19 +1423,19 @@ export default function Home() {
     Vault: analytics.docs,
   };
   const activeGroup = activeViewDefinition.group;
-  const groupLabels: Record<ViewGroup, string> = { "Daily work": "Today", "Breeding program": "Breeding", "Placement journey": "Families", Business: "Business", Tools: "Office" };
+  const groupLabels: Record<ViewGroup, string> = { "Daily work": "Kennel day", "Breeding program": "Breeding", "Placement journey": "Puppy families", Business: "Business", Tools: "Operations" };
   const groupDescriptions: Record<ViewGroup, string> = {
-    "Daily work": "Run sheet and schedule",
-    "Breeding program": "Dogs, litters, puppies, and care",
-    "Placement journey": "Application through go-home",
-    Business: "Money, communication, and reporting",
-    Tools: "Portal, phones, and documents",
+    "Daily work": "Daily priorities and calendar",
+    "Breeding program": "Dogs, litters, puppies, and health",
+    "Placement journey": "Application to puppy go-home",
+    Business: "Sales, expenses, and insights",
+    Tools: "Messages, portals, and documents",
   };
 
   return <div className="bos-shell">
     <header className="bos-command-bar">
-      <button className="bos-brand" onClick={() => navigateTo("Command")}><span>{tenantInitials}</span><b>{tenant.name}</b><small>{publicTenant.shortName}</small></button>
-      <nav className="bos-workspaces" aria-label="Operating workspaces">{viewGroups.map((group) => <button key={group} className={activeGroup === group ? "active" : ""} onClick={() => navigateTo(views.find((item) => item.group === group)?.id ?? "Command")}><b>{groupLabels[group]}</b><small>{groupDescriptions[group]}</small></button>)}</nav>
+      <button className="bos-brand" onClick={() => navigateTo("Command")}><span><PawPrint size={21}/></span><b>{tenant.name}</b><small>{tenant.primaryBreed} · BREEDER PORTAL</small></button>
+      <nav className="bos-workspaces" aria-label="Kennel workspaces">{viewGroups.map((group) => { const GroupIcon = viewGroupIcons[group]; return <button key={group} className={activeGroup === group ? "active" : ""} onClick={() => navigateTo(views.find((item) => item.group === group)?.id ?? "Command")}><GroupIcon size={17}/><span><b>{groupLabels[group]}</b><small>{groupDescriptions[group]}</small></span><ChevronRight size={14}/></button>; })}</nav>
       <div className="bos-search"><SearchIcon size={17} /><input ref={searchInputRef} aria-label="Search Breeder Portal" value={search} onFocus={() => setCommandOpen(true)} onChange={(event) => { setSearch(event.target.value); setCommandOpen(true); }} placeholder="Find any dog, puppy, family, payment…" /><kbd><CommandIcon size={11} />K</kbd>{commandOpen && <div className="bos-search-menu"><header><span>Find or create</span><button onClick={() => { setCommandOpen(false); setSearch(""); }} aria-label="Close search"><X size={15} /></button></header>{search.trim() ? searchResults.length ? <div className="command-results">{searchResults.map((item) => <button key={`${item.view}-${item.label}`} onClick={() => navigateTo(item.view)}><span><b>{item.label}</b><small>{item.detail}</small></span><ChevronRight size={15} /></button>)}</div> : <div className="command-empty"><SearchIcon size={19} /><b>No matching records</b><small>Try a family name, puppy, transaction, or event.</small></div> : <div className="bos-create-menu"><button onClick={() => { setCommandOpen(false); openCreate("buyers", { application_status: "New" }); }}><ClipboardCheck size={17} /><span><b>New application</b><small>Start family screening</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("transactions", { type: "Payment" }); }}><ReceiptText size={17} /><span><b>Record payment</b><small>Credit a buyer account</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("events", { event_type: "Pickup", status: "Scheduled" }); }}><Route size={17} /><span><b>Schedule go-home</b><small>Pickup or delivery</small></span></button></div>}</div>}</div>
       <a className="bos-domain-settings" href="/settings/branding"><Palette size={16}/><span>Brand</span></a>
       <a className="bos-domain-settings" href="/settings/domain"><Globe2 size={16}/><span>Domain</span></a>

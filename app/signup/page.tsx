@@ -20,7 +20,12 @@ export default function SignupPage() {
     if (slug.length < 3) return;
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
-      try { const result = await fetch(`/api/auth/availability?slug=${encodeURIComponent(slug)}`, { signal: controller.signal }).then((response) => response.json()) as { available?: boolean }; setAvailable(Boolean(result.available)); }
+      try {
+        const response = await fetch(`/api/auth/availability?slug=${encodeURIComponent(slug)}`, { signal: controller.signal });
+        const result = await response.json() as { available?: boolean };
+        if (!response.ok || typeof result.available !== "boolean") throw new Error("Unable to check that address.");
+        setAvailable(result.available);
+      }
       catch { if (!controller.signal.aborted) setAvailable(null); }
     }, 350);
     return () => { window.clearTimeout(timer); controller.abort(); };
@@ -30,7 +35,7 @@ export default function SignupPage() {
     event.preventDefault(); setBusy(true); setError("");
     const form = new FormData(event.currentTarget);
     try {
-      const response = await fetch("/api/auth/signup", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({ kennel_name:kennelName, kennel_slug:slug, email:form.get("email"), password:form.get("password"), plan:form.get("plan") }) });
+      const response = await fetch("/api/auth/signup", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({ kennel_name:form.get("kennel_name"), kennel_slug:form.get("kennel_slug"), email:form.get("email"), password:form.get("password"), plan:form.get("plan") }) });
       const result = await response.json() as { error?:string; redirect?:string };
       if (!response.ok) throw new Error(result.error || "Unable to create your kennel account.");
       window.location.assign(result.redirect || "/");
@@ -42,8 +47,8 @@ export default function SignupPage() {
     <section className="signup-intro"><span className="signup-logo"><PawPrint size={29}/></span><small>START YOUR BREEDER PORTAL</small><h1>Your brand. Your kennel. Your portal.</h1><p>Choose your kennel address first. Then create the owner login that controls your private workspace and your families’ puppy portals.</p><div className="signup-points"><span><Check size={17}/>No shared staff password</span><span><Check size={17}/>Separate private kennel data</span><span><Check size={17}/>Buyer puppy portals you control</span></div></section>
     <section className="signup-panel"><form className="signup-card" onSubmit={submit}>
       <span>CREATE KENNEL</span><h2>Claim your workspace</h2><p>Your password comes last—first set up the kennel your account belongs to.</p>
-      <label><span>1. Kennel or business name</span><div className="signup-input"><Building2 size={18}/><input value={kennelName} onChange={(event)=>{const value=event.target.value;setKennelName(value);if(!slugEdited)setSlug(slugify(value));setAvailable(null);}} autoComplete="organization" placeholder="Willow Creek Goldens" required/></div></label>
-      <label><span>2. Included kennel address</span><div className="signup-input slug"><Globe2 size={18}/><input value={slug} onChange={(event)=>{setSlugEdited(true);setSlug(slugify(event.target.value));setAvailable(null);}} aria-describedby="slug-status" minLength={3} required/><b>.{platformDomain}</b></div><small id="slug-status" className={available === true ? "available" : available === false ? "unavailable" : ""}>{available === true ? "Available—this address is yours when signup finishes." : available === false ? "Already in use—try another kennel address." : "Use lowercase letters, numbers, and hyphens."}</small></label>
+      <label><span>1. Kennel or business name</span><div className="signup-input"><Building2 size={18}/><input name="kennel_name" value={kennelName} onChange={(event)=>{const value=event.target.value;setKennelName(value);if(!slugEdited)setSlug(slugify(value));setAvailable(null);}} autoComplete="organization" placeholder="Willow Creek Goldens" required/></div></label>
+      <label><span>2. Included kennel address</span><div className="signup-input slug"><Globe2 size={18}/><input name="kennel_slug" value={slug} onChange={(event)=>{setSlugEdited(true);setSlug(slugify(event.target.value));setAvailable(null);}} aria-describedby="slug-status" minLength={3} required/><b>.{platformDomain}</b></div><small id="slug-status" className={available === true ? "available" : available === false ? "unavailable" : ""}>{available === true ? "Available—this address is yours when signup finishes." : available === false ? "Already in use—try another kennel address." : "Use lowercase letters, numbers, and hyphens."}</small></label>
       <fieldset><legend>3. Package</legend><label><input type="radio" name="plan" value="starter" defaultChecked/><span><b>Breeder Portal</b><small>{slug || "kennelname"}.{platformDomain} included</small></span></label><label><input type="radio" name="plan" value="custom_domain"/><span><b>Custom Domain package</b><small>Start on the included address, then connect your own verified domain.</small></span></label></fieldset>
       <label><span>4. Owner email</span><div className="signup-input"><Mail size={18}/><input name="email" type="email" autoComplete="email" placeholder="owner@yourkennel.com" required/></div></label>
       <label><span>5. Create your password</span><div className="signup-input"><KeyRound size={18}/><input name="password" type={showPassword?"text":"password"} autoComplete="new-password" minLength={10} required/><button type="button" onClick={()=>setShowPassword((value)=>!value)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</button></div><small>At least 10 characters with uppercase, lowercase, and a number.</small></label>
