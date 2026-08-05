@@ -1,11 +1,14 @@
 import { createPortalRequest, getPuppyPortal, type PortalRequestInput } from "../../../../../db/contracts";
 import { sendOwnerNotification } from "../../../../../lib/email-service";
+import { verifyPortalToken } from "../../../../../lib/portal-token";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
+    const claims = await verifyPortalToken(token);
+    if (!claims) return Response.json({ error: "Your Puppy Portal session is invalid or has expired." }, { status: 401 });
     const input = await request.json() as Partial<PortalRequestInput>;
     if (input.kind !== "support" && input.kind !== "transportation") {
       return Response.json({ error: "Choose a valid request type." }, { status: 400 });
@@ -20,6 +23,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     try {
       const portal = await getPuppyPortal(token);
       await sendOwnerNotification({
+        kennelId: claims.kennelId,
         category: "Message",
         subject: `${input.kind === "transportation" ? "Transportation request" : "Portal message"} from ${portal?.buyer?.name || "a buyer"}`,
         buyerId: portal?.buyer?.id || null,
@@ -33,8 +37,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
           "Message:",
           String(input.message ?? ""),
           "",
-          "Review it in SWVAOS:",
-          input.kind === "transportation" ? "https://swvaos.site/?view=Delivery" : "https://swvaos.site/?view=Comms",
+          "Review it in Breeder Portal:",
+          `${new URL(request.url).origin}/?view=${input.kind === "transportation" ? "Delivery" : "Comms"}`,
         ].filter(Boolean).join("\n"),
       });
     } catch (emailError) {

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   if (!destination || !callerId) return voiceError("Outbound call routing is not configured.", 503);
 
   const response = new twilio.twiml.VoiceResponse();
-  response.say({ voice: "alice" }, "SWVAOS outbound call. Connecting you now.");
+  response.say({ voice: "alice" }, "Breeder Portal outbound call. Connecting you now.");
   const dial = response.dial({ callerId, answerOnBridge: true, timeout: 35 });
   dial.number(destination);
   response.say({ voice: "alice" }, "The call could not be completed.");

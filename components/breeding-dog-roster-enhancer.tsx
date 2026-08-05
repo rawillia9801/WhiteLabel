@@ -29,7 +29,7 @@ export function BreedingDogRosterEnhancer() {
       const payload = await response.json() as DataSet;
       if (response.ok) setData(payload);
     } catch {
-      // The normal SWVAOS page handles connection errors.
+      // The normal Breeder Portal page handles connection errors.
     }
   }, []);
 

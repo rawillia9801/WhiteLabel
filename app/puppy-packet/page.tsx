@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowLeft, FileSignature, Printer } from "lucide-react";
 import type { TemplatesConfig } from "../../lib/template-defaults";
+import { useTenant } from "../../components/tenant-runtime";
 
 type Buyer = { id: number; first_name: string; last_name: string; email: string; phone: string | null; city: string | null; state: string | null; postal_code?: string | null };
 type Puppy = { id: number; litter_id: number; buyer_id: number | null; name: string; sex: string | null; color: string | null; birth_date: string | null; birth_weight: number | null; current_weight: number | null; status: string; price_cents: number | null };
@@ -83,6 +84,7 @@ function renderSectionLines(lines: string[]) {
 }
 
 export default function PuppyPacketPage() {
+  const tenant = useTenant();
   const [data, setData] = useState<DataSet | null>(null);
   const [templates, setTemplates] = useState<TemplatesConfig | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -141,14 +143,14 @@ export default function PuppyPacketPage() {
       buyer_email: buyer?.email || "Not recorded",
       buyer_location: buyer ? [buyer.city, buyer.state, buyer.postal_code].filter(Boolean).join(", ") || "Not recorded" : "Not recorded",
       packet_date: formatDate(new Date().toISOString()),
-      business_name: "Southwest Virginia Chihuahua",
-      business_website: "swvachihuahua.com",
-      pup_lift_website: "pup-lift.com",
-      pup_lift_phone: "1-715-888-9526",
+      business_name: tenant.name,
+      business_website: tenant.websiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+      pup_lift_website: "",
+      pup_lift_phone: "",
     };
     const personalizedContent = replaceVariables(templates.documents.puppy_packet.content, variables);
     return { puppy, buyer, litter, dam, sire, updates, events, variables, sections: splitSections(personalizedContent) };
-  }, [data, templates, selectedId]);
+  }, [data, templates, selectedId, tenant.name, tenant.websiteUrl]);
 
   function choosePuppy(id: number) {
     setSelectedId(id);
@@ -218,17 +220,17 @@ export default function PuppyPacketPage() {
 
     {packet && <article className="packet">
       <section className="binder-cover">
-        <div className="brand">Southwest Virginia Chihuahua</div>
-        <div className="cover-seal">SW</div>
+        <div className="brand">{tenant.name}</div>
+        <div className="cover-seal">{tenant.name.split(/\s+/).slice(0,2).map((word) => word[0]).join("").toUpperCase()}</div>
         <h1>{packet.puppy.name}&apos;s<br />Puppy Care Binder</h1>
-        <p className="subtitle">Prepared especially for {buyerName(packet.buyer)} with personalized Chihuahua care, emergency readiness, Pup-Lift information, training guidance, records, and go-home resources.</p>
+        <p className="subtitle">Prepared especially for {buyerName(packet.buyer)} with personalized breed care, emergency readiness, training guidance, records, and go-home resources.</p>
         <div className="identity">
           <Field label="Puppy" value={packet.puppy.name} />
           <Field label="Family" value={buyerName(packet.buyer)} />
           <Field label="Date of birth" value={formatDate(packet.puppy.birth_date)} />
           <Field label="Go-home packet date" value={formatDate(new Date().toISOString())} />
         </div>
-        <div className="footer-note">Marion, Virginia · swvachihuahua.com · Pup-Lift: pup-lift.com · 1-715-888-9526</div>
+        <div className="footer-note">{[tenant.websiteUrl, tenant.contactEmail, tenant.contactPhone].filter(Boolean).join(" · ")}</div>
       </section>
 
       <section className="packet-section page-start">
@@ -266,7 +268,7 @@ export default function PuppyPacketPage() {
         <h2>Notes and Records for {packet.puppy.name}</h2>
         <p>Use this section for questions, veterinary instructions, insurance information, registration records, receipts, and additional notes for {buyerName(packet.buyer)} and {packet.puppy.name}.</p>
         <div className="notes-lines">{Array.from({ length: 22 }).map((_, index) => <p key={index}>&nbsp;</p>)}</div>
-        <div className="footer-note">Southwest Virginia Chihuahua · swvachihuahua.com · Pup-Lift: pup-lift.com · 1-715-888-9526</div>
+        <div className="footer-note">{[tenant.name, tenant.websiteUrl, tenant.contactEmail, tenant.contactPhone].filter(Boolean).join(" · ")}</div>
       </section>
     </article>}
   </main>;

@@ -48,7 +48,7 @@ export default function LitterProfilePage({ params }: { params: Promise<{ id: st
 
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const litter = data?.litters.find((candidate) => candidate.id === litterId) ?? null;
-  useEffect(() => { if (litter) document.title = `${litter.name} | SWVAOS`; }, [litter]);
+  useEffect(() => { if (litter) document.title = `${litter.name} | Breeder Portal`; }, [litter]);
 
   const profile = useMemo(() => {
     if (!data || !litter) return null;
@@ -72,10 +72,10 @@ export default function LitterProfilePage({ params }: { params: Promise<{ id: st
 
   if (loading) return <main className="profile-state"><span className="profile-spinner" />Loading litter profile...</main>;
   if (error && !data) return <main className="profile-state"><b>Unable to load this litter</b><p>{error}</p><button onClick={() => void load()}>Try again</button></main>;
-  if (!litter || !profile) return <main className="profile-state"><b>Litter not found</b><p>This litter record is not available.</p><Link href="/"><ArrowLeft size={16} /> Return to SWVAOS</Link></main>;
+  if (!litter || !profile) return <main className="profile-state"><b>Litter not found</b><p>This litter record is not available.</p><Link href="/"><ArrowLeft size={16} /> Return to Breeder Portal</Link></main>;
 
   return <main className="dog-profile-page">
-    <header className="profile-topbar"><Link href="/" className="profile-brand"><span><CalendarDays size={20} /></span><b>SWVAOS</b><small>Litter profile</small></Link><div className="profile-top-actions"><Link href="/?view=Breeding"><ArrowLeft size={16} /> Back to breeding</Link></div></header>
+    <header className="profile-topbar"><Link href="/" className="profile-brand"><span><CalendarDays size={20} /></span><b>Breeder Portal</b><small>Litter profile</small></Link><div className="profile-top-actions"><Link href="/?view=Breeding"><ArrowLeft size={16} /> Back to breeding</Link></div></header>
     <div className="profile-content">
       <section className="profile-identity"><div className="profile-monogram">{litter.name.slice(0, 1).toUpperCase()}</div><div className="profile-name"><span>Litter #{litter.id}</span><h1>{litter.name}</h1><p>{[profile.dam?.name, profile.sire?.name].filter(Boolean).join(" × ") || "Parents not fully connected"}</p><div><i className={litter.status === "Active" ? "active" : ""}>{litter.status}</i><i>{profile.puppies.length} puppies</i><i>{profile.buyers.length} families</i></div></div></section>
       <section className="profile-stat-grid" aria-label="Litter totals"><article><span>Collected</span><b>{money(profile.paid)}</b><small>Paid transactions</small></article><article><span>Outstanding</span><b>{money(profile.outstanding)}</b><small>Open transactions</small></article><article><span>Expenses</span><b>{money(profile.expenses)}</b><small>Linked costs</small></article><article><span>Net</span><b>{money(profile.net)}</b><small>Collected minus expenses</small></article><article><span>Puppies</span><b>{profile.puppies.length}</b><small>{profile.buyers.length} assigned families</small></article><article><span>Events</span><b>{profile.events.length}</b><small>Care and schedule records</small></article></section>

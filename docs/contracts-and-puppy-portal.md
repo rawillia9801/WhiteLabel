@@ -1,6 +1,6 @@
 # Contracts and puppy portal
 
-SWVAOS can generate a Bill of Sale and Health Guarantee from an assigned family and puppy record. Both PDFs are placed in the existing private buyer document vault and linked to the puppy.
+Breeder Portal can generate a Bill of Sale and Health Guarantee from an assigned family and puppy record. Both PDFs are placed in the tenant's private buyer document vault and linked to the puppy.
 
 ## Staff workflow
 
@@ -30,13 +30,11 @@ The server records the signer name, UTC timestamp, network address, browser reco
 Set these production environment variables:
 
 ```text
-SWVAOS_PORTAL_SECRET=a-long-random-secret-different-from-other-keys
-SWVAOS_SELLER_NAME=Southwest Virginia Chihuahua
-SWVAOS_SELLER_LOCATION=Southwest Virginia
+BREEDER_PORTAL_SECRET=a-long-random-secret-different-from-other-keys
 ```
 
-If `SWVAOS_PORTAL_SECRET` is omitted, the server uses the existing service credential as a compatibility fallback. A separate portal secret is recommended so portal links can be rotated independently.
+Seller name, location, primary breed, colors, and policy reminder are configured per kennel in **Brand and business setup**. If `BREEDER_PORTAL_SECRET` is omitted, the server uses the Supabase service credential as a compatibility fallback. A separate portal secret is recommended so portal links can be rotated independently.
 
 ## Legal review
 
-The included clauses are an editable operational template, not legal advice. Have a Virginia attorney review the exact Bill of Sale, warranty period, covered conditions, exclusions, remedies, venue, and any breeding or registration terms before using the documents for real transactions.
+The included clauses are an editable operational template, not legal advice. Have an attorney licensed in the breeder's jurisdiction review the exact Bill of Sale, warranty period, covered conditions, exclusions, remedies, venue, and any breeding or registration terms before using the documents for real transactions.

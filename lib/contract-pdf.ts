@@ -27,6 +27,7 @@ export type ContractSnapshot = {
   buyerLocation: string;
   puppyId: number;
   puppyName: string;
+  puppyBreed?: string;
   puppySex: string;
   puppyColor: string;
   puppyBirthDate: string;
@@ -107,7 +108,7 @@ export async function renderContractPdf(snapshot: ContractSnapshot) {
   pdf.setTitle(snapshot.title);
   pdf.setAuthor(snapshot.sellerName);
   pdf.setSubject(`${snapshot.puppyName} - ${snapshot.buyerName}`);
-  pdf.setCreator("SWVAOS");
+  pdf.setCreator("Breeder Portal");
   pdf.setCreationDate(new Date(snapshot.createdAt));
   if (snapshot.signature?.signedAt) pdf.setModificationDate(new Date(snapshot.signature.signedAt));
 
@@ -204,7 +205,7 @@ export async function renderContractPdf(snapshot: ContractSnapshot) {
       ["City / State / ZIP", details.buyerCityStateZip || snapshot.buyerLocation], ["Primary phone", snapshot.buyerPhone], ["Email", snapshot.buyerEmail], ["Emergency contact", details.buyerEmergencyContact],
     ]);
     detailSection("Puppy description and animal history", [
-      ["Registered / call name", snapshot.puppyName], ["Breed", "Chihuahua"], ["Sex", snapshot.puppySex], ["Date of birth", date(snapshot.puppyBirthDate)],
+      ["Registered / call name", snapshot.puppyName], ["Breed", snapshot.puppyBreed || "Dog"], ["Sex", snapshot.puppySex], ["Date of birth", date(snapshot.puppyBirthDate)],
       ["Age at transfer", details.puppyAgeAtTransfer], ["Color / markings", snapshot.puppyColor], ["Coat type", details.puppyCoatType], ["Current weight", details.puppyCurrentWeight],
       ["Estimated adult size (not guaranteed)", details.estimatedAdultSize], ["Registry", details.registry], ["Registration number / pending status", details.registrationNumber],
       ["Litter number / internal ID", details.litterInternalId || snapshot.litterName], ["Very small / Micro-Toy designation", yesNo(snapshot.microToy)],
@@ -235,7 +236,7 @@ export async function renderContractPdf(snapshot: ContractSnapshot) {
       const reservation = Number(details.reservationCreditCents ?? 0);
       const additional = Number(details.additionalPaymentsCents ?? 0);
       detailSection("Sale and payment summary", [
-        ["Cash price of puppy", money(snapshot.salePriceCents)], ["Virginia sales tax, if applicable", money(salesTax)], ["Transport / delivery", money(transport)],
+        ["Cash price of puppy", money(snapshot.salePriceCents)], ["Sales tax, if applicable", money(salesTax)], ["Transport / delivery", money(transport)],
         ["Other disclosed purchase charges", money(other)], ["Total sale price", money(snapshot.salePriceCents + salesTax + transport + other)],
         ["Deposit / reservation credit", money(reservation)], ["Additional payments received", money(additional)], ["Total payments recorded", money(snapshot.depositCents)],
         ["Balance due before transfer", money(snapshot.balanceCents)], ["Balance due date", date(snapshot.balanceDueDate)], ["Payment method", details.paymentMethod],
@@ -277,7 +278,7 @@ export async function renderContractPdf(snapshot: ContractSnapshot) {
     ensure(78);
     section("Electronic signature");
     textBlock("This document is awaiting the Buyer's electronic signature in the secure puppy portal.", { font: italic, size: 9.5, color: muted });
-    if (details?.sellerRepresentative) textBlock(`Prepared and issued through SWVAOS by ${details.sellerRepresentative}.`, { size: 8.5, color: muted });
+    if (details?.sellerRepresentative) textBlock(`Prepared and issued through Breeder Portal by ${details.sellerRepresentative}.`, { size: 8.5, color: muted });
     return pdf.save();
   }
 
@@ -316,7 +317,7 @@ export async function renderContractPdf(snapshot: ContractSnapshot) {
   section("Electronic signature declaration");
   textBlock(`By typing the legal name “${signature.signerName},” separately consenting to electronic records and signatures, and submitting the signature through the secure puppy portal, the signer adopted that typed name as the signer's electronic signature on this exact agreement.`, { size: 9.2, font: bold, gap: 7 });
   textBlock("The signature record, timestamp, network address, browser/device information, consent confirmations, agreement identifier, and SHA-256 audit identifier are maintained together as the electronic transaction record.", { size: 8.8, color: muted, gap: 6 });
-  if (details?.sellerRepresentative) textBlock(`Seller issuance record: ${details.sellerRepresentative} prepared and issued this agreement through the authenticated SWVAOS document workflow.`, { size: 8.8, color: muted, gap: 5 });
+  if (details?.sellerRepresentative) textBlock(`Seller issuance record: ${details.sellerRepresentative} prepared and issued this agreement through the authenticated Breeder Portal document workflow.`, { size: 8.8, color: muted, gap: 5 });
   textBlock("This certificate documents the available electronic-signature evidence. It does not independently determine legal enforceability, which depends on the applicable law and the surrounding facts.", { size: 7.8, font: italic, color: muted, gap: 2 });
 
   return pdf.save();

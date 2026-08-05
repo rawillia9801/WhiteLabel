@@ -2,7 +2,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf
 import type { TemplatesConfig } from "./template-defaults";
 
 type Row = Record<string, unknown>;
-type PacketInput = { puppy: Row; buyer: Row | null; litter: Row | null; dam: Row | null; sire: Row | null; updates: Row[]; events: Row[]; templates: TemplatesConfig; testCopy?: boolean };
+type PacketInput = { puppy: Row; buyer: Row | null; litter: Row | null; dam: Row | null; sire: Row | null; updates: Row[]; events: Row[]; templates: TemplatesConfig; brand: { name: string; location?: string; website?: string }; testCopy?: boolean };
 type PacketSection = { title: string; lines: string[] };
 
 const PAGE_W = 612;
@@ -84,14 +84,14 @@ function category(title: string) {
 function sectionSummary(title: string) {
   const lower = title.toLowerCase();
   if (/first 72/.test(lower)) return ["FIRST DAYS TOGETHER", "A calm and predictable beginning supports eating, sleep, bathroom routines, and bonding."];
-  if (/feeding/.test(lower)) return ["DAILY NUTRITION", "Small measured meals and direct observation help protect a young Chihuahua's energy and growth."];
+  if (/feeding/.test(lower)) return ["DAILY NUTRITION", "Age- and size-appropriate meals and direct observation support a young puppy's energy and growth."];
   if (/pup-lift|hypoglycemia/.test(lower)) return ["EMERGENCY READINESS", "Toy-breed puppies can decline quickly when blood sugar drops, so preparation and prompt action matter."];
   if (/veterinarian/.test(lower)) return ["WHEN TO SEEK CARE", "Use this page to distinguish emergency warning signs from concerns requiring a same-day veterinary call."];
   if (/vaccines|parasites|fleas|ticks|heartworms/.test(lower)) return ["PREVENTIVE HEALTH", "Accurate records and age-appropriate veterinary prevention help protect a developing puppy."];
-  if (/socialization|potty|crate|sleep|training/.test(lower)) return ["CONFIDENCE & ROUTINE", "Positive practice and consistent routines help a Chihuahua become secure, responsive, and comfortable at home."];
+  if (/socialization|potty|crate|sleep|training/.test(lower)) return ["CONFIDENCE & ROUTINE", "Positive practice and consistent routines help a puppy become secure, responsive, and comfortable at home."];
   if (/children|visitors|other pets/.test(lower)) return ["SAFE INTERACTIONS", "Tiny puppies require direct adult supervision around children, guests, and larger animals."];
   if (/grooming|dental/.test(lower)) return ["LIFELONG CARE", "Gentle early handling makes grooming, nail care, dental care, and routine examinations easier throughout life."];
-  if (/safety|poison|harness|travel/.test(lower)) return ["SAFETY FIRST", "A Chihuahua's size creates special risks from falls, escape, household hazards, and unsecured travel."];
+  if (/safety|poison|harness|travel/.test(lower)) return ["SAFETY FIRST", "A puppy's age, size, and breed can create special risks from falls, escape, household hazards, and unsecured travel."];
   if (/growth|insurance|financial/.test(lower)) return ["PLANNING AHEAD", "Weight records, insurance information, and financial preparation support timely care decisions."];
   if (/emergency plan|go-home checklist/.test(lower)) return ["READY BEFORE NEEDED", "A written plan helps every caregiver respond consistently when something changes."];
   if (/welcome home/.test(lower)) return ["WELCOME HOME", "A personal introduction to the care plan, records, and support prepared for this family."];
@@ -112,6 +112,9 @@ export async function renderPuppyPacketPdf(input: PacketInput) {
   const sire = value(input.sire, "registered_name") || value(input.sire, "name") || "Not recorded";
   const location = [value(input.buyer, "city"), value(input.buyer, "state"), value(input.buyer, "postal_code")].filter(Boolean).join(", ") || "Not recorded";
   const packetDate = formatDate(new Date().toISOString());
+  const businessName = clean(input.brand.name) || "Your Breeder";
+  const businessWebsite = clean(input.brand.website || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const businessFooter = [clean(input.brand.location), businessWebsite].filter(Boolean).join(" | ");
   const variables: Record<string, string> = {
     puppy_name: puppy,
     buyer_name: family,
@@ -128,18 +131,18 @@ export async function renderPuppyPacketPdf(input: PacketInput) {
     buyer_email: value(input.buyer, "email") || "Not recorded",
     buyer_location: location,
     packet_date: packetDate,
-    business_name: "Southwest Virginia Chihuahua",
-    business_website: "swvachihuahua.com",
-    pup_lift_website: "pup-lift.com",
-    pup_lift_phone: "1-715-888-9526",
+    business_name: businessName,
+    business_website: businessWebsite,
+    pup_lift_website: "",
+    pup_lift_phone: "",
   };
   const sections = splitSections(replaceVariables(input.templates.documents.puppy_packet.content, variables));
   const tocItems = ["Personalized Puppy and Family Record", ...sections.map((section) => section.title), "Health and Care Logs", `Notes and Records for ${puppy}`];
 
   pdf.setTitle(`${puppy}'s Personalized Puppy Care Packet`);
-  pdf.setAuthor("Southwest Virginia Chihuahua");
+  pdf.setAuthor(businessName);
   pdf.setSubject(`${puppy} - ${family}`);
-  pdf.setCreator("SWVAOS");
+  pdf.setCreator("Breeder Portal");
   pdf.setCreationDate(new Date());
 
   let pageNo = 0;
@@ -147,7 +150,7 @@ export async function renderPuppyPacketPdf(input: PacketInput) {
     pageNo += 1;
     const page = pdf.addPage([PAGE_W, PAGE_H]);
     page.drawRectangle({ x: 0, y: PAGE_H - 14, width: PAGE_W, height: 14, color: teal });
-    page.drawText("SOUTHWEST VIRGINIA CHIHUAHUA", { x: MARGIN, y: PAGE_H - 36, size: 7, font: bold, color: deep });
+    page.drawText(businessName.toUpperCase().slice(0, 72), { x: MARGIN, y: PAGE_H - 36, size: 7, font: bold, color: deep });
     page.drawText(clean(runningTitle).toUpperCase().slice(0, 76), { x: MARGIN, y: PAGE_H - 49, size: 6.5, font: regular, color: muted });
     page.drawLine({ start: { x: MARGIN, y: 45 }, end: { x: PAGE_W - MARGIN, y: 45 }, thickness: 0.6, color: line });
     page.drawText(clean(`Personalized for ${family} and ${puppy}`), { x: MARGIN, y: 29, size: 6.8, font: regular, color: muted });
@@ -173,7 +176,7 @@ export async function renderPuppyPacketPdf(input: PacketInput) {
   cover.drawRectangle({ x: 24, y: 24, width: PAGE_W - 48, height: PAGE_H - 48, borderColor: rgb(0.32, 0.72, 0.7), borderWidth: 1 });
   cover.drawCircle({ x: PAGE_W - 70, y: PAGE_H - 70, size: 120, color: rgb(0.04, 0.34, 0.38), opacity: 0.7 });
   cover.drawCircle({ x: 40, y: 90, size: 95, color: rgb(0.44, 0.36, 0.18), opacity: 0.35 });
-  cover.drawText("SOUTHWEST VIRGINIA CHIHUAHUA", { x: 52, y: 742, size: 8, font: bold, color: rgb(0.7, 0.95, 0.92) });
+  cover.drawText(businessName.toUpperCase().slice(0, 72), { x: 52, y: 742, size: 8, font: bold, color: rgb(0.7, 0.95, 0.92) });
   cover.drawText("PERSONALIZED GO-HOME COLLECTION", { x: 52, y: 728, size: 6.7, font: regular, color: rgb(0.72, 0.83, 0.83) });
   cover.drawRectangle({ x: 52, y: 588, width: 72, height: 72, color: rgb(1, 1, 1), opacity: 0.1, borderColor: rgb(0.45, 0.8, 0.77), borderWidth: 1 });
   const initials = puppy.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "SW";
@@ -190,7 +193,7 @@ export async function renderPuppyPacketPdf(input: PacketInput) {
     cover.drawText(label, { x: x + 12, y: y + 39, size: 6.5, font: bold, color: rgb(0.55, 0.9, 0.86) });
     drawWrapped(cover, fieldValue, x + 12, y + 22, { size: 10, font: bold, maxWidth: 141, color: rgb(1, 1, 1), lineHeight: 11 });
   });
-  const features = [["01", "EVERYDAY CARE", "Feeding, routines, training, grooming, and settling in."], ["02", "HEALTH & SAFETY", "Pup-Lift readiness, prevention, warning signs, and emergencies."], ["03", "PERSONAL RECORDS", "Weights, care history, important documents, and family notes."]];
+  const features = [["01", "EVERYDAY CARE", "Feeding, routines, training, grooming, and settling in."], ["02", "HEALTH & SAFETY", "Emergency readiness, prevention, warning signs, and urgent care."], ["03", "PERSONAL RECORDS", "Weights, care history, important documents, and family notes."]];
   features.forEach(([num, label, description], index) => {
     const x = 52 + index * 170;
     cover.drawRectangle({ x, y: 120, width: 155, height: 96, color: rgb(1, 1, 1), opacity: 0.07, borderColor: rgb(0.35, 0.66, 0.65), borderWidth: 0.6 });
@@ -198,7 +201,7 @@ export async function renderPuppyPacketPdf(input: PacketInput) {
     cover.drawText(label, { x: x + 12, y: 170, size: 7.5, font: bold, color: rgb(1, 1, 1) });
     drawWrapped(cover, description, x + 12, 151, { size: 7.3, maxWidth: 131, color: rgb(0.75, 0.85, 0.85), lineHeight: 10 });
   });
-  cover.drawText("Marion, Virginia | swvachihuahua.com | Pup-Lift: pup-lift.com | 1-715-888-9526", { x: 52, y: 62, size: 7, font: regular, color: rgb(0.72, 0.83, 0.83) });
+  if (businessFooter) cover.drawText(businessFooter.slice(0, 100), { x: 52, y: 62, size: 7, font: regular, color: rgb(0.72, 0.83, 0.83) });
   if (input.testCopy) cover.drawText("TEST COPY", { x: PAGE_W - 52 - bold.widthOfTextAtSize("TEST COPY", 11), y: 742, size: 11, font: bold, color: rgb(1, 0.68, 0.62) });
 
   const toc = addBasePage("Table of Contents");

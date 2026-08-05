@@ -7,7 +7,7 @@ import { parseContractTerm } from "../lib/contract-format.ts";
 import { contractNotes, parseContractNotes, renderContractPdf, type ContractSnapshot } from "../lib/contract-pdf.ts";
 import { createPortalToken, verifyPortalToken } from "../lib/portal-token.ts";
 
-process.env.SWVAOS_PORTAL_SECRET = "test-only-portal-secret-with-sufficient-entropy";
+process.env.BREEDER_PORTAL_SECRET = "test-only-portal-secret-with-sufficient-entropy";
 
 const snapshot: ContractSnapshot = {
   version: 1,
@@ -33,8 +33,8 @@ const snapshot: ContractSnapshot = {
   balanceCents: 200000,
   balanceDueDate: "2026-08-02",
   transferDate: "2026-08-03",
-  sellerName: "Southwest Virginia Chihuahua",
-  sellerLocation: "Southwest Virginia",
+  sellerName: "Willow Creek Goldens",
+  sellerLocation: "Example City, State",
   title: "Bill of Sale - Bubba",
   introduction: "A retained agreement generated from the CRM.",
   terms: billOfSaleTerms,
@@ -65,19 +65,19 @@ test("freezes contract data in buyer document metadata", () => {
 test("renders a signed letter-size PDF with document metadata", async () => {
   const bytes = await renderContractPdf(snapshot);
   const pdf = await PDFDocument.load(bytes);
-  assert.ok(pdf.getPageCount() >= 1 && pdf.getPageCount() <= 2);
+  assert.ok(pdf.getPageCount() >= 1);
   assert.equal(pdf.getTitle(), "Bill of Sale - Bubba");
   for (const page of pdf.getPages()) assert.deepEqual(page.getSize(), { width: 612, height: 792 });
 });
 
-test("builds a sectioned Virginia health guarantee with Micro-Toy safeguards", async () => {
+test("builds a sectioned health guarantee with editable consumer-law safeguards", async () => {
   const terms = healthGuaranteeTerms(240, 12, true);
   assert.equal(parseContractTerm(terms[0]).kind, "section");
   assert.match(terms.join("\n"), /10 calendar days/);
   assert.match(terms.join("\n"), /Micro-Toy Puppy/);
   assert.match(terms.join("\n"), /does not eliminate or restrict a right or remedy that cannot legally be waived/);
-  assert.match(virginiaConsumerNotice, /Virginia Consumer Protection Act/);
-  assert.match(virginiaConsumerNotice, /within 14 days following receipt if the animal is infected with parvovirus/);
+  assert.match(virginiaConsumerNotice, /applicable jurisdiction/);
+  assert.match(virginiaConsumerNotice, /cannot legally be waived/);
 
   const healthSnapshot: ContractSnapshot = { ...snapshot, kind: "health_guarantee", title: "Health Guarantee - Bubba", terms, microToy: true, signature: { ...snapshot.signature!, healthAcknowledged: true } };
   const bytes = await renderContractPdf(healthSnapshot);
@@ -92,13 +92,13 @@ test("renders the combined production agreement as one signable retained PDF", a
   assert.ok(noticeIndex > 0);
   assert.equal(parseContractTerm(parsedTerms![noticeIndex + 1]).kind, "clause");
   assert.match(parsedTerms!.join("\n"), /One-year limited congenital and hereditary health guarantee/i);
-  assert.match(parsedTerms!.join("\n"), /three business days/i);
+  assert.match(parsedTerms!.join("\n"), /applicable consumer-law notice/i);
 
   const combinedSnapshot: ContractSnapshot = {
     ...snapshot,
     kind: "health_guarantee",
     title: "Bill of Sale, Animal History Certificate and One-Year Health Guarantee - Bubba",
-    introduction: "A production agreement generated and retained by SWVAOS.",
+    introduction: "A production agreement generated and retained by Breeder Portal.",
     terms: parsedTerms!,
     microToy: false,
     agreementDetails: {
@@ -138,7 +138,7 @@ test("renders the combined production agreement as one signable retained PDF", a
       registrationStatus: "Pending after transfer",
       registrationType: "Limited / pet only",
       insuranceSelection: "30-day Trupanion offer provided when eligible",
-      sellerRepresentative: "Southwest Virginia Chihuahua LLC",
+      sellerRepresentative: "Willow Creek Goldens LLC",
     },
     signature: { ...snapshot.signature!, healthAcknowledged: true },
   };

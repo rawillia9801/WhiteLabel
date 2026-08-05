@@ -16,6 +16,8 @@ type SendInput = {
 };
 
 type OwnerNotificationInput = {
+  kennelId?: string;
+  kennelName?: string;
   subject: string;
   body: string;
   buyerId?: number | null;
@@ -33,15 +35,15 @@ type PortalAccountSetupInput = {
 };
 
 const businessDefaults: Variables = {
-  business_name: "Southwest Virginia Chihuahua",
-  support_email: "support@swvachihuahua.com",
-  support_phone: "855-506-5425",
+  business_name: "Your Breeder",
+  support_email: "",
+  support_phone: "",
 };
 
-const smtpUser = () => process.env.SMTP_USER?.trim() || "support@swvachihuahua.com";
-const configured = () => Boolean(process.env.SMTP_PASSWORD?.trim());
+const smtpUser = () => process.env.SMTP_USER?.trim() || "";
+const configured = () => Boolean(process.env.SMTP_PASSWORD?.trim() && smtpUser());
 const fromEmail = () => process.env.SMTP_FROM_EMAIL?.trim() || smtpUser();
-const ownerEmail = () => process.env.SWVAOS_OWNER_EMAIL?.trim() || "chichi@swvachihuahua.com";
+const ownerEmail = () => process.env.BREEDER_PORTAL_OWNER_EMAIL?.trim() || "";
 
 export function getEmailStatus() {
   return {
@@ -50,7 +52,7 @@ export function getEmailStatus() {
     port: Number(process.env.SMTP_PORT) || 465,
     secure: (Number(process.env.SMTP_PORT) || 465) === 465,
     fromEmail: fromEmail(),
-    fromName: process.env.SMTP_FROM_NAME?.trim() || "Southwest Virginia Chihuahua",
+    fromName: process.env.SMTP_FROM_NAME?.trim() || "Breeder Portal",
     ownerEmail: ownerEmail(),
   };
 }
@@ -111,29 +113,35 @@ async function logEmail(title: string, buyerId: number | null | undefined, statu
 }
 
 export async function sendOwnerNotification(input: OwnerNotificationInput) {
-  const to = ownerEmail();
+  const kennelResponse = input.kennelId
+    ? await supabaseRequest(`rest/v1/kennels?select=name,contact_email&id=eq.${encodeURIComponent(input.kennelId)}&limit=1`, { cache: "no-store" })
+    : null;
+  const kennelRows = kennelResponse?.ok ? await kennelResponse.json() as Array<Record<string, unknown>> : [];
+  const kennel = kennelRows[0] || {};
+  const kennelName = input.kennelName || String(kennel.name || "Breeder Portal");
+  const to = String(kennel.contact_email || ownerEmail());
   if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { sent: false, skipped: "No valid owner notification email." };
   if (!configured()) return { sent: false, skipped: "SMTP is not configured." };
 
-  const subject = `[SWVAOS ${input.category || "General"}] ${input.subject}`.replace(/[\r\n]+/g, " ").trim().slice(0, 250);
+  const subject = `[${kennelName} ${input.category || "General"}] ${input.subject}`.replace(/[\r\n]+/g, " ").trim().slice(0, 250);
   const body = input.body.trim();
   const status = getEmailStatus();
   const eventTitle = `Owner notification: ${input.category || "General"} - ${input.subject}`.slice(0, 240);
 
   try {
     const result = await transporter().sendMail({
-      from: { name: status.fromName, address: status.fromEmail },
+      from: { name: kennelName, address: status.fromEmail },
       replyTo: process.env.SMTP_REPLY_TO?.trim() || status.fromEmail,
       to,
       subject,
       text: body,
-      html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#173536;max-width:680px"><div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#087f84;margin-bottom:12px">SWVAOS ${escapeHtml(input.category || "GENERAL").toUpperCase()} NOTIFICATION</div>${escapeHtml(body).replace(/\n/g, "<br>")}</div>`,
+      html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#173536;max-width:680px"><div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#087f84;margin-bottom:12px">${escapeHtml(kennelName.toUpperCase())} ${escapeHtml(input.category || "GENERAL").toUpperCase()} NOTIFICATION</div>${escapeHtml(body).replace(/\n/g, "<br>")}</div>`,
     });
-    await logEmail(eventTitle, input.buyerId, "Completed", `Owner recipient: ${to}\nSubject: ${subject}\nProvider message: ${result.messageId}`);
+    await logEmail(eventTitle, input.buyerId, "Completed", `Owner recipient: ${to}\nSubject: ${subject}\nProvider message: ${result.messageId}`, input.kennelId);
     return { sent: true, messageId: result.messageId };
   } catch (error) {
     const message = error instanceof Error ? error.message : "SMTP delivery failed.";
-    await logEmail(eventTitle, input.buyerId, "Failed", `Owner recipient: ${to}\nSubject: ${subject}\nError: ${message}`);
+    await logEmail(eventTitle, input.buyerId, "Failed", `Owner recipient: ${to}\nSubject: ${subject}\nError: ${message}`, input.kennelId);
     throw new Error(`Owner notification failed: ${message}`);
   }
 }
@@ -168,7 +176,7 @@ export async function sendPortalAccountSetupEmail(input: PortalAccountSetupInput
 
   try {
     const result = await transporter().sendMail({
-      from: { name: status.fromName, address: status.fromEmail },
+      from: { name: kennelName, address: status.fromEmail },
       replyTo: process.env.SMTP_REPLY_TO?.trim() || status.fromEmail,
       to,
       subject,
@@ -189,18 +197,27 @@ export async function sendTemplateEmail(input: SendInput) {
   if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { sent: false, skipped: "No valid recipient email." };
   if (!configured()) return { sent: false, skipped: "SMTP is not configured." };
   const config = await getTemplatesConfig(input.kennelId);
+  const kennelResponse = await supabaseRequest(`rest/v1/kennels?select=name,contact_email,contact_phone&id=eq.${encodeURIComponent(input.kennelId)}&limit=1`, { cache: "no-store" });
+  const kennelRows = kennelResponse.ok ? await kennelResponse.json() as Array<Record<string, unknown>> : [];
+  const kennel = kennelRows[0] || {};
+  const kennelVariables: Variables = {
+    business_name: String(kennel.name || businessDefaults.business_name),
+    support_email: String(kennel.contact_email || ""),
+    support_phone: String(kennel.contact_phone || ""),
+  };
   const template = config.emails[input.templateKey];
   if (!template.enabled) return { sent: false, skipped: "This email template is disabled." };
   const eventTitle = `Email: ${template.name}${input.dedupeKey ? ` [${input.dedupeKey}]` : ""}`.slice(0, 240);
   if (input.dedupeKey && await eventExists(eventTitle, input.kennelId, input.buyerId)) return { sent: false, skipped: "Already sent." };
 
-  const subject = render(template.subject, input.variables ?? {}).replace(/[\r\n]+/g, " ").trim();
-  const body = render(template.body, input.variables ?? {}).trim();
+  const variables = { ...kennelVariables, ...(input.variables ?? {}) };
+  const subject = render(template.subject, variables).replace(/[\r\n]+/g, " ").trim();
+  const body = render(template.body, variables).trim();
   const status = getEmailStatus();
 
   try {
     const result = await transporter().sendMail({
-      from: { name: status.fromName, address: status.fromEmail },
+      from: { name: String(kennelVariables.business_name), address: status.fromEmail },
       replyTo: process.env.SMTP_REPLY_TO?.trim() || status.fromEmail,
       to,
       subject,

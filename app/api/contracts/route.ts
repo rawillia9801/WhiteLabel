@@ -2,6 +2,7 @@ import { prepareContractPackage } from "../../../db/contracts";
 import { breederSessionFromRequest, requireAdminSession } from "../../../lib/admin-session";
 import { sendBuyerAutomation } from "../../../lib/automation-email";
 import { getTemplatesConfig } from "../../../lib/templates-config";
+import { findKennelById } from "../../../lib/supabase-auth";
 
 const cents = (value: unknown) => Math.round(Math.max(0, Number(value) || 0) * 100);
 const terms = (value: unknown) => {
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
   try {
     const session = breederSessionFromRequest(request)!;
     const body = await request.json() as Record<string, unknown>;
-    const config = await getTemplatesConfig(session.kennelId);
+    const [config, kennel] = await Promise.all([getTemplatesConfig(session.kennelId), findKennelById(session.kennelId)]);
     const result = await prepareContractPackage({
       kennelId: session.kennelId,
       buyerId: Number(body.buyer_id),
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
       microToy: body.micro_toy === true || body.micro_toy === "on",
       billTerms: terms(body.bill_terms) ?? (config.documents.bill_of_sale.enabled ? terms(config.documents.bill_of_sale.content) : undefined),
       healthTerms: terms(body.health_terms) ?? (config.documents.health_guarantee.enabled ? terms(config.documents.health_guarantee.content) : undefined),
+      sellerName: kennel?.legal_name || kennel?.name,
+      sellerLocation: kennel?.location || "",
+      puppyBreed: kennel?.primary_breed || "Dog",
     });
     const origin = new URL(request.url).origin;
     const portalUrl = `${origin}/portal/${result.token}`;

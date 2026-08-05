@@ -30,6 +30,9 @@ export type ContractPackageInput = {
   microToy?: boolean;
   billTerms?: string[];
   healthTerms?: string[];
+  sellerName?: string;
+  sellerLocation?: string;
+  puppyBreed?: string;
 };
 
 export type PortalRequestInput = {
@@ -46,10 +49,10 @@ const positiveId = (value: unknown) => Number.isInteger(Number(value)) && Number
 const isPaymentRow = (row: Row) => ["Payment", "Deposit"].includes(text(row, "type"));
 const isSettledRow = (row: Row) => ["Paid", "Complete"].includes(text(row, "status"));
 
-function sellerDetails() {
+function sellerDetails(input?: { sellerName?: string; sellerLocation?: string }) {
   return {
-    name: process.env.SWVAOS_SELLER_NAME?.trim() || "Southwest Virginia Chihuahua LLC",
-    location: process.env.SWVAOS_SELLER_LOCATION?.trim() || "Southwest Virginia",
+    name: input?.sellerName?.trim() || "The Seller",
+    location: input?.sellerLocation?.trim() || "",
   };
 }
 
@@ -181,7 +184,7 @@ export async function prepareContractPackage(input: ContractPackageInput) {
   const examHours = Math.max(1, Math.min(336, Number(input.examHours ?? 240)));
   const guaranteeMonths = Math.max(1, Math.min(120, Number(input.guaranteeMonths ?? 12)));
   const microToy = input.microToy === true;
-  const seller = sellerDetails();
+  const seller = sellerDetails(input);
   const groupId = crypto.randomUUID();
   const createdAt = new Date().toISOString();
   const unloggedDepositCents = Math.max(0, depositCents - paidCents);
@@ -218,6 +221,7 @@ export async function prepareContractPackage(input: ContractPackageInput) {
     buyerLocation: [text(buyer, "city"), text(buyer, "state")].filter(Boolean).join(", "),
     puppyId,
     puppyName: text(puppy, "name") || `Puppy #${puppyId}`,
+    puppyBreed: input.puppyBreed?.trim() || "Dog",
     puppySex: text(puppy, "sex"),
     puppyColor: text(puppy, "color"),
     puppyBirthDate: text(puppy, "birth_date"),
@@ -316,23 +320,26 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
   const tenantFilter = kennelId ? `&kennel_id=eq.${encodeURIComponent(kennelId)}` : "";
   const buyer = await first<Row>("buyers", `select=*&id=eq.${buyerId}${tenantFilter}`);
   if (!buyer) return null;
-  const [puppies, transactions, documents] = await Promise.all([
-    select<Row>("puppies", `select=*&buyer_id=eq.${buyerId}&order=created_at.desc`),
-    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}&order=created_at.desc`),
-    select<DocumentRow>("buyer_documents", `select=*&buyer_id=eq.${buyerId}&order=created_at.desc`),
+  const activeKennelId = kennelId || text(buyer, "kennel_id");
+  const scoped = activeKennelId ? `&kennel_id=eq.${encodeURIComponent(activeKennelId)}` : "";
+  const [kennel, puppies, transactions, documents] = await Promise.all([
+    activeKennelId ? first<Row>("kennels", `select=name,contact_email,contact_phone&id=eq.${encodeURIComponent(activeKennelId)}`) : Promise.resolve(null),
+    select<Row>("puppies", `select=*&buyer_id=eq.${buyerId}${scoped}&order=created_at.desc`),
+    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}${scoped}&order=created_at.desc`),
+    select<DocumentRow>("buyer_documents", `select=*&buyer_id=eq.${buyerId}${scoped}&order=created_at.desc`),
   ]);
   const puppyIds = puppies.map((puppy) => Number(puppy.id));
   const litterIds = [...new Set(puppies.map((puppy) => positiveId(puppy.litter_id)).filter((id): id is number => Boolean(id)))];
   const today = new Date().toISOString().slice(0, 10);
   const [updates, links, litters, buyerActivity, puppyEvents] = await Promise.all([
-    puppyIds.length ? select<Row>("puppy_updates", `select=*&published=eq.true&puppy_id=in.(${puppyIds.join(",")})&order=created_at.desc`) : Promise.resolve([]),
-    documents.length ? select<Row>("buyer_document_puppies", `select=*&document_id=in.(${documents.map((document) => document.id).join(",")})`) : Promise.resolve([]),
-    litterIds.length ? select<Row>("litters", `select=*&id=in.(${litterIds.join(",")})`) : Promise.resolve([]),
-    select<Row>("events", `select=*&related_type=eq.buyers&related_id=eq.${buyerId}&order=event_date.desc,event_time.desc&limit=100`),
-    puppyIds.length ? select<Row>("events", `select=*&related_type=eq.puppies&related_id=in.(${puppyIds.join(",")})&event_date=gte.${today}&status=neq.Completed&order=event_date.asc,event_time.asc`) : Promise.resolve([]),
+    puppyIds.length ? select<Row>("puppy_updates", `select=*&published=eq.true&puppy_id=in.(${puppyIds.join(",")})${scoped}&order=created_at.desc`) : Promise.resolve([]),
+    documents.length ? select<Row>("buyer_document_puppies", `select=*&document_id=in.(${documents.map((document) => document.id).join(",")})${scoped}`) : Promise.resolve([]),
+    litterIds.length ? select<Row>("litters", `select=*&id=in.(${litterIds.join(",")})${scoped}`) : Promise.resolve([]),
+    select<Row>("events", `select=*&related_type=eq.buyers&related_id=eq.${buyerId}${scoped}&order=event_date.desc,event_time.desc&limit=100`),
+    puppyIds.length ? select<Row>("events", `select=*&related_type=eq.puppies&related_id=in.(${puppyIds.join(",")})${scoped}&event_date=gte.${today}&status=neq.Completed&order=event_date.asc,event_time.asc`) : Promise.resolve([]),
   ]);
   const parentIds = [...new Set(litters.flatMap((litter) => [positiveId(litter.dam_id), positiveId(litter.sire_id)]).filter((id): id is number => Boolean(id)))];
-  const parents = parentIds.length ? await select<Row>("dogs", `select=id,name,registered_name&id=in.(${parentIds.join(",")})`) : [];
+  const parents = parentIds.length ? await select<Row>("dogs", `select=id,name,registered_name&id=in.(${parentIds.join(",")})${scoped}`) : [];
   const contracts = documents.map((document) => contractSummary(document, links.filter((link) => Number(link.document_id) === document.id).map((link) => Number(link.puppy_id)))).filter(Boolean);
   const payments = transactions.filter(isPaymentRow);
   const latestBills = new Map<number, NonNullable<(typeof contracts)[number]>>();
@@ -381,8 +388,8 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
     upcomingEvents: upcomingEvents.map((event) => ({ id: Number(event.id), title: text(event, "title"), eventType: text(event, "event_type"), date: text(event, "event_date"), time: text(event, "event_time"), location: text(event, "location"), status: text(event, "status"), puppyName: text(event, "related_type") === "puppies" ? text(puppies.find((puppy) => Number(puppy.id) === Number(event.related_id)), "name") : "" })),
     requests: requests.map((event) => ({ id: Number(event.id), kind: text(event, "event_type") === "Transportation" ? "transportation" : "support", subject: text(event, "title"), status: text(event, "status"), requestedDate: text(event, "event_date"), createdAt: text(event, "created_at") })),
     support: {
-      phone: process.env.SWVAOS_SUPPORT_PHONE?.trim() || "",
-      email: process.env.SWVAOS_SUPPORT_EMAIL?.trim() || "",
+      phone: text(kennel, "contact_phone"),
+      email: text(kennel, "contact_email"),
     },
     payments: {
       saleTotalCents,
@@ -402,7 +409,7 @@ export async function getPuppyPortal(token: string) {
 export async function createPortalRequest(token: string, input: PortalRequestInput) {
   const claims = await verifyPortalToken(token);
   if (!claims) throw new Error("This puppy portal link is invalid or has expired.");
-  const buyer = await first<Row>("buyers", `select=id&id=eq.${claims.buyerId}`);
+  const buyer = await first<Row>("buyers", `select=id&id=eq.${claims.buyerId}&kennel_id=eq.${encodeURIComponent(claims.kennelId)}`);
   if (!buyer) throw new Error("The family account was not found.");
   const subject = input.subject.trim().replace(/\s+/g, " ").slice(0, 120);
   const message = input.message.trim().slice(0, 2000);
@@ -413,6 +420,7 @@ export async function createPortalRequest(token: string, input: PortalRequestInp
   const now = new Date().toISOString();
   const eventType = input.kind === "transportation" ? "Transportation" : "Portal Request";
   return insert<Row>("events", {
+    kennel_id: claims.kennelId,
     title: subject,
     event_type: eventType,
     event_date: requestedDate,
@@ -430,7 +438,7 @@ export async function createPortalRequest(token: string, input: PortalRequestInp
 export async function getPortalDocument(token: string, documentId: number) {
   const claims = await verifyPortalToken(token);
   if (!claims) return null;
-  const document = await first<DocumentRow>("buyer_documents", `select=*&id=eq.${documentId}&buyer_id=eq.${claims.buyerId}`);
+  const document = await first<DocumentRow>("buyer_documents", `select=*&id=eq.${documentId}&buyer_id=eq.${claims.buyerId}&kennel_id=eq.${encodeURIComponent(claims.kennelId)}`);
   if (!document) return null;
   const object = await downloadObject(document.object_key);
   return object.ok ? { document, object } : null;
@@ -439,13 +447,13 @@ export async function getPortalDocument(token: string, documentId: number) {
 export async function signPortalContract(token: string, documentId: number, signerName: string, ipAddress: string, userAgent: string, consent: { electronicConsent: boolean; healthAcknowledged: boolean }) {
   const claims = await verifyPortalToken(token);
   if (!claims) throw new Error("This puppy portal link is invalid or has expired.");
-  const document = await first<DocumentRow>("buyer_documents", `select=*&id=eq.${documentId}&buyer_id=eq.${claims.buyerId}`);
+  const document = await first<DocumentRow>("buyer_documents", `select=*&id=eq.${documentId}&buyer_id=eq.${claims.buyerId}&kennel_id=eq.${encodeURIComponent(claims.kennelId)}`);
   if (!document) throw new Error("The contract was not found.");
   const snapshot = parseContractNotes(document.notes);
   if (!snapshot || snapshot.buyerId !== claims.buyerId) throw new Error("The contract is not available in this portal.");
   if (snapshot.status === "signed") return contractSummary(document);
   if (!consent.electronicConsent) throw new Error("Separately consent to use electronic records and an electronic signature.");
-  if (snapshot.kind === "health_guarantee" && !consent.healthAcknowledged) throw new Error("Acknowledge the Health Guarantee and Virginia Consumer Notice before signing.");
+  if (snapshot.kind === "health_guarantee" && !consent.healthAcknowledged) throw new Error("Acknowledge the Health Guarantee and applicable consumer-law notice before signing.");
   const cleanedName = signerName.trim().replace(/\s+/g, " ").slice(0, 120);
   if (cleanedName.length < 3) throw new Error("Enter the buyer's full legal name.");
   const signedAt = new Date().toISOString();
@@ -459,7 +467,7 @@ export async function signPortalContract(token: string, documentId: number, sign
   };
   const pdf = await renderContractPdf(signedSnapshot);
   await uploadPdf(document.object_key, pdf, true);
-  const updated = await update("buyer_documents", `id=eq.${document.id}`, {
+  const updated = await update("buyer_documents", `id=eq.${document.id}&kennel_id=eq.${encodeURIComponent(claims.kennelId)}`, {
     title: `Signed ${snapshot.title}`,
     file_name: document.file_name.replace(/\.pdf$/i, "-signed.pdf"),
     size_bytes: pdf.length,
@@ -468,6 +476,7 @@ export async function signPortalContract(token: string, documentId: number, sign
   }) as DocumentRow;
   try {
     await insert("events", {
+      kennel_id: claims.kennelId,
       title: `${snapshot.title} signed by ${cleanedName}`,
       event_type: "Contract",
       event_date: signedAt.slice(0, 10),

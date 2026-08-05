@@ -88,7 +88,7 @@ export function TemplatesCenter({ initialConfig, onSaved }: { initialConfig: Tem
       <div>
         <span className="eyebrow">AUTOMATED COMMUNICATIONS & DOCUMENTS</span>
         <h2>Prepare the complete buyer package from one workspace</h2>
-        <p>The Complete Personalized Puppy Packet includes the binder cover, puppy and family record, table of contents, full Chihuahua care guide, Pup-Lift information, emergency guidance, and go-home checklist. Edit the wording here; SWVAOS fills the selected puppy and buyer throughout the packet.</p>
+        <p>The Complete Personalized Puppy Packet includes the binder cover, puppy and family record, table of contents, breed care guide, emergency guidance, and go-home checklist. Edit the wording here; Breeder Portal fills the selected puppy and buyer throughout the packet.</p>
         <div style={{ marginTop: 16 }}><Link className="primary-action action-link" href="/puppy-packet"><FileSignature size={17} /> Prepare for Buyer</Link></div>
       </div>
       <div className={`smtp-card ${status?.configured ? "ready" : "needs-setup"}`}>

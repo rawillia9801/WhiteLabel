@@ -16,7 +16,12 @@ function wrap(font: PDFFont, text: string, size: number, width: number) {
   return lines;
 }
 
-export async function renderPuppyApplicationPdf(introduction = "Thank you for considering Southwest Virginia Chihuahua. This application helps us evaluate safety, care readiness, household fit, and puppy preferences. Submission does not guarantee approval or reserve a puppy.") {
+export async function renderPuppyApplicationPdf(
+  introduction = "Thank you for considering our breeding program. This application helps us evaluate safety, care readiness, household fit, and puppy preferences. Submission does not guarantee approval or reserve a puppy.",
+  brandName = "Breeder Portal",
+  customPolicyNotice = "",
+  breedName = "Dogs",
+) {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -34,8 +39,8 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   const newPage = () => {
     page = pdf.addPage([width, height]);
     y = height - 42;
-    page.drawText("SOUTHWEST VIRGINIA CHIHUAHUA | PUPPY APPLICATION", { x: margin, y, size: 8, font: bold, color: green });
-    page.drawText("swvachihuahua.com | 855-506-5425 | info@swvchihuahua.com", { x: margin, y: 28, size: 7.5, font: regular, color: green });
+    page.drawText(`${brandName.toUpperCase()} | PUPPY APPLICATION`, { x: margin, y, size: 8, font: bold, color: green });
+    page.drawText("Generated securely by Breeder Portal", { x: margin, y: 28, size: 7.5, font: regular, color: green });
     y -= 24;
   };
   const ensure = (space: number) => { if (y - space < 48) newPage(); };
@@ -113,9 +118,9 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   field("Current cats", "Number: ______   Details: __________________________");
   field("Other animals"); field("Animals vaccinated?", "[ ] Yes   [ ] No   [ ] Not applicable");
   field("Animals altered?", "[ ] All   [ ] Some   [ ] None   [ ] N/A");
-  field("Past Chihuahua experience", "[ ] None   [ ] Some   [ ] Extensive");
+  field(`Past ${breedName} experience`, "[ ] None   [ ] Some   [ ] Extensive");
   field("Past toy-breed experience", "[ ] None   [ ] Some   [ ] Extensive");
-  paragraph("Describe your experience with Chihuahuas, toy breeds, puppies, or other dogs:"); lines();
+  paragraph(`Describe your experience with ${breedName}, puppies, or other dogs:`); lines();
   paragraph("Have you ever surrendered, rehomed, returned, or given away an animal? If yes, explain:"); lines();
   paragraph("Has an animal in your care ever been seized, neglected, seriously injured through lack of supervision, or ordered removed? If yes, explain:"); lines();
 
@@ -123,7 +128,7 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   field("Planned veterinary practice");
   field("Emergency veterinary hospital");
   field("Practice accepts new patients", "[ ] Confirmed   [ ] Not yet confirmed   [ ] Existing client");
-  paragraph("Southwest Virginia Chihuahua does not contact an applicant's veterinarian as part of the application review. The applicant is responsible for selecting a licensed veterinarian, confirming access to routine and emergency care, and completing the post-transfer examination required by the final agreement.");
+  paragraph("The breeder does not contact an applicant's veterinarian as part of the application review. The applicant is responsible for selecting a licensed veterinarian, confirming access to routine and emergency care, and completing the post-transfer examination required by the final agreement.");
 
   heading("6. Puppy Preferences");
   field("Preferred sex", "[ ] Male   [ ] Female   [ ] Either"); field("Preferred coat", "[ ] Short   [ ] Long   [ ] Either");
@@ -135,12 +140,12 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   paragraph("Which preferences are essential, and which are flexible?"); lines();
 
   heading("7. Naturally Small, Micro, and Micro-Toy Puppy Policy");
-  notice("IMPORTANT: SOUTHWEST VIRGINIA CHIHUAHUA DOES NOT BREED FOR EXTREME SMALL SIZE", "We select for health, structure, temperament, and overall quality. Occasionally, a puppy may remain exceptionally small despite responsible breeding. Labels such as Micro or Micro-Toy are descriptive business terms only and are not separate recognized Chihuahua varieties. Adult weight or final size cannot be guaranteed.");
+  notice("IMPORTANT: THE BREEDER DOES NOT BREED FOR EXTREME SMALL SIZE", "The breeding program selects for health, structure, temperament, and overall quality. Occasionally, a puppy may remain exceptionally small despite responsible breeding. Labels such as Micro or Micro-Toy are descriptive business terms only and are not separate recognized breed varieties. Adult weight or final size cannot be guaranteed.");
   paragraph("Exceptionally small puppies have very limited body reserves. Missing a meal, stress, chilling, overactivity, vomiting, diarrhea, or illness can cause blood sugar to fall rapidly and may lead to weakness, tremors, seizures, loss of consciousness, or medical collapse. These puppies may also be more vulnerable to dehydration, temperature instability, traumatic injury, falls, rough handling, larger animals, delayed development, congenital problems, and other serious complications.");
   paragraph("A naturally small, Micro, or Micro-Toy puppy generally remains with the Seller for an additional two to four weeks beyond the normal go-home schedule, and longer when the Seller or veterinarian determines additional development or monitoring is needed. Transfer will not occur until the puppy is consistently eating independently, maintaining weight and body temperature, and considered ready for the transition.");
   paragraph("During the extended-care period, the puppy may require measured meals approximately every two hours, including overnight, together with weight checks, temperature management, restricted activity, close observation, and immediate response to signs of hypoglycemia or illness. The Buyer must be able to continue the puppy-specific feeding and monitoring schedule after transfer and must maintain an emergency plan and a reliable backup caregiver.");
-  paragraph("Because of the additional two-to-four-week care period, round-the-clock feeding, monitoring, and increased placement risk, an additional $2,500.00 small-puppy care charge is added to the puppy's approved price. This additional charge must be paid in full before transfer and is not eligible for financing or a payment plan.");
-  paragraph("Naturally small, Micro, and Micro-Toy puppies are excluded from the Seller's voluntary one-year congenital and hereditary health guarantee. This exclusion does not limit any right or remedy that cannot legally be waived. These puppies may have a shorter or less predictable lifespan than a normally sized Chihuahua and can be more easily injured, even during ordinary household activity.");
+  paragraph("If additional extended care, round-the-clock feeding, or monitoring is required, the Seller will disclose any additional care charge before placement. Any such charge and its payment terms must be written into the final agreement.");
+  paragraph("Any written limitation for a naturally small, Micro, or Micro-Toy puppy must be disclosed in the final agreement. No policy limits a right or remedy that cannot legally be waived. Exceptionally small puppies may have a shorter or less predictable lifespan and can be more easily injured, even during ordinary household activity.");
   field("Interested in a naturally small / Micro puppy?", "[ ] Yes   [ ] No   [ ] Unsure");
   field("Two-hour feeding schedule possible?", "[ ] Yes   [ ] No   [ ] Need to discuss");
   field("Overnight monitoring possible?", "[ ] Yes   [ ] No   [ ] Need to discuss");
@@ -148,8 +153,9 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   field("Caregiver away from home", "Approximate hours per day: __________________");
   field("Backup caregiver");
   paragraph("If seeking an exceptionally small puppy, explain your feeding, supervision, backup-caregiver, and emergency-care plan:"); lines(3);
-  paragraph("[ ] I understand that Southwest Virginia Chihuahua does not intentionally breed for Micro or Micro-Toy size, does not guarantee adult size, and may decline or delay placement when the puppy's welfare requires it.");
-  paragraph("[ ] I understand the additional two-to-four-week or longer go-home period, approximately every-two-hour feedings including overnight, increased health and injury risks, $2,500.00 additional charge, no-financing policy, and exclusion from the voluntary one-year health guarantee.");
+  paragraph("[ ] I understand that the breeder does not intentionally breed for extreme small size, does not guarantee adult size, and may decline or delay placement when the puppy's welfare requires it.");
+  paragraph("[ ] I understand the possible extended go-home period, approximately every-two-hour feedings including overnight, increased health and injury risks, any disclosed additional care charge and payment terms, and any written health-guarantee limitation in the final agreement.");
+  if (customPolicyNotice.trim()) paragraph(`Breeder policy notice: ${customPolicyNotice.trim()}`);
   field("Applicant initials acknowledging Section 7");
 
   heading("8. Daily Care and Safety Plan");
@@ -167,10 +173,10 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   field("Expected payment method", "[ ] Pay in full   [ ] Financing request   [ ] Undecided");
   field("Ready to place deposit?", "[ ] Yes   [ ] No   [ ] After puppy selection"); field("Estimated deposit date");
   field("Need payment-plan review?", "[ ] Yes   [ ] No"); field("Billing name"); field("Billing email");
-  paragraph("Financing or a structured payment plan is not guaranteed and requires separate approval and written terms. Naturally small, Micro, and Micro-Toy puppies and the related $2,500.00 additional care charge are not eligible for financing. Sensitive financial information will be collected only through the designated secure payment process.");
+  paragraph("Financing or a structured payment plan is not guaranteed and requires separate approval and written terms. Any excluded puppy, service, or additional-care charge must be identified in those written terms. Sensitive financial information will be collected only through the designated secure payment process.");
 
   heading("11. Pickup and Transportation");
-  field("Preferred transfer", "[ ] Marion-area pickup   [ ] Ground meet-up/delivery"); field("Person receiving puppy");
+  field("Preferred transfer", "[ ] Breeder pickup   [ ] Ground meet-up/delivery   [ ] Other"); field("Person receiving puppy");
   field("Pickup photo ID name"); field("Starting city/state"); field("Transport assistance", "[ ] Not needed   [ ] Requested   [ ] Unsure");
   field("Scheduling limitations");
   paragraph("Ground delivery or a meet-up may be available for an additional fee and must be agreed upon in writing. Puppies are not shipped as unattended airline cargo. A requested date is not guaranteed. A naturally small, Micro, or Micro-Toy puppy normally requires an additional two to four weeks, and possibly longer, before transfer.");
@@ -179,16 +185,16 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   field("Reference 1 name"); field("Relationship"); field("Phone/email"); field("Reference 2 name"); field("Relationship"); field("Phone/email");
 
   heading("13. Additional Information");
-  paragraph("Why would you like to purchase a puppy from Southwest Virginia Chihuahua?"); lines(3);
+  paragraph("Why would you like to purchase a puppy from this breeder?"); lines(3);
   paragraph("Is there anything about your household, schedule, animals, finances, or care plan that may affect placement or that we should discuss before approval?"); lines(3);
   field("How did you hear about us?");
 
   heading("14. Applicant Authorizations and Acknowledgments");
   for (const statement of [
     "I certify that the information in this application is complete and truthful to the best of my knowledge.",
-    "If I rent or live in housing controlled by another person, I confirm that I am responsible for verifying that the puppy is permitted. I understand that Southwest Virginia Chihuahua does not contact my landlord as part of the application review.",
-    "I understand that Southwest Virginia Chihuahua does not contact my veterinarian as part of the application review and that I am responsible for arranging routine and emergency veterinary care.",
-    "I authorize Southwest Virginia Chihuahua LLC to contact the personal references or other non-landlord, non-veterinary contacts that I voluntarily identify for the limited purpose of evaluating this application and placement.",
+    "If I rent or live in housing controlled by another person, I confirm that I am responsible for verifying that the puppy is permitted. I understand that the breeder does not contact my landlord as part of the application review.",
+    "I understand that the breeder does not contact my veterinarian as part of the application review and that I am responsible for arranging routine and emergency veterinary care.",
+    "I authorize the breeder to contact the personal references or other non-landlord, non-veterinary contacts that I voluntarily identify for the limited purpose of evaluating this application and placement.",
     "I authorize information from this application to be used to prepare reservation agreements, deposit records, invoices, transportation forms, the Bill of Sale, Health Guarantee, registration paperwork, and client-portal records associated with my puppy placement.",
     "I understand that submitting this application does not guarantee approval, a specific puppy, availability, adult size, registration, financing, reservation, or placement.",
     "I understand that no puppy is reserved until all required steps are completed, the written deposit agreement is signed, cleared funds are received, and the reservation is confirmed by the Seller.",
@@ -213,7 +219,7 @@ export async function renderPuppyApplicationPdf(introduction = "Thank you for co
   field("Approved registry", "[ ] AKC   [ ] CKC   [ ] ACA   [ ] Any eligible");
   field("Approved placement", "[ ] Standard   [ ] Naturally small   [ ] Micro / Micro-Toy");
   field("Section 7 acknowledgment reviewed", "[ ] Yes   [ ] Not applicable");
-  field("Assigned puppy ID"); field("Approved price"); field("Additional small-puppy charge", "$2,500.00 / N/A");
+  field("Assigned puppy ID"); field("Approved price"); field("Additional disclosed care charge", "$________________ / N/A");
   field("Deposit amount"); field("Deposit due"); field("Document package ID"); field("Notes / conditions"); lines();
 
   return pdf.save();

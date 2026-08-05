@@ -154,8 +154,8 @@ const isPaidTransaction = (transaction: Transaction) => isPaymentTransaction(tra
 const includesAny = (value: string | null | undefined, terms: string[]) => terms.some((term) => (value ?? "").toLowerCase().includes(term));
 const friendlyError = (value: unknown, fallback: string) => {
   const message = value instanceof Error ? value.message : String(value || fallback);
-  if (/schema cache|could not find the table|relation .* does not exist|column .* does not exist/i.test(message)) return "The SWVAOS data structure needs attention.";
-  if (/not configured|missing.*key|missing.*url/i.test(message)) return "The SWVAOS data connection is not configured.";
+  if (/schema cache|could not find the table|relation .* does not exist|column .* does not exist/i.test(message)) return "The Breeder Portal data structure needs attention.";
+  if (/not configured|missing.*key|missing.*url/i.test(message)) return "The Breeder Portal data connection is not configured.";
   return message.replace(/supabase/gi, "data service").replace(/vercel/gi, "hosting service").replace(/chatgpt/gi, "legacy system");
 };
 
@@ -614,12 +614,12 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
     ["9", "Repeat menu", "Returns to the beginning of the recognized-caller menu"],
   ];
   const publicMenu = [
-    ["1", "Available puppies", "Current availability from SWVAOS records"],
+    ["1", "Available puppies", "Current availability from Breeder Portal records"],
     ["2", "Application help", "Help locating a submitted family application"],
     ["3", "Reserved puppy help", "Help locating an existing puppy reservation"],
     ["4", "Pickup or delivery", "General transportation information"],
     ["5", "Pup-Lift", "Current delivery-service information"],
-    ["6", "Chihuahua HQ", "Current community information"],
+    ["6", "Breed resources", "Current community information"],
     ["7", "Speak with someone", "Connects the caller to the team"],
     ["9", "Repeat menu", "Returns to the beginning of the public menu"],
   ];
@@ -699,7 +699,7 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
       const configuredCount = result.lines?.filter((line) => line.configured).length ?? 0;
       if (!result.configured) throw new Error(`${configuredCount} of 2 phone lines were configured. Confirm both numbers belong to this Twilio account.`);
       setRoutingReady(true);
-      setLineMessage({ tone: "good", text: "Both Twilio numbers now route into their correct SWVAOS call flows." });
+      setLineMessage({ tone: "good", text: "Both Twilio numbers now route into their correct Breeder Portal call flows." });
     } catch (error) {
       setLineMessage({ tone: "bad", text: error instanceof Error ? error.message : "Unable to sync the Twilio lines." });
     } finally {
@@ -736,14 +736,14 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
     <section className="crm-lines panel-wide">
       <header><div><span>VOICE LINE DIRECTORY</span><h2>Two numbers, two call experiences</h2><p>Each Twilio number enters the Voice CRM but receives its own greeting, keypad menu, and activity label.</p></div><button type="button" onClick={syncVoiceLines} disabled={syncingLines}><ShieldCheck size={16} /> {syncingLines ? "Syncing..." : "Sync Twilio lines"}</button></header>
       <div className="crm-line-cards">
-        <article><span className="crm-line-icon"><PhoneIncoming size={20} /></span><div><small>SWVAOS MAIN LINE</small><h3>+1 (855) 506-5425</h3><p>Families, applications, puppies, pickup, delivery, balances, messages, and staff transfer.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Receiving" : "Check route"}</Status></article>
+        <article><span className="crm-line-icon"><PhoneIncoming size={20} /></span><div><small>Breeder Portal MAIN LINE</small><h3>+1 (855) 506-5425</h3><p>Families, applications, puppies, pickup, delivery, balances, messages, and staff transfer.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Receiving" : "Check route"}</Status></article>
         <article className="pup-lift"><span className="crm-line-icon"><HeartPulse size={20} /></span><div><small>PUP-LIFT SUPPORT</small><h3>+1 (715) 888-9526</h3><p>Dedicated hypoglycemia support guidance, urgent warning signs, voicemail, and staff transfer.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Receiving" : "Check route"}</Status></article>
       </div>
       {lineMessage && <p className={`crm-line-message ${lineMessage.tone}`}>{lineMessage.text}</p>}
     </section>
 
     <section className="crm-dialer panel-wide">
-      <header><div><span>OUTBOUND PHONE</span><h2>Dial a customer or call request</h2><p>Enter any number or load a family. Twilio rings the selected operator first, then connects the destination through the SWVAOS line.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Ready" : "Check setup"}</Status></header>
+      <header><div><span>OUTBOUND PHONE</span><h2>Dial a customer or call request</h2><p>Enter any number or load a family. Twilio rings the selected operator first, then connects the destination through the Breeder Portal line.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Ready" : "Check setup"}</Status></header>
       <div className="crm-dialer-body">
         <div className="crm-dial-screen">
           <label htmlFor="crm-dial-number">Number to call</label>
@@ -755,7 +755,7 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
         <div className="crm-dial-actions">
           <fieldset><legend>Ring me first</legend><label className={dialOperator === "cristy" ? "active" : ""}><input type="radio" name="dial-operator" value="cristy" checked={dialOperator === "cristy"} onChange={() => setDialOperator("cristy")} /> Cristy</label><label className={dialOperator === "robert" ? "active" : ""}><input type="radio" name="dial-operator" value="robert" checked={dialOperator === "robert"} onChange={() => setDialOperator("robert")} /> Robert</label></fieldset>
           <button className="crm-start-call" type="button" onClick={startOutboundCall} disabled={!canDial || dialing}><PhoneCall size={18} /> {dialing ? "Starting call..." : "Start outbound call"}</button>
-          <small>Answer your ringing phone; SWVAOS then connects the number above and displays the business caller ID.</small>
+          <small>Answer your ringing phone; Breeder Portal then connects the number above and displays the business caller ID.</small>
           {dialMessage && <p className={dialMessage.tone}>{dialMessage.text}</p>}
         </div>
       </div>
@@ -807,7 +807,7 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
       {calls.length ? <div className="crm-history">{calls.slice(0, 8).map((call) => <button key={call.id} onClick={() => openEdit("events", call as unknown as Record<string, unknown>)}><span><b>{call.title}</b><small>{shortDate(call.event_date)}{call.event_time ? ` / ${call.event_time}` : ""}</small></span><Status tone={call.status === "Completed" ? "good" : "neutral"}>{call.status}</Status><p>{call.notes || "No notes recorded"}</p></button>)}</div> : <div className="crm-empty-line">No calls or recorded messages are connected to this account yet.</div>}
     </Section>
 
-    <section className="crm-menu-console panel-wide"><header><div><span>CALLER MENUS</span><h2>Line-aware phone routing</h2><p>Family callers receive account-aware choices, public callers receive general choices, and the Pup-Lift number always opens its dedicated support flow.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Online" : "Review setup"}</Status></header><div><section><h3>Recognized family flow</h3><div className="crm-menu-list">{knownMenu.map(([key, label, description]) => <span key={key}><b>{key}</b><small><strong>{label}</strong>{description}</small></span>)}</div></section><section><h3>Public SWVAOS flow</h3><div className="crm-menu-list public">{publicMenu.map(([key, label, description]) => <span key={key}><b>{key}</b><small><strong>{label}</strong>{description}</small></span>)}</div></section><section className="pup-lift-menu"><h3>Pup-Lift support flow</h3><div className="crm-menu-list">{pupLiftMenu.map(([key, label, description]) => <span key={key}><b>{key}</b><small><strong>{label}</strong>{description}</small></span>)}</div></section></div></section>
+    <section className="crm-menu-console panel-wide"><header><div><span>CALLER MENUS</span><h2>Line-aware phone routing</h2><p>Family callers receive account-aware choices, public callers receive general choices, and the Pup-Lift number always opens its dedicated support flow.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Online" : "Review setup"}</Status></header><div><section><h3>Recognized family flow</h3><div className="crm-menu-list">{knownMenu.map(([key, label, description]) => <span key={key}><b>{key}</b><small><strong>{label}</strong>{description}</small></span>)}</div></section><section><h3>Public Breeder Portal flow</h3><div className="crm-menu-list public">{publicMenu.map(([key, label, description]) => <span key={key}><b>{key}</b><small><strong>{label}</strong>{description}</small></span>)}</div></section><section className="pup-lift-menu"><h3>Pup-Lift support flow</h3><div className="crm-menu-list">{pupLiftMenu.map(([key, label, description]) => <span key={key}><b>{key}</b><small><strong>{label}</strong>{description}</small></span>)}</div></section></div></section>
   </div>;
 }
 
@@ -903,7 +903,7 @@ function ReportsView({ data, openCreate }: Pick<ViewProps, "data" | "openCreate"
     const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `swvaos-snapshot-${today()}.json`;
+    anchor.download = `breeder-portal-snapshot-${today()}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -1121,7 +1121,7 @@ function ContractModal({ modal, data, templates, saving, error, onClose, onSubmi
             <label><span>Voluntary guarantee period</span><div className="field-with-unit"><input name="guarantee_months" type="number" min="1" max="120" value={guaranteeMonths} onChange={(event) => { const next = Number(event.target.value); setGuaranteeMonths(next); regenerateHealthTerms(examDays, next, microToy); }} required /><small>months</small></div></label>
             <label className="check wide"><input name="micro_toy" type="checkbox" checked={microToy} onChange={(event) => { const next = event.target.checked; setMicroToy(next); regenerateHealthTerms(examDays, guaranteeMonths, next); }} /><span>Designate this puppy as Micro-Toy and apply the voluntary extended-guarantee exclusion.</span></label>
           </div>
-          <details className="contract-terms"><summary>Review and edit contract language</summary><label><span>Bill of Sale terms</span><textarea name="bill_terms" rows={13} defaultValue={templates.documents.bill_of_sale.content} /></label><label><span>Health Guarantee terms</span><textarea name="health_terms" rows={28} value={healthTerms} onChange={(event) => { setHealthTermsEdited(true); setHealthTerms(event.target.value); }} /></label><button className="contract-terms-reset" type="button" onClick={() => { setHealthTermsEdited(true); setHealthTerms(templates.documents.health_guarantee.content); }}>Reload saved global template</button><button className="contract-terms-reset" type="button" onClick={() => { setHealthTermsEdited(false); setHealthTerms(healthGuaranteeTerms(examDays * 24, guaranteeMonths, microToy).join("\n\n")); }}>Use generated standard language</button><small>Section markers organize the signed portal agreement and PDF. The Virginia Consumer Notice is rendered in bold 10-point type. Have Virginia counsel review business-specific terms before relying on them.</small></details>
+          <details className="contract-terms"><summary>Review and edit contract language</summary><label><span>Bill of Sale terms</span><textarea name="bill_terms" rows={13} defaultValue={templates.documents.bill_of_sale.content} /></label><label><span>Health Guarantee terms</span><textarea name="health_terms" rows={28} value={healthTerms} onChange={(event) => { setHealthTermsEdited(true); setHealthTerms(event.target.value); }} /></label><button className="contract-terms-reset" type="button" onClick={() => { setHealthTermsEdited(true); setHealthTerms(templates.documents.health_guarantee.content); }}>Reload saved global template</button><button className="contract-terms-reset" type="button" onClick={() => { setHealthTermsEdited(false); setHealthTerms(healthGuaranteeTerms(examDays * 24, guaranteeMonths, microToy).join("\n\n")); }}>Use generated standard language</button><small>Section markers organize the signed portal agreement and PDF. The consumer-law notice is rendered prominently. Have qualified counsel in your jurisdiction review every business-specific term before relying on it.</small></details>
         </>}
       </div>
       <footer><button type="button" onClick={onClose}>Close</button>{existingContracts.length > 0 && <button type="button" onClick={onOpenPortal} disabled={saving}>Open existing portal</button>}<button className="primary-action" disabled={saving || !puppies.length}><FileSignature size={16} /> {saving ? "Preparing..." : "Create both documents"}</button></footer>
@@ -1430,7 +1430,7 @@ export default function Home() {
     <header className="bos-command-bar">
       <button className="bos-brand" onClick={() => navigateTo("Command")}><span>{tenantInitials}</span><b>{tenant.name}</b><small>{publicTenant.shortName}</small></button>
       <nav className="bos-workspaces" aria-label="Operating workspaces">{viewGroups.map((group) => <button key={group} className={activeGroup === group ? "active" : ""} onClick={() => navigateTo(views.find((item) => item.group === group)?.id ?? "Command")}><b>{groupLabels[group]}</b><small>{groupDescriptions[group]}</small></button>)}</nav>
-      <div className="bos-search"><SearchIcon size={17} /><input ref={searchInputRef} aria-label="Search SWVAOS" value={search} onFocus={() => setCommandOpen(true)} onChange={(event) => { setSearch(event.target.value); setCommandOpen(true); }} placeholder="Find any dog, puppy, family, payment…" /><kbd><CommandIcon size={11} />K</kbd>{commandOpen && <div className="bos-search-menu"><header><span>Find or create</span><button onClick={() => { setCommandOpen(false); setSearch(""); }} aria-label="Close search"><X size={15} /></button></header>{search.trim() ? searchResults.length ? <div className="command-results">{searchResults.map((item) => <button key={`${item.view}-${item.label}`} onClick={() => navigateTo(item.view)}><span><b>{item.label}</b><small>{item.detail}</small></span><ChevronRight size={15} /></button>)}</div> : <div className="command-empty"><SearchIcon size={19} /><b>No matching records</b><small>Try a family name, puppy, transaction, or event.</small></div> : <div className="bos-create-menu"><button onClick={() => { setCommandOpen(false); openCreate("buyers", { application_status: "New" }); }}><ClipboardCheck size={17} /><span><b>New application</b><small>Start family screening</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("transactions", { type: "Payment" }); }}><ReceiptText size={17} /><span><b>Record payment</b><small>Credit a buyer account</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("events", { event_type: "Pickup", status: "Scheduled" }); }}><Route size={17} /><span><b>Schedule go-home</b><small>Pickup or delivery</small></span></button></div>}</div>}</div>
+      <div className="bos-search"><SearchIcon size={17} /><input ref={searchInputRef} aria-label="Search Breeder Portal" value={search} onFocus={() => setCommandOpen(true)} onChange={(event) => { setSearch(event.target.value); setCommandOpen(true); }} placeholder="Find any dog, puppy, family, payment…" /><kbd><CommandIcon size={11} />K</kbd>{commandOpen && <div className="bos-search-menu"><header><span>Find or create</span><button onClick={() => { setCommandOpen(false); setSearch(""); }} aria-label="Close search"><X size={15} /></button></header>{search.trim() ? searchResults.length ? <div className="command-results">{searchResults.map((item) => <button key={`${item.view}-${item.label}`} onClick={() => navigateTo(item.view)}><span><b>{item.label}</b><small>{item.detail}</small></span><ChevronRight size={15} /></button>)}</div> : <div className="command-empty"><SearchIcon size={19} /><b>No matching records</b><small>Try a family name, puppy, transaction, or event.</small></div> : <div className="bos-create-menu"><button onClick={() => { setCommandOpen(false); openCreate("buyers", { application_status: "New" }); }}><ClipboardCheck size={17} /><span><b>New application</b><small>Start family screening</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("transactions", { type: "Payment" }); }}><ReceiptText size={17} /><span><b>Record payment</b><small>Credit a buyer account</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("events", { event_type: "Pickup", status: "Scheduled" }); }}><Route size={17} /><span><b>Schedule go-home</b><small>Pickup or delivery</small></span></button></div>}</div>}</div>
       <a className="bos-domain-settings" href="/settings/branding"><Palette size={16}/><span>Brand</span></a>
       <a className="bos-domain-settings" href="/settings/domain"><Globe2 size={16}/><span>Domain</span></a>
       <button className="bos-global-add" onClick={() => openCreate(quickResource)}><Plus size={17} /><span>Add record</span></button>

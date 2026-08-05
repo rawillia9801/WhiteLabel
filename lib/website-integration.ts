@@ -1,9 +1,6 @@
 import type { ResourceInput } from "../db/resources";
 
-const WEBSITE_ORIGINS = new Set([
-  "https://swvachihuahua.com",
-  "https://www.swvachihuahua.com",
-]);
+const configuredOrigins = () => new Set((process.env.WEBSITE_ALLOWED_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean));
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -28,7 +25,7 @@ const APPLICATION_FIELDS = [
   ["current_pets", "Current pets"],
   ["vaccinated_pets", "Current pets vaccinated"],
   ["altered_pets", "Current pets altered"],
-  ["chihuahua_exp", "Chihuahua experience"],
+  ["chihuahua_exp", "Breed experience"],
   ["toy_breed_exp", "Toy breed experience"],
   ["rehomed_history", "Rehoming / surrender history"],
   ["animal_incident_history", "Animal safety history"],
@@ -69,7 +66,7 @@ const APPLICATION_FIELDS = [
   ["ref1_phone", "Reference 1 phone / email"],
   ["ref2_name", "Reference 2"],
   ["ref2_phone", "Reference 2 phone / email"],
-  ["why_us", "Why Southwest Virginia Chihuahua"],
+  ["why_us", "Why this breeding program"],
   ["notes", "Additional notes"],
   ["communication_preferences", "Communication preferences"],
 ] as const;
@@ -94,18 +91,29 @@ function cleanBoolean(value: unknown) {
   return value === true || value === "true" || value === "on" || value === "yes";
 }
 
-export function isAllowedWebsiteOrigin(origin: string | null) {
-  return Boolean(origin && WEBSITE_ORIGINS.has(origin));
+export function isAllowedWebsiteOrigin(origin: string | null, requestHost?: string | null) {
+  if (!origin) return false;
+  try {
+    const hostname = new URL(origin).hostname.toLowerCase();
+    const platform = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "breederportal.site";
+    const sameHost = requestHost?.split(":")[0].toLowerCase();
+    return configuredOrigins().has(origin)
+      || hostname === platform
+      || hostname.endsWith(`.${platform}`)
+      || Boolean(sameHost && hostname === sameHost);
+  } catch {
+    return false;
+  }
 }
 
-export function websiteCorsHeaders(origin: string | null) {
+export function websiteCorsHeaders(origin: string | null, requestHost?: string | null) {
   const headers = new Headers({
     "access-control-allow-methods": "GET, POST, OPTIONS",
     "access-control-allow-headers": "content-type",
     "access-control-max-age": "86400",
     "vary": "Origin",
   });
-  if (isAllowedWebsiteOrigin(origin)) headers.set("access-control-allow-origin", origin!);
+  if (isAllowedWebsiteOrigin(origin, requestHost)) headers.set("access-control-allow-origin", origin!);
   return headers;
 }
 
@@ -166,7 +174,7 @@ export function formatApplicationNotes(application: WebsiteApplication, received
   });
   return [
     `Website puppy application received ${receivedAt}`,
-    "Source: swvachihuahua.com/application",
+    "Source: kennel website application",
     "Small-puppy policy acknowledged: Yes",
     "Applicant record-use authorization acknowledged: Yes",
     "",

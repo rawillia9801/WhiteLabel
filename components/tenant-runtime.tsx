@@ -9,9 +9,13 @@ export type RuntimeTenant = {
   primaryColor: string;
   accentColor: string;
   fontFamily: string;
+  primaryBreed: string;
+  contactEmail: string;
+  contactPhone: string;
+  websiteUrl: string;
 };
 
-const fallback: RuntimeTenant = { name: "Breeder Portal", slug: "", plan: "starter", primaryColor: "#087f8c", accentColor: "#c68b24", fontFamily: "Geist" };
+const fallback: RuntimeTenant = { name: "Breeder Portal", slug: "", plan: "starter", primaryColor: "#087f8c", accentColor: "#c68b24", fontFamily: "Geist", primaryBreed: "Dogs", contactEmail: "", contactPhone: "", websiteUrl: "" };
 const TenantContext = createContext<RuntimeTenant>(fallback);
 
 export function TenantRuntimeProvider({ tenant, children }: { tenant?: RuntimeTenant | null; children: React.ReactNode }) {

@@ -195,7 +195,6 @@ export async function reserveTransportationMeet(input: { buyerId: number; date: 
   const occupied = (await transportationEventsForDate(input.date)).filter(activeReservation);
   if (occupied.length) return { reserved: false, unavailable: true, date: input.date, time: input.time };
 
-  const now = new Date().toISOString();
   const created = await createSupabaseResource("events", {
     title: `Transportation meet request - ${eligibility.buyerName}`,
     event_type: "Transportation",
@@ -241,7 +240,7 @@ export async function reserveTransportationMeet(input: { buyerId: number; date: 
       "Required documents: Complete",
       "Status: Requested - breeder confirmation is still required.",
       "",
-      "Review in SWVAOS: https://swvaos.site/?view=Delivery",
+      "Review the request in Breeder Portal under Delivery.",
     ].join("\n"),
   }).catch(() => null);
 

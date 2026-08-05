@@ -173,7 +173,7 @@ export function CommandDashboardEnhancer() {
 
   if (!host) return null;
 
-  return createPortal(<section className="command-dashboard-shell" aria-label="SWVAOS operational dashboard">
+  return createPortal(<section className="command-dashboard-shell" aria-label="Breeder Portal operational dashboard">
     <div className="command-dashboard-heading">
       <div><span>COMMAND CENTER</span><h1>Today at a glance</h1></div>
       <p>Live operational cards for the records that need attention across the breeding program.</p>
@@ -190,7 +190,7 @@ export function CommandDashboardEnhancer() {
 
       <DashboardCard href="/?view=Finance" icon={<WalletCards size={21} />} eyebrow="PAYMENTS" value={money(view.paidThisMonth)} label="Received this month" detail={`${view.duePayments} payment${view.duePayments === 1 ? "" : "s"} currently due or scheduled.`} />
       <DashboardCard href="/?view=Finance" icon={<FileText size={21} />} eyebrow="PAYMENT PLANS" value={String(view.activePlans.length)} label="Active plans" detail={view.activePlans[0]?.next_due_date ? `Next due ${shortDate(view.activePlans[0].next_due_date)}` : "No next payment date is recorded."} />
-      <DashboardCard href="/?view=Litters" icon={<ListTree size={21} />} eyebrow="LITTERS" value={String(view.activeLitters.length)} label="Active litters" detail={`${data?.litters.length ?? 0} total litter records in SWVAOS.`} />
+      <DashboardCard href="/?view=Litters" icon={<ListTree size={21} />} eyebrow="LITTERS" value={String(view.activeLitters.length)} label="Active litters" detail={`${data?.litters.length ?? 0} total litter records in Breeder Portal.`} />
       <DashboardCard href="/?view=Families" icon={<UsersRound size={21} />} eyebrow="BUYERS" value={String(data?.buyers.length ?? 0)} label="Buyer records" detail={`${view.approvedBuyers.length} approved, matched, placed, or waitlisted.`} />
       <DashboardCard href="/?view=Applications" icon={<ClipboardCheck size={21} />} eyebrow="APPLICATIONS" value={String(view.pendingApplications.length)} label="New applications" detail="Families currently waiting for an application decision." className={view.pendingApplications.length ? "attention-card" : ""} />
       <DashboardCard href="/?view=Comms" icon={<MessagesSquare size={21} />} eyebrow="UPDATES" value={String(view.draftUpdates.length)} label="Draft updates" detail={`${(data?.updates.length ?? 0) - view.draftUpdates.length} updates have been published.`} />

@@ -224,6 +224,15 @@ create table if not exists kennels (
   primary_color text not null default '#087f8c',
   accent_color text not null default '#c68b24',
   font_family text not null default 'Geist',
+  primary_breed text not null default 'Dogs',
+  legal_name text,
+  location text,
+  contact_email text,
+  contact_phone text,
+  website_url text,
+  default_puppy_price_cents integer not null default 0 check (default_puppy_price_cents >= 0),
+  default_deposit_cents integer not null default 0 check (default_deposit_cents >= 0),
+  custom_policy_notice text not null default 'Have a qualified local attorney review all customer-facing policies and contracts before use.',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

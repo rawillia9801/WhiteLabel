@@ -1,10 +1,13 @@
 import { signPortalContract } from "../../../../../../../db/contracts";
 import { sendBuyerAutomation } from "../../../../../../../lib/automation-email";
 import { sendOwnerNotification } from "../../../../../../../lib/email-service";
+import { verifyPortalToken } from "../../../../../../../lib/portal-token";
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string; id: string }> }) {
   try {
     const { token, id } = await params;
+    const claims = await verifyPortalToken(token);
+    if (!claims) return Response.json({ error: "Your Puppy Portal session is invalid or has expired." }, { status: 401 });
     const documentId = Number(id);
     const body = await request.json() as { signer_name?: unknown; agreed?: unknown; electronic_consent?: unknown; health_acknowledged?: unknown };
     if (!Number.isInteger(documentId) || documentId <= 0) throw new Error("A valid contract is required.");
@@ -34,6 +37,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
       try {
         await sendOwnerNotification({
+          kennelId: claims.kennelId,
           category: "Contract",
           subject: `${String(result.snapshot.title || "Buyer document")} signed by ${signerName}`,
           buyerId: Number(result.snapshot.buyerId),
@@ -46,8 +50,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
             `Document ID: ${documentId}`,
             `Signed at: ${new Date().toISOString()}`,
             "",
-            "The signed PDF and electronic-signature audit record are stored in SWVAOS.",
-            "https://swvaos.site/?view=Vault",
+            "The signed PDF and electronic-signature audit record are stored in Breeder Portal.",
+            `${new URL(request.url).origin}/?view=Vault`,
           ].join("\n"),
         });
       } catch (emailError) {

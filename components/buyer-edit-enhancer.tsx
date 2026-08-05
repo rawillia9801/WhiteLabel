@@ -226,7 +226,7 @@ export function BuyerEditEnhancer() {
               <label className="buyer-edit-wide"><span>Buyer notes</span><textarea name="notes" rows={8} defaultValue={buyer.notes || ""} /></label>
             </div>
 
-            <p className="buyer-edit-note">Changes update the buyer record used throughout SWVAOS. Changing the email does not reveal or change the customer's password.</p>
+            <p className="buyer-edit-note">Changes update the buyer record used throughout Breeder Portal. Changing the email does not reveal or change the customer&apos;s password.</p>
             {error && <div className="buyer-edit-error" role="alert">{error}</div>}
             <footer>
               <button type="button" className="buyer-edit-cancel" disabled={saving} onClick={() => { setBuyer(null); setError(""); }}>Cancel</button>

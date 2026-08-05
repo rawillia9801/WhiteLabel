@@ -5,6 +5,7 @@ const voice = { voice: "Polly.Joanna" as const, language: "en-US" as const };
 const incomingPath = "/api/voice/incoming?repeat=1";
 export const DEFAULT_MAIN_NUMBER = "+12762761669";
 export const DEFAULT_PUP_LIFT_NUMBER = "+17158889526";
+const voiceBusinessName = () => process.env.VOICE_BUSINESS_NAME?.trim() || "the breeder";
 
 function normalizePhone(value: string | null | undefined) {
   const raw = String(value ?? "").trim();
@@ -35,8 +36,8 @@ const spokenDate = (value: string) => value ? new Intl.DateTimeFormat("en-US", {
 function publicMenu(response: InstanceType<typeof twilio.twiml.VoiceResponse>, profile: CallerCrmProfile, calledNumber: string | null | undefined) {
   const gather = response.gather({ action: routeWithContext("/api/voice/menu", calledNumber), method: "POST", input: ["dtmf"], numDigits: 1, timeout: 8, actionOnEmptyResult: true });
   gather.say(voice, profile.recognized
-    ? "Thank you for calling Southwest Virginia Chihuahua. We found a family account associated with the phone number you are calling from. Press 1 to verify the account. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for Pup-Lift information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu."
-    : "Thank you for calling Southwest Virginia Chihuahua. Press 1 if you are an existing applicant or buyer and need account help. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for Pup-Lift information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.");
+    ? `Thank you for calling ${voiceBusinessName()}. We found a family account associated with the phone number you are calling from. Press 1 to verify the account. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`
+    : `Thank you for calling ${voiceBusinessName()}. Press 1 if you are an existing applicant or buyer and need account help. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`);
 }
 
 function pupLiftMenu(response: InstanceType<typeof twilio.twiml.VoiceResponse>, calledNumber: string | null | undefined) {

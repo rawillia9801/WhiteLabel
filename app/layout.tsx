@@ -44,6 +44,10 @@ async function requestTenant(): Promise<RuntimeTenant | null> {
       primaryColor: kennel.primary_color || tenantConfig.theme.primary,
       accentColor: kennel.accent_color || tenantConfig.theme.accent,
       fontFamily: kennel.font_family || "Geist",
+      primaryBreed: kennel.primary_breed || "Dogs",
+      contactEmail: kennel.contact_email || "",
+      contactPhone: kennel.contact_phone || "",
+      websiteUrl: kennel.website_url || "",
     } : null;
   } catch { return null; }
 }

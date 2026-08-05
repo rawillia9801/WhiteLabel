@@ -3,6 +3,7 @@ import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/
 import { sendPuppyPacketEmail } from "../../../../lib/puppy-packet-email";
 import { renderPuppyPacketPdf } from "../../../../lib/puppy-packet-pdf";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
+import { findKennelById } from "../../../../lib/supabase-auth";
 
 type Row = Record<string, unknown>;
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     const testCopy = body.testCopy === true;
     if (!Number.isInteger(puppyId) || puppyId <= 0) return Response.json({ error: "Select a valid puppy before sending the packet." }, { status: 400 });
 
-    const [data, templates] = await Promise.all([getKennelDataFromSupabase(session.kennelId), getTemplatesConfig(session.kennelId)]);
+    const [data, templates, kennel] = await Promise.all([getKennelDataFromSupabase(session.kennelId), getTemplatesConfig(session.kennelId), findKennelById(session.kennelId)]);
     const rows = data as unknown as {
       puppies?: Row[];
       buyers?: Row[];
@@ -59,8 +60,12 @@ export async function POST(request: Request) {
 
     const family = [text(buyer, "first_name"), text(buyer, "last_name")].filter(Boolean).join(" ") || (testCopy ? "Test Recipient" : buyerEmail || "Family");
     const puppyName = text(puppy, "name") || "Puppy";
-    const pdf = await renderPuppyPacketPdf({ puppy, buyer, litter, dam, sire, updates, events, templates, testCopy });
+    const brand = { name: kennel?.name || session.kennelName, location: kennel?.location || "", website: kennel?.website_url || "" };
+    const pdf = await renderPuppyPacketPdf({ puppy, buyer, litter, dam, sire, updates, events, templates, brand, testCopy });
     const result = await sendPuppyPacketEmail({
+      kennelId: session.kennelId,
+      kennelName: brand.name,
+      kennelWebsite: brand.website,
       to: recipient,
       buyerId: buyerId || null,
       buyerName: family,

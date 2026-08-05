@@ -1,11 +1,17 @@
 import { renderPaymentAgreementPdf } from "../../../../lib/payment-agreement";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
 import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
+import { findKennelById } from "../../../../lib/supabase-auth";
 
 export async function GET(request: Request) {
   const unauthorized = requireAdminSession(request); if (unauthorized) return unauthorized;
-  const config = await getTemplatesConfig(breederSessionFromRequest(request)!.kennelId);
+  const session = breederSessionFromRequest(request)!;
+  const [config, kennel] = await Promise.all([
+    getTemplatesConfig(session.kennelId),
+    findKennelById(session.kennelId),
+  ]);
   const pdf = await renderPaymentAgreementPdf({
+    breederName: kennel?.legal_name || kennel?.name || session.kennelName,
     buyerName: "____________________________________________",
     planType: "Pre-transfer purchase plan",
     processor: "____________________________________________",
@@ -33,7 +39,7 @@ export async function GET(request: Request) {
   });
   return new Response(new Blob([pdf as BlobPart], { type: "application/pdf" }), {
     headers: {
-      "content-disposition": 'attachment; filename="swva-chihuahua-payment-plan-agreement.pdf"',
+      "content-disposition": 'attachment; filename="payment-plan-agreement.pdf"',
       "content-type": "application/pdf",
       "cache-control": "no-store",
     },

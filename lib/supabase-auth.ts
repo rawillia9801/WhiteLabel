@@ -91,7 +91,7 @@ export function portalKennelIdFromAuthUser(user: AuthUser) {
   return /^[0-9a-f-]{36}$/i.test(candidate) ? candidate : null;
 }
 
-type KennelRow = {
+export type KennelRow = {
   id: string;
   slug: string;
   name: string;
@@ -101,7 +101,18 @@ type KennelRow = {
   primary_color?: string | null;
   accent_color?: string | null;
   font_family?: string | null;
+  primary_breed?: string | null;
+  legal_name?: string | null;
+  location?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  website_url?: string | null;
+  default_puppy_price_cents?: number | null;
+  default_deposit_cents?: number | null;
+  custom_policy_notice?: string | null;
 };
+
+const kennelSelect = "id,slug,name,plan,custom_domain,domain_status,primary_color,accent_color,font_family,primary_breed,legal_name,location,contact_email,contact_phone,website_url,default_puppy_price_cents,default_deposit_cents,custom_policy_notice";
 
 async function restJson<T>(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
@@ -134,7 +145,7 @@ async function kennelForUser(userId: string) {
   );
   const membership = memberships[0];
   if (!membership) return null;
-  const kennels = await restJson<KennelRow[]>(`rest/v1/kennels?select=id,slug,name,plan,custom_domain,domain_status,primary_color,accent_color,font_family&id=eq.${encodeURIComponent(membership.kennel_id)}&limit=1`);
+  const kennels = await restJson<KennelRow[]>(`rest/v1/kennels?select=${kennelSelect}&id=eq.${encodeURIComponent(membership.kennel_id)}&limit=1`);
   const kennel = kennels[0];
   return kennel ? { kennel, role: membership.role } : null;
 }
@@ -160,7 +171,7 @@ export async function createBreederAccount(input: { email: string; password: str
     const kennels = await restJson<KennelRow[]>("rest/v1/kennels", {
       method: "POST",
       headers: { prefer: "return=representation" },
-      body: JSON.stringify({ name: kennelName, slug, plan: input.plan, owner_auth_user_id: user.id }),
+      body: JSON.stringify({ name: kennelName, legal_name: kennelName, contact_email: email, slug, plan: input.plan, owner_auth_user_id: user.id }),
     });
     const kennel = kennels[0];
     if (!kennel) throw new Error("The kennel workspace could not be created.");
@@ -213,16 +224,16 @@ export async function findKennelByHost(hostValue: string) {
   const suffix = `.${platformDomain}`;
   if (host.endsWith(suffix)) {
     const slug = host.slice(0, -suffix.length);
-    const rows = await restJson<KennelRow[]>(`rest/v1/kennels?select=id,slug,name,plan,custom_domain,domain_status,primary_color,accent_color,font_family&slug=eq.${encodeURIComponent(slug)}&limit=1`);
+    const rows = await restJson<KennelRow[]>(`rest/v1/kennels?select=${kennelSelect}&slug=eq.${encodeURIComponent(slug)}&limit=1`);
     return rows[0] || null;
   }
-  const rows = await restJson<KennelRow[]>(`rest/v1/kennels?select=id,slug,name,plan,custom_domain,domain_status,primary_color,accent_color,font_family&custom_domain=eq.${encodeURIComponent(host)}&domain_status=eq.verified&limit=1`);
+  const rows = await restJson<KennelRow[]>(`rest/v1/kennels?select=${kennelSelect}&custom_domain=eq.${encodeURIComponent(host)}&domain_status=eq.verified&limit=1`);
   return rows[0] || null;
 }
 
 export async function findKennelById(kennelId: string) {
   if (!/^[0-9a-f-]{36}$/i.test(kennelId)) return null;
-  const rows = await restJson<KennelRow[]>(`rest/v1/kennels?select=id,slug,name,plan,custom_domain,domain_status,primary_color,accent_color,font_family&id=eq.${encodeURIComponent(kennelId)}&limit=1`);
+  const rows = await restJson<KennelRow[]>(`rest/v1/kennels?select=${kennelSelect}&id=eq.${encodeURIComponent(kennelId)}&limit=1`);
   return rows[0] || null;
 }
 

@@ -1,5 +1,5 @@
-import { CONTRACT_NOTICE_PREFIX, CONTRACT_SECTION_PREFIX, contractNotice, contractSection } from "./contract-format";
-import { virginiaConsumerNotice } from "./contract-templates";
+import { CONTRACT_NOTICE_PREFIX, CONTRACT_SECTION_PREFIX, contractNotice, contractSection } from "./contract-format.ts";
+import { virginiaConsumerNotice } from "./contract-templates.ts";
 
 export type CombinedAgreementDetails = {
   agreementNumber?: string;
@@ -66,7 +66,7 @@ export type CombinedAgreementDetails = {
 
 export const combinedAgreementTerms = [
   contractSection("1. Parties, purpose, and effective date"),
-  "This Puppy Bill of Sale, Animal History Certificate, and One-Year Limited Health Guarantee (Agreement) is entered into by Southwest Virginia Chihuahua LLC, Marion, Virginia (Seller), and the Buyer or Buyers identified in the completed agreement (collectively, Buyer). The Agreement becomes effective when electronically signed by the Buyer and issued by the Seller through SWVAOS. Ownership and risk of loss transfer only as stated below.",
+  "This Puppy Bill of Sale, Animal History Certificate, and One-Year Limited Health Guarantee (Agreement) is entered into by the kennel identified as Seller in the completed agreement and the Buyer or Buyers identified there (collectively, Buyer). The Agreement becomes effective when electronically signed by the Buyer and issued by the Seller through the Breeder Portal. Ownership and risk of loss transfer only as stated below.",
   "This Agreement replaces prior oral discussions concerning the final sale, health coverage, registration, ownership, and post-transfer obligations. A separate Deposit and Reservation Agreement or Payment Plan and Financing Agreement remains controlling on subjects expressly assigned to that document.",
 
   contractSection("2. Puppy identification and animal history"),
@@ -76,7 +76,7 @@ export const combinedAgreementTerms = [
   contractSection("3. Purchase price, taxes, credits, and payment"),
   "Unless a separate signed payment-plan agreement expressly permits post-transfer financing, all amounts required before transfer must be paid and cleared before the puppy is released. A pending, reversed, disputed, stopped, or rejected payment is not considered paid. A legitimate dispute of an unauthorized or erroneous transaction is not prohibited.",
   "Deposits and reservation payments are governed by the separate Deposit and Reservation Agreement. Transport, delivery, administrative, financing, boarding, supplies, and other separately itemized charges are not part of the puppy purchase price for purposes of the voluntary one-year guarantee unless applicable law requires otherwise.",
-  "The payment summary shown in this Agreement is based on transactions recorded in SWVAOS and any corrections entered by the Seller before generation. The Buyer must report a material payment discrepancy before signing.",
+  "The payment summary shown in this Agreement is based on transactions recorded in the Breeder Portal and any corrections entered by the Seller before generation. The Buyer must report a material payment discrepancy before signing.",
 
   contractSection("4. Transfer of ownership, possession, and risk"),
   "Transfer occurs when the puppy is physically delivered to the Buyer or the Buyer's authorized transporter, the required sale documents are signed, and all amounts required before transfer have cleared.",
@@ -88,15 +88,15 @@ export const combinedAgreementTerms = [
   "To the Seller's knowledge on the transfer date, and subject to all written disclosures, the puppy is alert and suitable for transfer, is eating as represented, and has received the age-appropriate care identified in the retained health record. The Seller does not knowingly conceal an infection, communicable disease, parasitic infestation, abnormality, or physical defect.",
   "The Seller's statements are based on the puppy's known history, observation, available veterinary information, and disclosed testing. No breeder can promise that a living animal will never become ill or develop a condition after transfer. Except for the express promises in this Agreement and rights imposed by law, no additional oral, implied, or future-health warranty is made.",
 
-  contractSection("6. Virginia statutory consumer notice"),
+  contractSection("6. Applicable consumer-law notice"),
   contractNotice(virginiaConsumerNotice),
-  "A veterinary certification presented for statutory remedies must contain the information required by Virginia law. A finding of intestinal parasites alone does not make the puppy unfit unless the puppy is clinically ill because of the parasites. Injury or illness contracted after possession does not qualify as a pre-sale condition.",
+  "A veterinary certification presented for a statutory remedy must contain the information required by applicable law. The Buyer and Seller must follow every legally required form, delivery method, and deadline.",
   "Nothing in this Agreement shortens, eliminates, or conditions a statutory remedy that cannot legally be waived. If a conflict exists between a non-waivable law and this Agreement, the law controls.",
 
   contractSection("7. Prompt veterinary examination"),
   "The Buyer agrees to arrange an examination by a licensed veterinarian within 72 hours after receiving the puppy, excluding a day when the chosen clinic is closed. This prompt examination supports early care and the voluntary initial-health portion of this Agreement.",
   "The Buyer must provide the veterinarian with the puppy's health record and disclose the puppy's age, size, transfer date, feeding schedule, and any known symptoms.",
-  "The Buyer should notify the Seller promptly of a serious concern and provide the complete written veterinary record. For a statutory unfit-for-purchase claim, the Buyer must comply with the statutory deadline stated in the Virginia Consumer Notice.",
+  "The Buyer should notify the Seller promptly of a serious concern and provide the complete written veterinary record. For a statutory claim, the Buyer must comply with every deadline under applicable law.",
   "Failure to obtain the 72-hour examination may limit the voluntary initial-health coverage for a condition that a timely examination probably would have discovered. It does not eliminate a non-waivable statutory right and does not automatically eliminate the one-year congenital guarantee unless the delay materially caused or worsened the condition or prevented reliable diagnosis.",
   "Emergency treatment must never be delayed to contact the Seller. The Buyer shall obtain necessary care first and notify the Seller as soon as reasonably possible.",
 
@@ -106,7 +106,7 @@ export const combinedAgreementTerms = [
   "Examples that may qualify when severe and properly documented include major congenital cardiac defects, serious inherited neurological disease, severe structural malformation, or another congenital or hereditary disorder that meets every requirement above. Naming a condition does not guarantee coverage without diagnosis, causation, severity, and timely documentation.",
 
   contractSection("9. One-year guarantee claim procedure"),
-  "The Buyer must notify the Seller in writing within five business days after receiving the diagnosis, and before elective euthanasia or non-emergency major corrective surgery whenever medically reasonable. This five-day term applies to the voluntary one-year guarantee and does not replace the shorter statutory notice period for a Virginia unfit-for-purchase claim.",
+  "The Buyer must notify the Seller in writing within five business days after receiving the diagnosis, and before elective euthanasia or non-emergency major corrective surgery whenever medically reasonable. This voluntary-guarantee term does not replace a shorter deadline imposed by applicable law.",
   "The Buyer must provide the complete medical record, laboratory results, imaging, treatment plan, prognosis, itemized invoices, and a written statement identifying why the veterinarian believes the condition is congenital or hereditary.",
   "For a cardiac, neurological, orthopedic, ophthalmic, hepatic, or other specialized diagnosis, the Seller may reasonably require confirmation by a board-certified veterinary specialist or a veterinarian with appropriate advanced experience.",
   "The Buyer authorizes the Seller to communicate directly with the treating veterinarian and obtain relevant records. The Seller may request a second opinion at the Seller's expense. If the veterinarians materially disagree, the parties may jointly select a third veterinarian and share that examination cost unless they agree otherwise.",
@@ -141,7 +141,7 @@ export const combinedAgreementTerms = [
   "The Buyer will use safe transport restraint, never leave the puppy unattended in a vehicle or outside, comply with applicable animal-care laws, and inform future veterinarians of the dog's small size, known history, and any prior reaction or medical concern.",
 
   contractSection("13. Toy and Micro-Toy safety acknowledgment"),
-  "Southwest Virginia Chihuahua does not guarantee a specific adult weight and does not represent micro, teacup, or toy as a separate registry-recognized Chihuahua variety. When a puppy is described as especially small, the description concerns current size or estimated growth only.",
+  "The Seller does not guarantee a specific adult weight and does not represent micro, teacup, or toy as a separate registry-recognized variety. When a puppy is described as especially small, the description concerns current size or estimated growth only.",
   "If the puppy is designated by the Seller as very small, toy, or Micro-Toy, the Buyer acknowledges the need for additional precautions, including frequent meals, continuous access to appropriate food as directed, careful temperature control, restricted access to stairs and elevated furniture, immediate response to appetite loss or weakness, and delayed transfer until the Seller believes the puppy is maintaining weight and eating safely.",
   "The Buyer understands that hypoglycemia can progress rapidly. Home sugar products or nutritional gels are emergency first aid only and are not substitutes for veterinary care. A weak, unresponsive, seizing, repeatedly vomiting, or non-eating puppy requires immediate veterinary attention.",
 
@@ -155,7 +155,7 @@ export const combinedAgreementTerms = [
   "Any complimentary insurance or trial offer identified in the completed agreement is provided by the insurance company, not by the Seller. The Buyer is responsible for activating coverage by the insurer's deadline, reviewing exclusions and waiting periods, maintaining premiums after the trial, and submitting claims. The Seller is not the insurer and does not guarantee eligibility, continuation, reimbursement, or claim approval. Insurance does not replace this Agreement or veterinary care.",
 
   contractSection("16. Registration, pedigree documents, and breeding rights"),
-  "If the Seller promises registration or documents necessary for registration, the Seller will provide or effect them within the time required by Virginia law. Registration identifies pedigree eligibility; it does not guarantee show quality, breeding quality, fertility, adult size, temperament, or freedom from every inherited condition.",
+  "If the Seller promises registration or documents necessary for registration, the Seller will provide or effect them within the time required by applicable law and the completed agreement. Registration identifies pedigree eligibility; it does not guarantee show quality, breeding quality, fertility, adult size, temperament, or freedom from every inherited condition.",
   "Unless full registration or breeding rights are expressly selected in the completed agreement and any required addendum is signed, the puppy is sold as a companion with no representation that breeding is authorized. A Buyer who breeds without required written rights may lose voluntary guarantee benefits for conditions caused or worsened by breeding, but ownership does not automatically revert and no self-help seizure is authorized.",
 
   contractSection("17. No guarantee of adult size, appearance, temperament, or performance"),
@@ -181,7 +181,7 @@ export const combinedAgreementTerms = [
 
   contractSection("22. Dispute resolution and general contract terms"),
   "Before filing a non-emergency lawsuit, the complaining party should provide a written description of the dispute and requested resolution and allow at least 10 business days for a response, unless a deadline, safety concern, statute of limitation, or need for immediate relief makes delay unreasonable.",
-  "Virginia law governs this Agreement without waiving any consumer right that cannot legally be waived. Subject to mandatory law and jurisdictional limits, an action concerning this Agreement may be filed in a court with proper jurisdiction in Smyth County, Virginia.",
+  "The completed agreement must identify any chosen governing law or venue. No choice-of-law or venue term waives a consumer right, mandatory law, or jurisdictional protection that cannot legally be waived.",
   "Each party bears its own attorney fees and costs unless a statute, court order, or separate enforceable term permits recovery.",
   "This Agreement and its signed attachments contain the complete agreement on the subjects they address. A modification must be in a written record accepted by both parties. Informal messages do not change a material term unless they clearly identify the change and are accepted by both parties.",
   "If a provision is invalid or unenforceable, it will be enforced to the maximum lawful extent and the remaining provisions will continue. Delay or failure to enforce a term once does not waive future enforcement.",
@@ -191,18 +191,18 @@ export const combinedAgreementTerms = [
   contractSection("23. Final acknowledgments"),
   "By signing, each Buyer confirms that the Buyer is legally competent to enter a binding agreement and has provided accurate identity, contact, household, and placement information.",
   "The Buyer confirms that the Buyer reviewed the puppy description, known health disclosures, medical record, payment summary, registration selection, and transfer information.",
-  "The Buyer confirms receipt of the Virginia statutory consumer notice before delivery and understands that statutory deadlines may be shorter than the voluntary one-year guarantee deadlines.",
+  "The Buyer confirms receipt of every consumer notice required for this transaction before delivery and understands that statutory deadlines may be shorter than the voluntary-guarantee deadlines.",
   "The Buyer understands that the one-year guarantee is limited to verified severe congenital or hereditary defects and does not reimburse ordinary veterinary expenses.",
-  "The Buyer understands the specialized feeding, supervision, temperature, hypoglycemia, and injury-prevention needs of a Chihuahua puppy.",
+  "The Buyer understands the breed-, age-, and size-appropriate feeding, supervision, temperature, health-monitoring, and injury-prevention needs of the puppy.",
   "The Buyer had an opportunity to ask questions, obtain independent veterinary or legal advice, and decline the transaction before signing; is not relying on an oral promise omitted from this Agreement; and voluntarily accepts the puppy and the responsibilities stated in this Agreement.",
 
   contractSection("Appendix A - Animal history and medical record"),
-  "The puppy identification, parent information, transfer-date findings, available veterinary information, vaccinations, deworming, medications, diet, and known reactions recorded in SWVAOS or attached to the buyer portal are incorporated into this Agreement. The Seller certifies this information to the best of the Seller's knowledge as of transfer.",
+  "The puppy identification, parent information, transfer-date findings, available veterinary information, vaccinations, deworming, medications, diet, and known reactions recorded in the Breeder Portal or attached to the buyer portal are incorporated into this Agreement. The Seller certifies this information to the best of the Seller's knowledge as of transfer.",
   "The Seller shall retain the signed animal-history record for the period required by applicable law.",
 
   contractSection("Appendix B - Health guarantee claim and veterinary release"),
   "A voluntary claim should identify the Buyer, puppy, transfer date, symptom onset, first examination date, diagnosis date, treating veterinarian, clinic contact information, diagnosed condition, requested remedy, and the veterinarian's explanation of congenital or hereditary cause and severity.",
-  "The Buyer authorizes any veterinarian, clinic, laboratory, insurer, or specialist that treated or evaluated the dog to release relevant medical records and discuss diagnosis, causation, prognosis, and treatment with Southwest Virginia Chihuahua LLC for claim evaluation. This authorization may be revoked prospectively in writing, but revocation may prevent claim verification.",
+  "The Buyer authorizes any veterinarian, clinic, laboratory, insurer, or specialist that treated or evaluated the dog to release relevant medical records and discuss diagnosis, causation, prognosis, and treatment with the Seller for claim evaluation. This authorization may be revoked prospectively in writing, but revocation may prevent claim verification.",
   "The Buyer certifies that submitted claim information is complete and accurate to the best of the Buyer's knowledge.",
 
   contractSection("Appendix C - Go-home care and safety acknowledgment"),
@@ -210,8 +210,8 @@ export const combinedAgreementTerms = [
   "A very small puppy that refuses food, becomes weak, trembles, vomits repeatedly, has diarrhea with lethargy, struggles to breathe, collapses, or has a seizure requires immediate veterinary attention. The Buyer must not wait for the Seller to respond before obtaining emergency care.",
 
   contractSection("Electronic records and signature"),
-  "The parties agree that this exact document may be retained and signed electronically. The Buyer's separately recorded agreement checkbox, health and Virginia-notice acknowledgment, electronic-consent checkbox, typed legal name, signature timestamp, network information, frozen document terms, and audit hash form the retained signature record.",
-  "The Seller's generation and issuance of this document through the authenticated SWVAOS account constitutes the Seller's electronic preparation and delivery of the Agreement. Nothing in this Agreement requires the Buyer to surrender a right or remedy that cannot lawfully be waived.",
+  "The parties agree that this exact document may be retained and signed electronically. The Buyer's separately recorded agreement checkbox, health and consumer-notice acknowledgment, electronic-consent checkbox, typed legal name, signature timestamp, network information, frozen document terms, and audit hash form the retained signature record.",
+  "The Seller's generation and issuance of this document through the authenticated Breeder Portal account constitutes the Seller's electronic preparation and delivery of the Agreement. Nothing in this Agreement requires the Buyer to surrender a right or remedy that cannot lawfully be waived.",
 ];
 
 export function parseCombinedAgreementContent(value: unknown) {

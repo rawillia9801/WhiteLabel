@@ -26,6 +26,34 @@ const positiveId = (value: FormDataEntryValue | null) => {
 const safeText = (value: FormDataEntryValue | null, fallback = "") =>
   String(value ?? fallback).trim();
 
+function validKennelId(value: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(value)) throw new Error("A valid kennel workspace is required.");
+  return value;
+}
+
+async function requireTenantOwner(table: "buyers" | "dogs", ownerId: number, kennelId: string) {
+  const owner = await first<Record<string, unknown>>(table, `select=id&id=eq.${ownerId}&kennel_id=eq.${encodeURIComponent(kennelId)}`);
+  if (!owner) throw new Error(table === "buyers" ? "The buyer is not part of this kennel." : "The dog is not part of this kennel.");
+}
+
+async function requireBuyerReferences(buyerId: number, puppyIds: number[], paymentPlanId: number | null, kennelId: string) {
+  await Promise.all([
+    ...puppyIds.map(async (puppyId) => {
+      const puppy = await first<Record<string, unknown>>("puppies", `select=id&id=eq.${puppyId}&buyer_id=eq.${buyerId}&kennel_id=eq.${encodeURIComponent(kennelId)}`);
+      if (!puppy) throw new Error("Every linked puppy must belong to this buyer and kennel.");
+    }),
+    paymentPlanId ? first<Record<string, unknown>>("payment_plans", `select=id&id=eq.${paymentPlanId}&buyer_id=eq.${buyerId}&kennel_id=eq.${encodeURIComponent(kennelId)}`).then((plan) => {
+      if (!plan) throw new Error("The payment plan does not belong to this buyer and kennel.");
+    }) : Promise.resolve(),
+  ]);
+}
+
+async function requireDogRegistration(dogId: number, registrationId: number | null, kennelId: string) {
+  if (!registrationId) return;
+  const registration = await first<Record<string, unknown>>("dog_registrations", `select=id&id=eq.${registrationId}&dog_id=eq.${dogId}&kennel_id=eq.${encodeURIComponent(kennelId)}`);
+  if (!registration) throw new Error("The registration does not belong to this dog and kennel.");
+}
+
 function selectedPuppyIds(form: FormData) {
   return [...new Set(form.getAll("puppy_ids").flatMap((value) => String(value).split(",")).map(Number).filter((value) => Number.isInteger(value) && value > 0))];
 }
@@ -102,7 +130,8 @@ async function objectExists(objectKey: string) {
   return response.ok;
 }
 
-export async function createSignedDocumentUpload(input: { kind: "dog" | "buyer"; ownerId: number; fileName: string; contentType: string; sizeBytes: number }) {
+export async function createSignedDocumentUpload(input: { kind: "dog" | "buyer"; ownerId: number; fileName: string; contentType: string; sizeBytes: number; kennelId: string }) {
+  const kennelId = validKennelId(input.kennelId);
   if (!Number.isInteger(input.ownerId) || input.ownerId <= 0) throw new Error("A document owner is required.");
   if (!Number.isFinite(input.sizeBytes) || input.sizeBytes <= 0) throw new Error("Choose a document to upload.");
   if (input.sizeBytes > MAX_FILE_SIZE) throw new Error("Documents must be 20 MB or smaller.");
@@ -110,7 +139,8 @@ export async function createSignedDocumentUpload(input: { kind: "dog" | "buyer";
   const contentType = contentTypeForUpload(input.fileName, input.contentType);
   const fileName = safeFileName(input.fileName, input.kind === "dog" ? "dog-document" : "scanned-document");
   const folder = input.kind === "dog" ? "dogs" : "buyers";
-  const objectKey = `${folder}/${input.ownerId}/${crypto.randomUUID()}-${fileName}`;
+  await requireTenantOwner(input.kind === "dog" ? "dogs" : "buyers", input.ownerId, kennelId);
+  const objectKey = `kennels/${kennelId}/${folder}/${input.ownerId}/${crypto.randomUUID()}-${fileName}`;
   const { url, storageBucket } = getSupabaseConfig();
   const response = await supabaseRequest(`storage/v1/object/upload/sign/${storageBucket}/${objectKey}`, {
     method: "POST",
@@ -139,20 +169,23 @@ async function downloadObject(objectKey: string) {
   return response;
 }
 
-async function deleteDocument(table: "buyer_documents" | "dog_documents", documentId: number) {
-  const document = await first<DocumentRecord>(table, `select=*&id=eq.${documentId}`);
+async function deleteDocument(table: "buyer_documents" | "dog_documents", documentId: number, kennelId: string) {
+  const document = await first<DocumentRecord>(table, `select=*&id=eq.${documentId}&kennel_id=eq.${encodeURIComponent(validKennelId(kennelId))}`);
   if (!document) throw new Error("Document not found.");
-  await jsonRequest(`rest/v1/${table}?id=eq.${documentId}`, { method: "DELETE" });
+  await jsonRequest(`rest/v1/${table}?id=eq.${documentId}&kennel_id=eq.${encodeURIComponent(kennelId)}`, { method: "DELETE" });
   await deleteObject(document.object_key);
 }
 
-export async function uploadBuyerDocumentToSupabase(form: FormData) {
+export async function uploadBuyerDocumentToSupabase(form: FormData, kennelIdValue: string) {
+  const kennelId = validKennelId(kennelIdValue);
   const buyerId = positiveId(form.get("buyer_id"));
   const paymentPlanId = positiveId(form.get("payment_plan_id"));
   const puppyIds = selectedPuppyIds(form);
   const documentType = safeText(form.get("document_type"));
   const file = form.get("file");
   if (!buyerId) throw new Error("A buyer is required.");
+  await requireTenantOwner("buyers", buyerId, kennelId);
+  await requireBuyerReferences(buyerId, puppyIds, paymentPlanId, kennelId);
   if (!buyerDocumentTypes.has(documentType)) throw new Error("Choose a valid document type.");
   if (!(file instanceof File) || file.size === 0) throw new Error("Choose a scanned document to upload.");
   if (file.size > MAX_FILE_SIZE) throw new Error("Documents must be 20 MB or smaller.");
@@ -161,15 +194,15 @@ export async function uploadBuyerDocumentToSupabase(form: FormData) {
   const fileName = safeFileName(file.name, "scanned-document");
   const title = (safeText(form.get("title")) || documentType).slice(0, 160);
   const notes = safeText(form.get("notes")).slice(0, 2000) || null;
-  const objectKey = `buyers/${buyerId}/${crypto.randomUUID()}-${fileName}`;
+  const objectKey = `kennels/${kennelId}/buyers/${buyerId}/${crypto.randomUUID()}-${fileName}`;
   const now = new Date().toISOString();
   await uploadObject(objectKey, file, contentType);
   try {
-    const document = await insertDocument("buyer_documents", { buyer_id: buyerId, payment_plan_id: paymentPlanId, document_type: documentType, title, object_key: objectKey, file_name: fileName, content_type: contentType, size_bytes: file.size, notes, created_at: now, updated_at: now });
+    const document = await insertDocument("buyer_documents", { kennel_id: kennelId, buyer_id: buyerId, payment_plan_id: paymentPlanId, document_type: documentType, title, object_key: objectKey, file_name: fileName, content_type: contentType, size_bytes: file.size, notes, created_at: now, updated_at: now });
     for (const puppyId of puppyIds) {
       await jsonRequest("rest/v1/buyer_document_puppies", {
         method: "POST",
-        body: JSON.stringify({ document_id: document.id, puppy_id: puppyId }),
+        body: JSON.stringify({ kennel_id: kennelId, document_id: document.id, puppy_id: puppyId }),
       });
     }
     return { ...document, puppy_ids: puppyIds };
@@ -179,12 +212,15 @@ export async function uploadBuyerDocumentToSupabase(form: FormData) {
   }
 }
 
-export async function uploadDogDocumentToSupabase(form: FormData) {
+export async function uploadDogDocumentToSupabase(form: FormData, kennelIdValue: string) {
+  const kennelId = validKennelId(kennelIdValue);
   const dogId = positiveId(form.get("dog_id"));
   const registrationId = positiveId(form.get("registration_id"));
   const documentType = safeText(form.get("document_type"));
   const file = form.get("file");
   if (!dogId) throw new Error("A breeding dog is required.");
+  await requireTenantOwner("dogs", dogId, kennelId);
+  await requireDogRegistration(dogId, registrationId, kennelId);
   if (!dogDocumentTypes.has(documentType)) throw new Error("Choose a valid document type.");
   if (!(file instanceof File) || file.size === 0) throw new Error("Choose a scanned document to upload.");
   if (file.size > MAX_FILE_SIZE) throw new Error("Documents must be 20 MB or smaller.");
@@ -195,11 +231,11 @@ export async function uploadDogDocumentToSupabase(form: FormData) {
   const registrationNumber = safeText(form.get("registration_number")).slice(0, 100) || null;
   const title = (safeText(form.get("title")) || [registry, documentType].filter(Boolean).join(" ")).slice(0, 160);
   const notes = safeText(form.get("notes")).slice(0, 2000) || null;
-  const objectKey = `dogs/${dogId}/${crypto.randomUUID()}-${fileName}`;
+  const objectKey = `kennels/${kennelId}/dogs/${dogId}/${crypto.randomUUID()}-${fileName}`;
   const now = new Date().toISOString();
   await uploadObject(objectKey, file, contentType);
   try {
-    return await insertDocument("dog_documents", { dog_id: dogId, registration_id: registrationId, document_type: documentType, registry, registration_number: registrationNumber, title, object_key: objectKey, file_name: fileName, content_type: contentType, size_bytes: file.size, notes, created_at: now, updated_at: now });
+    return await insertDocument("dog_documents", { kennel_id: kennelId, dog_id: dogId, registration_id: registrationId, document_type: documentType, registry, registration_number: registrationNumber, title, object_key: objectKey, file_name: fileName, content_type: contentType, size_bytes: file.size, notes, created_at: now, updated_at: now });
   } catch (error) {
     await deleteObject(objectKey);
     throw error;
@@ -213,23 +249,26 @@ type DirectDocumentInput = Record<string, unknown> & {
   size_bytes?: unknown;
 };
 
-function directUploadFields(input: DirectDocumentInput, folder: "dogs" | "buyers", ownerId: number) {
+function directUploadFields(input: DirectDocumentInput, folder: "dogs" | "buyers", ownerId: number, kennelId: string) {
   const objectKey = String(input.object_key ?? "").trim();
   const fileName = safeFileName(String(input.file_name ?? ""), "document");
   const contentType = contentTypeForUpload(fileName, String(input.content_type ?? ""));
   const sizeBytes = Number(input.size_bytes);
-  if (!objectKey.startsWith(`${folder}/${ownerId}/`) || objectKey.includes("..")) throw new Error("The uploaded document path is invalid.");
+  if (!objectKey.startsWith(`kennels/${kennelId}/${folder}/${ownerId}/`) || objectKey.includes("..")) throw new Error("The uploaded document path is invalid.");
   if (!Number.isFinite(sizeBytes) || sizeBytes <= 0 || sizeBytes > MAX_FILE_SIZE) throw new Error("The uploaded document size is invalid.");
   return { objectKey, fileName, contentType, sizeBytes };
 }
 
-export async function registerDogDocumentUpload(input: DirectDocumentInput) {
+export async function registerDogDocumentUpload(input: DirectDocumentInput, kennelIdValue: string) {
+  const kennelId = validKennelId(kennelIdValue);
   const dogId = Number(input.dog_id);
   const registrationId = Number(input.registration_id) > 0 ? Number(input.registration_id) : null;
   const documentType = String(input.document_type ?? "").trim();
   if (!Number.isInteger(dogId) || dogId <= 0) throw new Error("A breeding dog is required.");
+  await requireTenantOwner("dogs", dogId, kennelId);
+  await requireDogRegistration(dogId, registrationId, kennelId);
   if (!dogDocumentTypes.has(documentType)) throw new Error("Choose a valid document type.");
-  const upload = directUploadFields(input, "dogs", dogId);
+  const upload = directUploadFields(input, "dogs", dogId, kennelId);
   if (!await objectExists(upload.objectKey)) throw new Error("The uploaded file could not be verified.");
   const now = new Date().toISOString();
   const registry = String(input.registry ?? "").trim().slice(0, 100) || null;
@@ -237,28 +276,31 @@ export async function registerDogDocumentUpload(input: DirectDocumentInput) {
   const title = (String(input.title ?? "").trim() || [registry, documentType].filter(Boolean).join(" ")).slice(0, 160);
   const notes = String(input.notes ?? "").trim().slice(0, 2000) || null;
   try {
-    return await insertDocument("dog_documents", { dog_id: dogId, registration_id: registrationId, document_type: documentType, registry, registration_number: registrationNumber, title, object_key: upload.objectKey, file_name: upload.fileName, content_type: upload.contentType, size_bytes: upload.sizeBytes, notes, created_at: now, updated_at: now });
+    return await insertDocument("dog_documents", { kennel_id: kennelId, dog_id: dogId, registration_id: registrationId, document_type: documentType, registry, registration_number: registrationNumber, title, object_key: upload.objectKey, file_name: upload.fileName, content_type: upload.contentType, size_bytes: upload.sizeBytes, notes, created_at: now, updated_at: now });
   } catch (error) {
     await deleteObject(upload.objectKey);
     throw error;
   }
 }
 
-export async function registerBuyerDocumentUpload(input: DirectDocumentInput) {
+export async function registerBuyerDocumentUpload(input: DirectDocumentInput, kennelIdValue: string) {
+  const kennelId = validKennelId(kennelIdValue);
   const buyerId = Number(input.buyer_id);
   const paymentPlanId = Number(input.payment_plan_id) > 0 ? Number(input.payment_plan_id) : null;
   const documentType = String(input.document_type ?? "").trim();
   if (!Number.isInteger(buyerId) || buyerId <= 0) throw new Error("A buyer is required.");
+  await requireTenantOwner("buyers", buyerId, kennelId);
   if (!buyerDocumentTypes.has(documentType)) throw new Error("Choose a valid document type.");
-  const upload = directUploadFields(input, "buyers", buyerId);
+  const upload = directUploadFields(input, "buyers", buyerId, kennelId);
   if (!await objectExists(upload.objectKey)) throw new Error("The uploaded file could not be verified.");
   const puppyIds = [...new Set((Array.isArray(input.puppy_ids) ? input.puppy_ids : String(input.puppy_ids ?? "").split(",")).map(Number).filter((value) => Number.isInteger(value) && value > 0))];
+  await requireBuyerReferences(buyerId, puppyIds, paymentPlanId, kennelId);
   const now = new Date().toISOString();
   const title = (String(input.title ?? "").trim() || documentType).slice(0, 160);
   const notes = String(input.notes ?? "").trim().slice(0, 2000) || null;
   try {
-    const document = await insertDocument("buyer_documents", { buyer_id: buyerId, payment_plan_id: paymentPlanId, document_type: documentType, title, object_key: upload.objectKey, file_name: upload.fileName, content_type: upload.contentType, size_bytes: upload.sizeBytes, notes, created_at: now, updated_at: now });
-    for (const puppyId of puppyIds) await jsonRequest("rest/v1/buyer_document_puppies", { method: "POST", body: JSON.stringify({ document_id: document.id, puppy_id: puppyId }) });
+    const document = await insertDocument("buyer_documents", { kennel_id: kennelId, buyer_id: buyerId, payment_plan_id: paymentPlanId, document_type: documentType, title, object_key: upload.objectKey, file_name: upload.fileName, content_type: upload.contentType, size_bytes: upload.sizeBytes, notes, created_at: now, updated_at: now });
+    for (const puppyId of puppyIds) await jsonRequest("rest/v1/buyer_document_puppies", { method: "POST", body: JSON.stringify({ kennel_id: kennelId, document_id: document.id, puppy_id: puppyId }) });
     return { ...document, puppy_ids: puppyIds };
   } catch (error) {
     await deleteObject(upload.objectKey);
@@ -266,21 +308,21 @@ export async function registerBuyerDocumentUpload(input: DirectDocumentInput) {
   }
 }
 
-export const deleteBuyerDocumentFromSupabase = (documentId: number) =>
-  deleteDocument("buyer_documents", documentId);
+export const deleteBuyerDocumentFromSupabase = (documentId: number, kennelId: string) =>
+  deleteDocument("buyer_documents", documentId, kennelId);
 
-export const deleteDogDocumentFromSupabase = (documentId: number) =>
-  deleteDocument("dog_documents", documentId);
+export const deleteDogDocumentFromSupabase = (documentId: number, kennelId: string) =>
+  deleteDocument("dog_documents", documentId, kennelId);
 
-export async function getBuyerDocumentFromSupabase(documentId: number) {
-  const document = await first<DocumentRecord>("buyer_documents", `select=*&id=eq.${documentId}`);
+export async function getBuyerDocumentFromSupabase(documentId: number, kennelId: string) {
+  const document = await first<DocumentRecord>("buyer_documents", `select=*&id=eq.${documentId}&kennel_id=eq.${encodeURIComponent(validKennelId(kennelId))}`);
   if (!document) return null;
   const object = await downloadObject(document.object_key);
   return object ? { document, object } : null;
 }
 
-export async function getDogDocumentFromSupabase(documentId: number) {
-  const document = await first<DocumentRecord>("dog_documents", `select=*&id=eq.${documentId}`);
+export async function getDogDocumentFromSupabase(documentId: number, kennelId: string) {
+  const document = await first<DocumentRecord>("dog_documents", `select=*&id=eq.${documentId}&kennel_id=eq.${encodeURIComponent(validKennelId(kennelId))}`);
   if (!document) return null;
   const object = await downloadObject(document.object_key);
   return object ? { document, object } : null;

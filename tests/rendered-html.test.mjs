@@ -4,11 +4,11 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("ships the SWVAOS command surface", async () => {
+test("ships the white-label Breeder Portal command surface", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
 
-  assert.match(page, /SWVAOS/);
-  assert.match(page, /BREEDER OS/i);
+  assert.match(page, /Breeder Portal/);
+  assert.match(page, /useTenant/);
   assert.match(page, /PRIORITY QUEUE/);
   assert.match(page, /Work that is waiting on you/);
   assert.match(page, /Documents/);
@@ -204,7 +204,7 @@ test("ships the caller CRM and complete line-aware voice menus", async () => {
 
   assert.match(page, /Caller CRM/);
   assert.match(page, /Recognized family flow/);
-  assert.match(page, /Public SWVAOS flow/);
+  assert.match(page, /Public Breeder Portal flow/);
   assert.match(page, /Pup-Lift support flow/);
   assert.match(page, /\+1 \(715\) 888-9526/);
   assert.match(page, /Assigned Records/);
@@ -222,7 +222,7 @@ test("ships the caller CRM and complete line-aware voice menus", async () => {
   assert.match(webhook, /x-twilio-signature/);
   assert.match(webhook, /validateRequest/);
   assert.match(webhook, /Basic/);
-  assert.match(callerVoice, /Press 7 to speak with someone/);
+  assert.match(callerVoice, /Press 7 to speak with our team/);
   assert.match(callerVoice, /Press 6 to speak with someone/);
   assert.match(callerVoice, /Polly\.Joanna/);
   assert.match(callerVoice, /DEFAULT_PUP_LIFT_NUMBER/);
@@ -237,7 +237,7 @@ test("ships the caller CRM and complete line-aware voice menus", async () => {
   assert.doesNotMatch(incomingRoute, /catch\(\(\) => null\)/);
   assert.match(env, /TWILIO_AUTH_TOKEN/);
   assert.match(env, /SWVAOS_CRM_API_KEY/);
-  assert.match(env, /SWVAOS_PUP_LIFT_NUMBER/);
+  assert.match(env, /NEXT_PUBLIC_FEATURE_PHONE_CENTER=false/);
 });
 
 test("generates e-signature contracts and retains them in the puppy portal", async () => {
@@ -246,7 +246,7 @@ test("generates e-signature contracts and retains them in the puppy portal", asy
     readFile(new URL("db/contracts.ts", root), "utf8"),
     readFile(new URL("lib/contract-pdf.ts", root), "utf8"),
     readFile(new URL("lib/contract-templates.ts", root), "utf8"),
-    readFile(new URL("app/portal/[token]/page.tsx", root), "utf8"),
+    readFile(new URL("components/family-portal-experience.tsx", root), "utf8"),
     readFile(new URL("app/portal/[token]/contracts/[id]/page.tsx", root), "utf8"),
     readFile(new URL("app/api/portal/[token]/contracts/[id]/sign/route.ts", root), "utf8"),
     readFile(new URL(".env.example", root), "utf8"),
@@ -260,27 +260,27 @@ test("generates e-signature contracts and retains them in the puppy portal", asy
   assert.match(contracts, /Puppy deposit/);
   assert.match(contracts, /buyer_document_puppies/);
   assert.match(contracts, /SHA-256/);
-  assert.match(pdf, /SIGNED COPY/);
-  assert.match(portal, /Agreements and signatures/);
-  assert.match(portal, /Family account details/);
+  assert.match(pdf, /ELECTRONICALLY SIGNED/);
+  assert.match(portal, /Review and retain your documents/);
+  assert.match(portal, /Contact and placement record/);
   assert.match(portal, /Additional documents/);
-  assert.match(portal, /Upcoming dates and next steps/);
+  assert.match(portal, /Appointments and next steps/);
   assert.match(page, /Designate this puppy as Micro-Toy/);
   assert.match(page, /exam_days/);
-  assert.match(templates, /Virginia Consumer Protection Act/);
-  assert.match(templates, /within 14 days following receipt if the animal is infected with parvovirus/);
+  assert.match(templates, /IMPORTANT CONSUMER-LAW NOTICE/);
+  assert.match(templates, /cannot legally be waived/);
   assert.match(signaturePage, /separately agree to conduct this transaction electronically/);
-  assert.match(signaturePage, /Virginia Consumer Notice/);
+  assert.match(signaturePage, /applicable consumer-law notice/);
   assert.match(signatureRoute, /electronic_consent/);
   assert.match(signatureRoute, /health_acknowledged/);
   assert.doesNotMatch(`${page}${portal}${signaturePage}`, /localStorage|sessionStorage/);
-  assert.match(env, /SWVAOS_PORTAL_SECRET/);
+  assert.match(env, /BREEDER_PORTAL_SECRET/);
 });
 
-test("unifies phone operations and family requests inside SWVAOS", async () => {
+test("unifies optional phone operations and family requests inside Breeder Portal", async () => {
   const [page, portal, contracts, requestRoute, css] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
-    readFile(new URL("app/portal/[token]/page.tsx", root), "utf8"),
+    readFile(new URL("components/family-portal-experience.tsx", root), "utf8"),
     readFile(new URL("db/contracts.ts", root), "utf8"),
     readFile(new URL("app/api/portal/[token]/requests/route.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
@@ -293,11 +293,11 @@ test("unifies phone operations and family requests inside SWVAOS", async () => {
   assert.match(page, /Phone routing online/);
   assert.match(page, /\+1 \(715\) 888-9526/);
   assert.match(page, /Pup-Lift support flow/);
-  assert.match(portal, /YOUR PUPPY JOURNEY/);
-  assert.match(portal, /Pickup and transportation/);
-  assert.match(portal, /Messages and requests/);
-  assert.match(portal, /Ready for home/);
-  assert.match(portal, /Send request/);
+  assert.match(portal, /YOUR JOURNEY/);
+  assert.match(portal, /Pickup and delivery/);
+  assert.match(portal, /Send a private message/);
+  assert.match(portal, /Go-home scheduled/);
+  assert.match(portal, /Send transportation request/);
   assert.match(contracts, /createPortalRequest/);
   assert.match(contracts, /\[Family request\]/);
   assert.match(requestRoute, /createPortalRequest/);
@@ -322,8 +322,8 @@ test("ships a connected breeder workspace with portal preview and customer sign-
   assert.match(page, /Payments & sales/);
   assert.match(page, /Pickup & delivery/);
   assert.match(family, /Portal Preview/);
-  assert.match(family, /SWVAOS PORTAL SIMULATOR/);
-  assert.match(portalLogin, /Email my sign-in link/);
+  assert.match(family, /Breeder Portal PORTAL SIMULATOR/);
+  assert.match(portalLogin, /Email my secure sign-in link/);
   assert.match(portalAccount, /PORTAL_SESSION_COOKIE/);
   assert.match(portalRequest, /portal-access-/);
   assert.match(templates, /portal_sign_in/);
@@ -363,8 +363,8 @@ test("connects applications, placement, delivery, payments, and automated emails
   assert.match(page, /Credit to buyer \/ family/);
   assert.match(page, /Final balance/);
   assert.match(page, /related_type/);
-  assert.match(templatesCenter, /Control the language families actually receive/);
-  assert.match(templatesCenter, /APPLICATION RECEIVED/);
+  assert.match(templatesCenter, /Prepare the complete buyer package/);
+  assert.match(templatesCenter, /Automatic email templates/);
   assert.match(templatesCenter, /Discard edits/);
   assert.doesNotMatch(templatesCenter, /Restore defaults/);
 });

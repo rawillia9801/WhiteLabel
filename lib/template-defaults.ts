@@ -46,14 +46,14 @@ export const defaultTemplatesConfig: TemplatesConfig = {
   documents: {
     puppy_packet: {
       name: "Complete Personalized Puppy Packet",
-      description: "The complete buyer-facing go-home packet: personalized binder cover, puppy and family record, table of contents, Chihuahua care guide, Pup-Lift information, emergency guidance, safety, training, insurance, and go-home checklist. Saved wording remains editable while puppy and buyer fields populate automatically.",
+      description: "The complete buyer-facing go-home packet: personalized binder cover, puppy and family record, table of contents, breed care guide, emergency guidance, safety, training, insurance, and go-home checklist. Saved wording remains editable while puppy and buyer fields populate automatically.",
       content: defaultPuppyPacketTemplate,
       enabled: true,
       prepareUrl: "/puppy-packet",
     },
     bill_of_sale_health_guarantee: {
       name: "Bill of Sale + 1-Year Health Guarantee",
-      description: "Production combined agreement with animal history, payment and transfer terms, Virginia notice, one-year congenital and hereditary guarantee, care acknowledgments, one electronic signature, and a retained buyer-portal copy.",
+      description: "Production combined agreement with animal history, payment and transfer terms, an editable consumer-law notice, health-guarantee terms, care acknowledgments, one electronic signature, and a retained buyer-portal copy.",
       content: combinedAgreementTerms.join("\n\n"),
       enabled: true,
       downloadUrl: "/api/templates/bill-of-sale-health-guarantee",
@@ -74,14 +74,14 @@ export const defaultTemplatesConfig: TemplatesConfig = {
     payment_agreement: {
       name: "Payment Plan Agreement",
       description: "Additional business-specific terms appended to generated payment agreements.",
-      content: "Payments must be made through the processor named in the completed agreement. Any exception, extension, or modification must be approved in writing by Southwest Virginia Chihuahua LLC.",
+      content: "Payments must be made through the processor named in the completed agreement. Any exception, extension, or modification must be approved in writing by the Seller.",
       enabled: true,
       downloadUrl: "/api/templates/payment-agreement",
     },
     puppy_application: {
       name: "Puppy Application",
       description: "Opening statement shown on the downloadable customer application.",
-      content: "Thank you for considering Southwest Virginia Chihuahua. This application helps us evaluate safety, care readiness, household fit, and puppy preferences. Submission does not guarantee approval or reserve a puppy.",
+      content: "Thank you for considering our breeding program. This application helps us evaluate safety, care readiness, household fit, and puppy preferences. Submission does not guarantee approval or reserve a puppy.",
       enabled: true,
       downloadUrl: "/api/templates/puppy-application",
     },
@@ -91,7 +91,7 @@ export const defaultTemplatesConfig: TemplatesConfig = {
       name: "Application received",
       trigger: "Sent when a new family/application record is submitted or added.",
       subject: "We received your puppy application",
-      body: "Hi {{first_name}},\n\nThank you for submitting your puppy application to {{business_name}}. We have received it and will review your information. We will contact you if we need anything else.\n\nQuestions? Reply to this email or call {{support_phone}}.\n\n{{business_name}}",
+      body: "Hi {{first_name}},\n\nThank you for submitting your puppy application to {{business_name}}. We have received it and will review your information. We will contact you if we need anything else.\n\nCreate your private Buyer Puppy Portal password with this secure link:\n{{portal_url}}\n\nQuestions? Reply to this email or call {{support_phone}}.\n\n{{business_name}}",
       enabled: true,
     },
     application_approved: {

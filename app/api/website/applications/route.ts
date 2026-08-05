@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto";
 import { createSupabaseResource, updateSupabaseResource } from "../../../../db/supabase-kennel";
 import { getSupabaseConfig, supabaseRequest } from "../../../../db/supabase";
-import { sendApplicationJourneyEmail } from "../../../../lib/application-journey-email";
-import { sendOwnerNotification } from "../../../../lib/email-service";
+import { sendOwnerNotification, sendTemplateEmail } from "../../../../lib/email-service";
 import { createPortalToken } from "../../../../lib/portal-token";
 import { findKennelByHost } from "../../../../lib/supabase-auth";
 import {
@@ -14,8 +13,8 @@ import {
 
 type BuyerRow = Record<string, unknown> & { id: number; first_name?: string; email?: string; application_status?: string; notes?: string };
 
-function response(origin: string | null, payload: Record<string, unknown>, status = 200) {
-  return Response.json(payload, { status, headers: websiteCorsHeaders(origin) });
+function response(origin: string | null, host: string | null, payload: Record<string, unknown>, status = 200) {
+  return Response.json(payload, { status, headers: websiteCorsHeaders(origin, host) });
 }
 
 function retainAdvancedStatus(status: unknown) {
@@ -32,26 +31,27 @@ async function existingBuyer(email: string, kennelId: string) {
 
 export async function OPTIONS(request: Request) {
   const origin = request.headers.get("origin");
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
   return new Response(null, {
-    status: isAllowedWebsiteOrigin(origin) ? 204 : 403,
-    headers: websiteCorsHeaders(origin),
+    status: isAllowedWebsiteOrigin(origin, host) ? 204 : 403,
+    headers: websiteCorsHeaders(origin, host),
   });
 }
 
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
-  if (!isAllowedWebsiteOrigin(origin)) return response(origin, { error: "This submission source is not allowed." }, 403);
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  if (!isAllowedWebsiteOrigin(origin, host)) return response(origin, host, { error: "This submission source is not allowed." }, 403);
 
   const length = Number(request.headers.get("content-length") ?? 0);
-  if (length > 75_000) return response(origin, { error: "The application is too large." }, 413);
+  if (length > 75_000) return response(origin, host, { error: "The application is too large." }, 413);
 
   try {
     if (!getSupabaseConfig().serviceRoleKey) {
-      return response(origin, { error: "Application intake is temporarily unavailable." }, 503);
+      return response(origin, host, { error: "Application intake is temporarily unavailable." }, 503);
     }
-    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
-    const kennel = await findKennelByHost(host);
-    if (!kennel) return response(origin, { error: "This application form is not connected to a kennel." }, 404);
+    const kennel = await findKennelByHost(host || "");
+    if (!kennel) return response(origin, host, { error: "This application form is not connected to a kennel." }, 404);
     const application = normalizeWebsiteApplication(await request.json());
     const receivedAt = new Date().toISOString();
     const input = applicationBuyerInput(application, receivedAt);
@@ -77,12 +77,16 @@ export async function POST(request: Request) {
         .slice(0, 20);
       const setupToken = await createPortalToken(Number(buyer.id), 7, kennel.id);
       portalSetupUrl = `${new URL(request.url).origin}/portal/setup?token=${encodeURIComponent(setupToken)}`;
-      const email = await sendApplicationJourneyEmail({
+      const email = await sendTemplateEmail({
+        kennelId: kennel.id,
+        templateKey: "application_received",
         buyerId: Number(buyer.id),
         to: String(buyer.email || input.email),
-        firstName: String(buyer.first_name || String(application.full_name).split(/\s+/)[0] || "there"),
-        setupLink: portalSetupUrl,
         dedupeKey: `website-application-${fingerprint}`,
+        variables: {
+          first_name: String(buyer.first_name || String(application.full_name).split(/\s+/)[0] || "there"),
+          portal_url: portalSetupUrl,
+        },
       });
       confirmationEmailSent = email.sent === true;
     } catch (error) {
@@ -92,11 +96,13 @@ export async function POST(request: Request) {
     let ownerNotificationSent = false;
     try {
       const ownerEmail = await sendOwnerNotification({
+        kennelId: kennel.id,
+        kennelName: kennel.name,
         category: "Application",
         subject: `New puppy application from ${String(application.full_name)}`,
         buyerId: Number(buyer.id),
         body: [
-          "A puppy application was submitted through swvachihuahua.com.",
+          `A puppy application was submitted through ${new URL(request.url).host}.`,
           "",
           `Applicant: ${String(application.full_name)}`,
           `Email: ${String(application.email)}`,
@@ -108,8 +114,8 @@ export async function POST(request: Request) {
           "Small-puppy policy acknowledged: Yes",
           `Portal setup email: ${confirmationEmailSent ? "Sent" : "Not sent"}`,
           "",
-          "Review the full application in SWVAOS:",
-          "https://swvaos.site/?view=Applications",
+          "Review the full application in Breeder Portal:",
+          `${new URL(request.url).origin}/?view=Applications`,
         ].join("\n"),
       });
       ownerNotificationSent = ownerEmail.sent === true;
@@ -117,7 +123,7 @@ export async function POST(request: Request) {
       console.error("Owner application notification failed", error instanceof Error ? error.message : error);
     }
 
-    return response(origin, {
+    return response(origin, host, {
       ok: true,
       application_id: Number(buyer.id),
       status: retainAdvancedStatus(buyer.application_status),
@@ -128,6 +134,6 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to save the application.";
     const status = /valid|must|required|acknowledgement|full name|phone number|accept/i.test(message) ? 400 : 500;
-    return response(origin, { error: status === 400 ? message : "Unable to save the application right now." }, status);
+    return response(origin, host, { error: status === 400 ? message : "Unable to save the application right now." }, status);
   }
 }

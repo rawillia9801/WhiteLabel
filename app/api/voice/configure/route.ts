@@ -20,13 +20,13 @@ export async function POST(request: Request) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
   const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
   const configuredBase = process.env.TWILIO_WEBHOOK_BASE_URL?.trim().replace(/\/$/, "");
-  const webhookBase = configuredBase === "https://swvaos.site" ? "https://www.swvaos.site" : configuredBase || "https://www.swvaos.site";
-  if (!accountSid || !authToken) {
-    return Response.json({ error: "Twilio credentials must be configured before syncing phone lines." }, { status: 503 });
+  const webhookBase = configuredBase;
+  if (!accountSid || !authToken || !webhookBase) {
+    return Response.json({ error: "Twilio credentials and TWILIO_WEBHOOK_BASE_URL must be configured before syncing phone lines." }, { status: 503 });
   }
 
   const managedLines = [
-    { id: "main", phone: normalizePhone(process.env.SWVAOS_MAIN_NUMBER || DEFAULT_MAIN_NUMBER), friendlyName: "Southwest Virginia Chihuahua" },
+    { id: "main", phone: normalizePhone(process.env.SWVAOS_MAIN_NUMBER || DEFAULT_MAIN_NUMBER), friendlyName: process.env.VOICE_BUSINESS_NAME?.trim() || "Breeder Portal" },
     { id: "pup-lift", phone: normalizePhone(process.env.SWVAOS_PUP_LIFT_NUMBER || DEFAULT_PUP_LIFT_NUMBER), friendlyName: "Pup-Lift Support" },
   ];
 

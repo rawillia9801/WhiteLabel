@@ -21,18 +21,21 @@ const validApplication = {
   ack_policies: true,
   ack_financial: true,
   ack_truth: true,
-  ack_contact: true,
+  ack_records: true,
+  ack_small_puppy: true,
 };
 
-test("accepts only the production website origins", () => {
-  assert.equal(isAllowedWebsiteOrigin("https://swvachihuahua.com"), true);
-  assert.equal(isAllowedWebsiteOrigin("https://www.swvachihuahua.com"), true);
+test("accepts configured and platform website origins", () => {
+  process.env.WEBSITE_ALLOWED_ORIGINS = "https://willowcreekgoldens.com,https://www.willowcreekgoldens.com";
+  assert.equal(isAllowedWebsiteOrigin("https://willowcreekgoldens.com"), true);
+  assert.equal(isAllowedWebsiteOrigin("https://www.willowcreekgoldens.com"), true);
+  assert.equal(isAllowedWebsiteOrigin("https://willow-creek.breederportal.site"), true);
   assert.equal(isAllowedWebsiteOrigin("https://example.com"), false);
-  assert.equal(websiteCorsHeaders("https://swvachihuahua.com").get("access-control-allow-origin"), "https://swvachihuahua.com");
+  assert.equal(websiteCorsHeaders("https://willowcreekgoldens.com").get("access-control-allow-origin"), "https://willowcreekgoldens.com");
   assert.equal(websiteCorsHeaders("https://example.com").has("access-control-allow-origin"), false);
 });
 
-test("normalizes the website application into a SWVAOS buyer", () => {
+test("normalizes the website application into a tenant buyer", () => {
   const normalized = normalizeWebsiteApplication({ application: validApplication });
   const buyer = applicationBuyerInput(normalized, "2026-07-24T12:00:00.000Z");
   assert.equal(normalized.email, "jane@example.com");

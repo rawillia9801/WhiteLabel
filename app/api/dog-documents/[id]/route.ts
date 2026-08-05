@@ -1,10 +1,12 @@
 import { getDogDocumentFromSupabase } from "../../../../db/supabase-documents";
+import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
 
 export async function GET(request: Request) {
+  const unauthorized = requireAdminSession(request); if (unauthorized) return unauthorized;
   const documentId = Number(new URL(request.url).pathname.split("/").filter(Boolean).pop());
   if (!Number.isInteger(documentId) || documentId <= 0) return Response.json({ error: "A valid document is required." }, { status: 400 });
 
-  const result = await getDogDocumentFromSupabase(documentId);
+  const result = await getDogDocumentFromSupabase(documentId, breederSessionFromRequest(request)!.kennelId);
   if (!result) return Response.json({ error: "Document not found." }, { status: 404 });
 
   const headers = new Headers();

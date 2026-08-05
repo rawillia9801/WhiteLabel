@@ -59,8 +59,8 @@ const fieldValue = (record: Record<string, unknown> | undefined, key: string) =>
 const dollarValue = (record: Record<string, unknown> | undefined, key: string) => typeof record?.[key] === "number" ? String((record[key] as number) / 100) : "";
 const friendlyError = (value: unknown, fallback: string) => {
   const message = value instanceof Error ? value.message : String(value || fallback);
-  if (/schema cache|could not find the table|relation .* does not exist|column .* does not exist/i.test(message)) return "The SWVAOS data structure needs attention.";
-  if (/not configured|missing.*key|missing.*url/i.test(message)) return "The SWVAOS data connection is not configured.";
+  if (/schema cache|could not find the table|relation .* does not exist|column .* does not exist/i.test(message)) return "The Breeder Portal data structure needs attention.";
+  if (/not configured|missing.*key|missing.*url/i.test(message)) return "The Breeder Portal data connection is not configured.";
   return message.replace(/supabase/gi, "data service").replace(/vercel/gi, "hosting service").replace(/chatgpt/gi, "legacy system");
 };
 
@@ -107,7 +107,7 @@ export default function DogProfilePage({ params }: { params: Promise<{ id: strin
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 2600); return () => window.clearTimeout(timer); }, [toast]);
 
   const dog = data?.dogs.find((candidate) => candidate.id === dogId) ?? null;
-  useEffect(() => { if (dog) document.title = `${dog.name} | SWVAOS`; }, [dog]);
+  useEffect(() => { if (dog) document.title = `${dog.name} | Breeder Portal`; }, [dog]);
 
   const profile = useMemo(() => {
     if (!data || !dog) return null;
@@ -213,13 +213,13 @@ export default function DogProfilePage({ params }: { params: Promise<{ id: strin
 
   if (loading) return <main className="profile-state"><span className="profile-spinner" />Loading profile...</main>;
   if (error && !data) return <main className="profile-state"><b>Something needs attention</b><p>{error}</p><button onClick={() => void loadData()}>Retry</button></main>;
-  if (!dog || !profile) return <main className="profile-state"><b>Profile not found</b><p>This dog record is not available.</p><Link href="/"><ArrowLeft size={16} /> Return to SWVAOS</Link></main>;
+  if (!dog || !profile) return <main className="profile-state"><b>Profile not found</b><p>This dog record is not available.</p><Link href="/"><ArrowLeft size={16} /> Return to Breeder Portal</Link></main>;
 
   const profileRecord = dog as unknown as Record<string, unknown>;
 
   return <main className="dog-profile-page">
     <header className="profile-topbar">
-      <Link href="/" className="profile-brand"><span><DogIcon size={20} /></span><b>SWVAOS</b><small>Dog profile</small></Link>
+      <Link href="/" className="profile-brand"><span><DogIcon size={20} /></span><b>Breeder Portal</b><small>Dog profile</small></Link>
       <div className="profile-top-actions"><Link href="/"><ArrowLeft size={16} /> Back to operating system</Link><button onClick={() => openModal("dog", profileRecord)}><Pencil size={16} /> Edit profile</button></div>
     </header>
 

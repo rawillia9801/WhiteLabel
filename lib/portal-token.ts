@@ -8,7 +8,7 @@ type PortalClaims = {
 const encoder = new TextEncoder();
 
 function portalSecret() {
-  const secret = process.env.SWVAOS_PORTAL_SECRET?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const secret = process.env.BREEDER_PORTAL_SECRET?.trim() || process.env.SWVAOS_PORTAL_SECRET?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!secret) throw new Error("Puppy portal security is not configured.");
   return secret;
 }

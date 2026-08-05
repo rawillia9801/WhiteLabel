@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import styles from "./form.module.css";
+import { useTenant } from "../../../components/tenant-runtime";
 
 type BaseRecord = { id: number; created_at?: string; updated_at?: string };
 type Buyer = BaseRecord & {
@@ -94,6 +95,7 @@ function FormSection({ title, step, children }: { title: string; step: string; c
 }
 
 export default function BillOfSaleHealthGuaranteeFormPage() {
+  const tenant = useTenant();
   const [data, setData] = useState<DataSet>(emptyData);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -110,7 +112,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
     try {
       const response = await fetch("/api/data", { cache: "no-store" });
       const payload = await response.json() as Partial<DataSet> & { error?: string };
-      if (!response.ok) throw new Error(payload.error || "Unable to load SWVAOS records.");
+      if (!response.ok) throw new Error(payload.error || "Unable to load Breeder Portal records.");
       const nextData: DataSet = {
         buyers: Array.isArray(payload.buyers) ? payload.buyers : [],
         puppies: Array.isArray(payload.puppies) ? payload.puppies : [],
@@ -124,7 +126,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
       const firstBuyer = nextData.buyers.find((buyer) => nextData.puppies.some((puppy) => Number(puppy.buyer_id) === buyer.id));
       if (firstBuyer) setBuyerId((current) => current || firstBuyer.id);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "Unable to load SWVAOS records.");
+      setLoadError(error instanceof Error ? error.message : "Unable to load Breeder Portal records.");
     } finally {
       setLoading(false);
     }
@@ -171,14 +173,14 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
 
   async function copyPortalLink() { if (prepared?.portalUrl) await navigator.clipboard.writeText(prepared.portalUrl); }
 
-  if (loading) return <main className={styles.state}><LoaderCircle className={styles.spin} size={28} /><h1>Loading SWVAOS records</h1><p>Preparing buyer, puppy, payment, litter, and transfer information.</p></main>;
+  if (loading) return <main className={styles.state}><LoaderCircle className={styles.spin} size={28} /><h1>Loading Breeder Portal records</h1><p>Preparing buyer, puppy, payment, litter, and transfer information.</p></main>;
 
   return <main className={styles.page}>
-    <header className={styles.topbar}><Link href="/"><ArrowLeft size={17} /> Back to SWVAOS</Link><span><ShieldCheck size={16} /> Authenticated production form</span></header>
+    <header className={styles.topbar}><Link href="/"><ArrowLeft size={17} /> Back to Breeder Portal</Link><span><ShieldCheck size={16} /> Authenticated production form</span></header>
     <div className={styles.shell}>
-      <section className={styles.hero}><div><span className={styles.eyebrow}>AUTOMATED FORMS / PRODUCTION AGREEMENT</span><h1>Bill of Sale + One-Year Health Guarantee</h1><p>Select a family and assigned puppy. SWVAOS fills existing buyer, puppy, litter, parent, payment, and scheduled-transfer information; staff completes only details that are not yet stored.</p></div><div className={styles.heroBadge}><FileSignature size={25} /><span><b>One document</b><small>One buyer signature · retained portal copy</small></span></div></section>
+      <section className={styles.hero}><div><span className={styles.eyebrow}>AUTOMATED FORMS / PRODUCTION AGREEMENT</span><h1>Bill of Sale + One-Year Health Guarantee</h1><p>Select a family and assigned puppy. Breeder Portal fills existing buyer, puppy, litter, parent, payment, and scheduled-transfer information; staff completes only details that are not yet stored.</p></div><div className={styles.heroBadge}><FileSignature size={25} /><span><b>One document</b><small>One buyer signature · retained portal copy</small></span></div></section>
       {loadError && <section className={styles.error}><b>Unable to open the form.</b><span>{loadError}</span><button type="button" onClick={() => void load()}><RefreshCw size={15} /> Try again</button></section>}
-      {prepared && <section className={styles.success}><CheckCircle2 size={28} /><div><h2>Agreement prepared and saved</h2><p>The pending PDF is in the buyer's portal and ready for electronic signature. The signed PDF will replace the pending copy while retaining the audit record.</p><input readOnly value={prepared.portalUrl} aria-label="Buyer portal URL" /></div><button type="button" onClick={() => void copyPortalLink()}><Copy size={16} /> Copy link</button><a href={prepared.portalUrl} target="_blank" rel="noreferrer">Open portal <ExternalLink size={15} /></a></section>}
+      {prepared && <section className={styles.success}><CheckCircle2 size={28} /><div><h2>Agreement prepared and saved</h2><p>The pending PDF is in the buyer&apos;s portal and ready for electronic signature. The signed PDF will replace the pending copy while retaining the audit record.</p><input readOnly value={prepared.portalUrl} aria-label="Buyer portal URL" /></div><button type="button" onClick={() => void copyPortalLink()}><Copy size={16} /> Copy link</button><a href={prepared.portalUrl} target="_blank" rel="noreferrer">Open portal <ExternalLink size={15} /></a></section>}
 
       <form className={styles.form} onSubmit={submit}>
         <section className={styles.selectorPanel}>
@@ -222,7 +224,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
           </FormSection>
 
           <FormSection title="Breeder and parent information" step="4">
-            <label className={styles.checkbox}><input name="bred_by_seller" type="checkbox" defaultChecked /><span>Puppy was bred by Southwest Virginia Chihuahua.</span></label>
+            <label className={styles.checkbox}><input name="bred_by_seller" type="checkbox" defaultChecked /><span>Puppy was bred by your breeder.</span></label>
             <InputField label="Person from whom Seller obtained puppy" name="acquired_from" defaultValue="Bred by Seller" />
             <InputField label="Sire" name="sire_display_name" defaultValue={sire?.registered_name || sire?.name || ""} readOnly />
             <InputField label="Sire registration number" name="sire_registration_number" defaultValue={registrationFor(sire?.id, data.dog_registrations, sire || undefined)} />
@@ -243,7 +245,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
 
           <FormSection title="Sale and payment summary" step="6">
             <InputField label="Cash price of puppy" name="sale_price" type="number" min="0" step="0.01" defaultValue={salePrice.toFixed(2)} required />
-            <InputField label="Virginia sales tax, if applicable" name="sales_tax" type="number" min="0" step="0.01" defaultValue="0.00" />
+            <InputField label="Sales tax, if applicable" name="sales_tax" type="number" min="0" step="0.01" defaultValue="0.00" />
             <InputField label="Transport / delivery charge" name="transport_fee" type="number" min="0" step="0.01" defaultValue="0.00" />
             <InputField label="Other disclosed purchase charges" name="other_charges" type="number" min="0" step="0.01" defaultValue="0.00" />
             <InputField label="Deposit / reservation credit" name="reservation_credit" type="number" min="0" step="0.01" defaultValue={(paymentSummary.reservation / 100).toFixed(2)} />
@@ -256,7 +258,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
             <label><span>Transfer / pickup date</span><input name="transfer_date" type="date" value={transferDate} onChange={(event) => setTransferDate(event.target.value)} required /></label>
             <InputField label="Transfer time" name="transfer_time" type="time" defaultValue={transferEvent?.event_time || ""} />
             <SelectField label="Transfer method" name="transfer_method" defaultValue={transferEvent ? (/deliver|transport/i.test(`${transferEvent.event_type} ${transferEvent.title}`) ? "Ground delivery / transporter" : "Buyer pickup") : "Buyer pickup"}><option>Buyer pickup</option><option>Ground delivery / transporter</option><option>Flight nanny</option><option>Other written arrangement</option></SelectField>
-            <InputField label="Transfer location" name="transfer_location" defaultValue={transferEvent?.location || "Marion, Virginia"} />
+            <InputField label="Transfer location" name="transfer_location" defaultValue={transferEvent?.location || ""} />
             <InputField label="Person receiving puppy" name="recipient_name" defaultValue={fullName(buyer)} />
           </FormSection>
 
@@ -289,7 +291,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
             <SelectField label="Spay / neuter term" name="spay_neuter_term" defaultValue="No mandatory procedure date unless separately written"><option>No mandatory procedure date unless separately written</option><option>Spay / neuter required by separate addendum</option><option>Full registration / breeding rights granted</option></SelectField>
             <SelectField label="Separate breeding addendum" name="breeding_addendum" defaultValue="No"><option>No</option><option>Yes - attached</option><option>Yes - retained separately in buyer portal</option></SelectField>
             <SelectField label="Complimentary insurance" name="insurance_selection" defaultValue="30-day Trupanion offer provided when eligible"><option>30-day Trupanion offer provided when eligible</option><option>Buyer accepted / activation information provided</option><option>Buyer declined</option><option>Not eligible / not included</option></SelectField>
-            <InputField label="Seller's authorized representative" name="seller_representative" defaultValue="Southwest Virginia Chihuahua LLC" />
+            <InputField label="Seller's authorized representative" name="seller_representative" defaultValue={tenant.name} />
           </FormSection>
 
           {submitError && <div className={styles.errorInline}>{submitError}</div>}

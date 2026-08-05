@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 export type PaymentAgreementInput = {
+  breederName?: string;
   buyerName: string;
   coBuyerName?: string;
   billingAddress?: string;
@@ -70,7 +71,7 @@ export async function renderPaymentAgreementPdf(input: PaymentAgreementInput) {
   const newPage = () => {
     page = pdf.addPage([width, height]);
     y = height - 42;
-    page.drawText("SOUTHWEST VIRGINIA CHIHUAHUA | PAYMENT PLAN & FINANCING", { x: margin, y, size: 8, font: bold, color: green });
+    page.drawText(`${(input.breederName || "Breeder Portal").toUpperCase()} | PAYMENT PLAN & FINANCING`, { x: margin, y, size: 8, font: bold, color: green });
     y -= 24;
   };
   const ensure = (space: number) => { if (y - space < 44) newPage(); };
@@ -139,7 +140,7 @@ export async function renderPaymentAgreementPdf(input: PaymentAgreementInput) {
   row("Planned transfer date", date(input.plannedTransferDate));
   row("Payment processor", input.processor);
   paragraph(input.planType === "Pre-transfer purchase plan" ? "The puppy remains with the Seller and no ownership or right to possession transfers until all required amounts have been paid and cleared and final transfer documents are completed." : "The puppy may go home before the financed balance is fully paid. The Buyer remains obligated to pay according to this Agreement. Default does not authorize unlawful self-help repossession or automatically transfer ownership back to the Seller.");
-  notice("NO FINANCING FOR NATURALLY SMALL, MICRO, OR MICRO-TOY PUPPIES", "Southwest Virginia Chihuahua does not intentionally breed for extreme small size. A puppy later designated by the Seller as naturally small, Micro, Micro-Toy, or exceptionally small is not eligible for financing or a structured payment plan. The related $2,500.00 additional small-puppy care charge is also not financeable. Before transfer, the Buyer must either pay the complete approved price in cleared funds or select another eligible puppy, subject to the written Deposit & Reservation Agreement. This policy does not limit rights that cannot legally be waived.");
+  notice("SPECIAL FINANCING RESTRICTIONS", "If the Seller identifies a puppy as naturally small or requiring special care, that puppy may be ineligible for financing or a structured payment plan under the Seller's published policy. Any related special-care charge is also not financeable unless the completed agreement expressly states otherwise. Before transfer, the Buyer must either pay the complete approved price in cleared funds or select another eligible puppy, subject to the written Deposit & Reservation Agreement. This policy does not limit rights that cannot legally be waived.");
 
   heading("3. Itemization of Amount Financed");
   row("Cash price of puppy", money(input.cashPriceCents));
@@ -194,7 +195,7 @@ export async function renderPaymentAgreementPdf(input: PaymentAgreementInput) {
     ["16. Communications and Records", "The Buyer must keep current contact information on file. Account notices may be delivered by email, client portal, postal mail, or telephone as permitted by law. Marketing consent is not required as a condition of financing."],
     ["17. Joint Responsibility", "If more than one Buyer signs, each is jointly and individually responsible for the complete unpaid obligation unless the Seller expressly agrees otherwise in writing."],
     ["18. Assignment", "The Buyer may not assign this Agreement without written consent. The Seller may assign the right to receive payment only as permitted by law."],
-    ["19. General Terms", "This Agreement, its completed payment schedule, and the identified related sale documents contain the complete payment-plan agreement. Virginia law governs except where controlling federal law applies. Electronic signatures and counterparts are intended to have the same effect as originals to the extent permitted by law. No provision waives a right or remedy that cannot lawfully be waived."],
+    ["19. General Terms", "This Agreement, its completed payment schedule, and the identified related sale documents contain the complete payment-plan agreement. Governing law and venue are determined by the completed terms and applicable law. Electronic signatures and counterparts are intended to have the same effect as originals to the extent permitted by law. No provision waives a right or remedy that cannot lawfully be waived."],
     ["20. Final Acknowledgments", "The Buyer acknowledges reviewing the amount financed, APR, finance charge, total of payments, fees, due dates, payment schedule, plan type, default and cure provisions, early-payment terms, and the exclusion of naturally small, Micro, and Micro-Toy puppies from financing. The Buyer enters this Agreement voluntarily and believes the scheduled payments can be met."],
   ];
   for (const [title, text] of clauses) { heading(title); paragraph(text); }
@@ -202,7 +203,7 @@ export async function renderPaymentAgreementPdf(input: PaymentAgreementInput) {
   if (input.notes?.trim()) { heading("Additional Written Terms"); paragraph(input.notes.trim()); }
 
   heading("FINANCING ACKNOWLEDGMENT");
-  paragraph("I understand that this is a binding payment obligation. I reviewed the completed financial terms and payment schedule and agree to pay the total obligation when due. I also understand that naturally small, Micro, Micro-Toy, and exceptionally small puppies, including the additional $2,500.00 small-puppy care charge, are not eligible for financing or a payment plan.", 10);
+  paragraph("I understand that this is a binding payment obligation. I reviewed the completed financial terms and payment schedule and agree to pay the total obligation when due. Any puppy, service, or additional-care charge excluded from financing must be identified in the completed written terms.", 10);
   y -= 8;
   row("Buyer printed name", input.buyerName);
   row("Buyer signature", "________________________________________");
@@ -214,7 +215,7 @@ export async function renderPaymentAgreementPdf(input: PaymentAgreementInput) {
 
   const pages = pdf.getPages();
   pages.forEach((item, index) => {
-    item.drawText("swvachihuahua.com • 855-506-5425 • info@swvchihuahua.com", { x: margin, y: 24, size: 7, font: regular, color: green });
+    item.drawText("Generated securely by Breeder Portal", { x: margin, y: 24, size: 7, font: regular, color: green });
     item.drawText(`Page ${index + 1} of ${pages.length}`, { x: width - margin - 55, y: 24, size: 7, font: regular, color: green });
   });
   return pdf.save();

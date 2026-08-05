@@ -170,7 +170,7 @@ export default function ApplicationsPage() {
     <div className="applications-shell">
       <div className="applications-head">
         <div><small>Buyer workflow</small><h1>Applications & Agreements</h1><p>Review applicants, approve placement, and prepare the complete puppy payment agreement.</p></div>
-        <Link className="back-link" href="/"><ArrowLeft size={17} /> Back to SWVAOS</Link>
+        <Link className="back-link" href="/"><ArrowLeft size={17} /> Back to Breeder Portal</Link>
       </div>
       {error && <div className="error">{error}</div>}
       <div className="applications-tools"><label className="applications-search"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search applicants by name, email, phone, or status..." /></label><a className="back-link" href="/api/templates/puppy-application"><Download size={16} /> Puppy application</a><a className="back-link" href="/api/templates/payment-agreement"><Download size={16} /> Payment agreement</a><button className="refresh" onClick={() => void load()} title="Refresh"><RefreshCw size={18} /></button></div>

@@ -175,7 +175,7 @@ export function MilestoneManager() {
 
   return <div className="milestone-manager">
     <div className="milestone-toolbar">
-      <div><span>BUYER DEVELOPMENT JOURNEY</span><h2>Personal puppy updates</h2><p>Create warm, informative updates that appear every few days as each puppy grows. Use <b>{"{{puppy_name}}"}</b> anywhere in the title or message and SWVAOS will place the puppy&apos;s name there.</p></div>
+      <div><span>BUYER DEVELOPMENT JOURNEY</span><h2>Personal puppy updates</h2><p>Create warm, informative updates that appear every few days as each puppy grows. Use <b>{"{{puppy_name}}"}</b> anywhere in the title or message and Breeder Portal will place the puppy&apos;s name there.</p></div>
       <button type="button" className="milestone-add" onClick={addMilestone}><Plus size={16}/> Add milestone</button>
     </div>
 

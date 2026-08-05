@@ -6,6 +6,7 @@ import { canonicalizeKennelData } from "../../../lib/canonical-display-data";
 import { enrichProfileImages } from "../../../lib/profile-images";
 import { syncPuppyJourneyMilestones } from "../../../lib/puppy-journey";
 import { recordWeeklyPuppyWeight } from "../../../lib/puppy-weight-log";
+import { findKennelById } from "../../../lib/supabase-auth";
 
 function writeError(error: unknown, fallback: string) {
   return Response.json(
@@ -40,7 +41,14 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { resource?: unknown; data?: ResourceInput };
     if (!isResource(body.resource) || !body.data) return Response.json({ error: "A valid resource and data are required." }, { status: 400 });
-    const created = await createSupabaseResource(body.resource, body.data, session.kennelId);
+    const input = { ...body.data };
+    if ((body.resource === "puppies" && !String(input.price ?? "").trim())
+      || (body.resource === "transactions" && String(input.type) === "Deposit" && !String(input.amount ?? "").trim())) {
+      const kennel = await findKennelById(session.kennelId);
+      if (body.resource === "puppies") input.price = (Number(kennel?.default_puppy_price_cents) || 0) / 100;
+      if (body.resource === "transactions") input.amount = (Number(kennel?.default_deposit_cents) || 0) / 100;
+    }
+    const created = await createSupabaseResource(body.resource, input, session.kennelId);
     try {
       if (body.resource === "buyers" && Number(created.id) > 0) await sendBuyerAutomation("application_received", Number(created.id), { dedupeKey: `buyer-${Number(created.id)}` });
       if (body.resource === "transactions") await sendTransactionReceipt(created);

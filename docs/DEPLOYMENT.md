@@ -4,7 +4,7 @@ WhiteLabel is a standard Next.js application hosted on Vercel with Supabase prov
 
 ## 1. Create the platform Supabase project
 
-Create the Supabase project for Breeder Portal. In its SQL editor, run `supabase/schema.sql`. Create or confirm the `documents` Storage bucket and policies created by the schema. Record the project URL, anonymous key, and service-role key.
+Create the Supabase project for Breeder Portal. In its SQL editor, run `supabase/schema.sql` for a fresh database. If this repository is already connected to an older database, run `supabase/multi-tenant-migration.sql` instead. Create or confirm the `documents` Storage bucket and policies created by the schema. Record the project URL, anonymous key, and service-role key.
 
 The schema creates kennels, kennel memberships, tenant columns, and breeder records. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
 
@@ -27,16 +27,20 @@ Required core variables:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_STORAGE_BUCKET`
 - `BREEDER_SESSION_SECRET`
-- `SWVAOS_PORTAL_SECRET`
+- `BREEDER_PORTAL_SECRET`
 
 `NEXT_PUBLIC_PLATFORM_DOMAIN` must be `breederportal.site`. Custom-domain automation additionally requires server-only `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID`, and, for team projects, `VERCEL_TEAM_ID`.
 
-## 4. Deploy and verify
+## 4. Create the first kennel account
+
+Deploy the project, open `/signup`, and create the first kennel owner. There is no shared staff password. Each owner chooses an email and password, receives an included `<kennel-slug>.breederportal.site` address, and can invite buyer portal accounts from the buyer record. In **Brand and business setup**, enter the kennel's name, legal identity, contact details, colors, font, starting price, deposit, and policy reminder.
+
+## 5. Deploy and verify
 
 Pushes to non-production branches create Vercel previews when Git integration is enabled. Merge the verified version to `main` for production.
 
 Before launch, verify staff login, CRUD operations, application intake, family portal authentication, file upload/download, contract creation/signing, email delivery, cron authorization, backups, and mobile layout. Confirm the browser network log sends data only to the breeder's Vercel domain, Supabase project, and explicitly configured integrations.
 
-## 5. Custom domain and operations
+## 6. Custom domain and operations
 
 Add the breeder's domain in Vercel, update `TWILIO_WEBHOOK_BASE_URL` if the phone module is enabled, and verify DNS and HTTPS. Configure Supabase backups and document retention. Rotate all inherited or temporary secrets before accepting real customer information.

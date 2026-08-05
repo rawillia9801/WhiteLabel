@@ -47,6 +47,7 @@ export async function POST(request: Request) {
 
     try {
       await sendOwnerNotification({
+        kennelId: claims.kennelId,
         category: "General",
         subject: `Puppy Portal account activated for ${portal.buyer.name}`,
         buyerId: claims.buyerId,
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
           `Email: ${portal.buyer.email}`,
           `Application status: ${portal.buyer.applicationStatus || "Not recorded"}`,
           "",
-          "Their portal is now password protected and connected to the existing SWVAOS family record.",
+          "Their portal is now password protected and connected to the existing Breeder Portal family record.",
         ].join("\n"),
       });
     } catch (emailError) {

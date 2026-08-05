@@ -1,6 +1,6 @@
 # WhiteLabel Breeder OS
 
-A customizable, independently hosted operating system for responsible dog breeders, based on SWVAOS. It includes breeding records, litters, puppies, applications, family accounts, payments, documents, care schedules, communications, a customer portal, and reports.
+A customizable, independently hosted operating system for responsible dog breeders. It includes breeding records, litters, puppies, applications, family accounts, payments, documents, care schedules, communications, a customer portal, and reports.
 
 ## Hosting architecture
 
@@ -12,12 +12,12 @@ The platform runs as one multi-tenant Vercel application backed by one Supabase 
 
 1. Copy `.env.example` to `.env.local`.
 2. Change every value in the **Branding**, **Theme**, **Locale and business rules**, and **Optional modules** sections.
-3. Create the platform Supabase project and run `supabase/schema.sql` in its SQL editor.
+3. Create the platform Supabase project and run `supabase/schema.sql` in its SQL editor. For an existing installation, run `supabase/multi-tenant-migration.sql` instead.
 4. Create the Vercel project from this GitHub repository, add `breederportal.site` and `*.breederportal.site`, and add the variables from `.env.example` in Vercel Project Settings.
 5. Add the same development values to `.env.local`. Never expose the service-role key, session secret, or Vercel API token to the browser.
 6. Run `npm install`, then `npm run dev`.
 7. Replace `public/favicon.svg` and `public/og.png`, or point the branding variables to other assets.
-8. Review all templates under **Automations & templates** with an attorney licensed where the breeder operates.
+8. Open `/signup`, create the first kennel owner, then review **Brand and business setup** and all templates under **Automations & templates** with an attorney licensed where the breeder operates.
 
 ```bash
 cp .env.example .env.local
@@ -35,11 +35,11 @@ npm run dev
 - Phone center, transportation, family portal, and applications modules
 - Email, contract, application, milestone, and puppy-packet templates in the application
 
-The single source of truth is `lib/tenant-config.ts`; deployment values come from environment variables documented in `.env.example`.
+Deployment defaults come from `lib/tenant-config.ts` and `.env.example`. Each kennel's business identity, colors, font, pricing defaults, contact details, domain, and policy notice are stored in Supabase and editable by its owner.
 
 ## Isolation and safety
 
-Kennels share platform infrastructure but not application records: all breeder-owned rows are scoped to a kennel, owner/staff sessions contain a signed kennel identity, and buyer portal links include the kennel identity. Do not copy production credentials or customer records from SWVAOS.
+Kennels share platform infrastructure but not application records: all breeder-owned rows are scoped to a kennel, owner/staff sessions contain a signed kennel identity, and buyer portal links include the kennel identity. Do not copy production credentials or customer records from another installation.
 
 See `docs/DEPLOYMENT.md` for the complete Supabase and Vercel deployment sequence.
 

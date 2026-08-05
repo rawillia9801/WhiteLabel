@@ -8,8 +8,8 @@ const publicPath = (pathname: string) =>
   || pathname.startsWith("/portal/")
   || pathname.startsWith("/api/portal/")
   || pathname.startsWith("/api/website/")
-  || pathname.startsWith("/api/voice/")
-  || pathname === "/api/caller-crm/lookup";
+  || (process.env.NEXT_PUBLIC_FEATURE_PHONE_CENTER === "true" && pathname.startsWith("/api/voice/"))
+  || (process.env.NEXT_PUBLIC_FEATURE_PHONE_CENTER === "true" && pathname === "/api/caller-crm/lookup");
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;

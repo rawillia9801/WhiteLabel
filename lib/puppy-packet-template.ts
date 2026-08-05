@@ -43,7 +43,7 @@ The first three days should be quiet and predictable for {{puppy_name}}. Focus o
 
 # Feeding and Water
 
-Young Chihuahuas have small stomachs and limited energy reserves. {{puppy_name}} should not be expected to follow the meal schedule of an adult dog.
+Young puppies have developing digestive systems and age- and size-specific energy needs. {{puppy_name}} should not be expected to follow the meal schedule of an adult dog.
 
 - Measure meals so {{buyer_name}} knows how much was offered and eaten.
 - Use several small meals when directed for {{puppy_name}}.
@@ -54,17 +54,17 @@ Young Chihuahuas have small stomachs and limited energy reserves. {{puppy_name}}
 
 A bowl left down all day does not prove that {{puppy_name}} ate enough. During the first weeks, observe meals and record intake when needed.
 
-# Pup-Lift and Toy-Breed Hypoglycemia
+# Toy-Breed Hypoglycemia Readiness
 
-Pup-Lift is part of the emergency-readiness system used by {{business_name}} for young or very small puppies at risk of low blood sugar. Information and support are available at {{pup_lift_website}} and {{pup_lift_phone}}.
+Young or very small puppies can be at risk of low blood sugar. Ask {{business_name}} and your veterinarian for puppy-specific feeding, monitoring, and emergency instructions.
 
 Possible warning signs include sudden weakness, unusual sleepiness, wobbling, trembling, glassy eyes, disorientation, refusal to eat, feeling cold, collapse, or seizure activity.
 
 - Treat suspected hypoglycemia as urgent.
 - Call a veterinarian or emergency clinic immediately.
-- Follow the puppy-specific Pup-Lift instructions provided for {{puppy_name}} while arranging veterinary care.
+- Follow the puppy-specific emergency instructions provided for {{puppy_name}} while arranging veterinary care.
 - Do not force food, liquid, or gel into the mouth of a puppy that cannot swallow normally, is unconscious, or is actively seizing.
-- Keep the Pup-Lift supplies accessible at home and during travel.
+- Keep the recommended emergency supplies accessible at home and during travel.
 
 Repeated episodes or ongoing poor appetite require veterinary evaluation. Low blood sugar is a warning sign, not a complete diagnosis.
 
@@ -117,7 +117,7 @@ Pair new experiences with food, play, or calm praise. Give {{puppy_name}} more d
 
 # Potty Training
 
-Chihuahuas have small bladders and often need more frequent opportunities than larger puppies.
+Young puppies often need more frequent bathroom opportunities than adult dogs. Adjust the schedule for {{puppy_name}}'s age, size, and progress.
 
 - Take {{puppy_name}} to the same bathroom area after waking, eating, drinking, playing, and leaving the crate.
 - Use a short cue and reward immediately after success.
@@ -142,9 +142,9 @@ Puppies sleep a great deal. Overtired puppies may become mouthy, frantic, vocal,
 
 Use a predictable rhythm of bathroom break, meal, short play or training, and rest. Provide a quiet sleep area away from constant household traffic. Never leave {{puppy_name}} unattended on a bed, sofa, or other elevated surface.
 
-# Training and Chihuahua Behavior
+# Training and Puppy Behavior
 
-Chihuahuas are intelligent, observant dogs. Small size does not reduce the need for training, structure, exercise, and respectful boundaries.
+Puppies benefit from kind, consistent training, structure, breed-appropriate exercise, and respectful boundaries.
 
 Teach name response, recall, hand targeting, sit, wait, leave it, drop it, calm handling, harness walking, and settling on a mat. Reward desired behavior, prevent rehearsal of unwanted behavior, and keep sessions brief.
 
@@ -154,7 +154,7 @@ Do not encourage growling, guarding, snapping, or lunging because it appears cut
 
 An adult should supervise every interaction between {{puppy_name}} and children. Children should sit on the floor, allow the puppy to approach, and never chase, squeeze, wake, corner, or carry the puppy without direct adult help.
 
-Even friendly larger dogs can seriously injure a Chihuahua through one paw strike, collision, or play bite. Use barriers, leashes, and short controlled introductions. Provide {{puppy_name}} with a protected rest area.
+Even friendly dogs can injure a puppy through a collision or play bite. Use barriers, leashes, and short controlled introductions. Provide {{puppy_name}} with a protected rest area.
 
 # Grooming, Nails, Ears, and Coat Care
 
@@ -169,7 +169,7 @@ A weak, chilled, sick, or hypoglycemic puppy should not be bathed. Stabilization
 
 # Dental Care
 
-Toy breeds are prone to crowded teeth and periodontal disease. Begin gentle dental handling while {{puppy_name}} is young.
+Begin gentle dental handling while {{puppy_name}} is young and ask the veterinarian about any breed-specific dental risks.
 
 - Use toothpaste made for dogs, never human toothpaste.
 - Work toward daily brushing.
@@ -181,13 +181,13 @@ Toy breeds are prone to crowded teeth and periodontal disease. Begin gentle dent
 
 Common risks include electrical cords, recliners, rocking chairs, open doors, gaps in fencing, coins, batteries, magnets, hair ties, small toys, medications, nicotine, cannabis, cleaning products, rodent poison, chocolate, xylitol, grapes, raisins, onion, garlic, alcohol, and caffeine.
 
-Chihuahua-specific risks include falls from furniture or arms, being stepped or sat on, escaping through small openings, rough play with larger pets, cold exposure, wet weather, hot vehicles, and direct sun.
+Size- and breed-specific risks may include falls, being stepped on, escape through openings, rough play with other pets, temperature exposure, hot vehicles, and direct sun. Ask the breeder and veterinarian which risks apply to {{puppy_name}}.
 
 Do not induce vomiting unless a veterinarian or poison professional specifically instructs you to do so.
 
 # Harnesses and Identification
 
-A properly fitted lightweight harness is generally safer for walking a tiny dog than pressure concentrated on the neck.
+A properly fitted collar or harness should match the puppy's size, breed, and veterinary needs without concentrating unsafe pressure on the neck.
 
 - Check the fit frequently while {{puppy_name}} grows.
 - Use an identification tag with a current phone number.
@@ -200,7 +200,7 @@ A properly fitted lightweight harness is generally safer for walking a tiny dog 
 
 - Secure {{puppy_name}} in a suitable carrier or appropriately rated restraint.
 - Do not place the puppy in the front seat near an airbag.
-- Bring food, water, records, waste supplies, and the Pup-Lift kit.
+- Bring food, water, records, waste supplies, and the puppy's emergency kit.
 - Plan meal and bathroom stops around {{puppy_name}}'s schedule.
 - Avoid placing an incompletely vaccinated puppy on high-traffic dog-relief ground.
 - Never leave {{puppy_name}} unattended in a vehicle.
@@ -219,7 +219,7 @@ Keep medical records and receipts, know whether the clinic requires payment in a
 
 # Emergency Plan
 
-Record the primary veterinarian, emergency hospital, poison resource, breeder contact, insurance information, and transportation plan in this binder. Keep a secure carrier, records, payment method, Pup-Lift supplies, puppy food, and a towel or blanket ready.
+Record the primary veterinarian, emergency hospital, poison resource, breeder contact, insurance information, and transportation plan in this binder. Keep a secure carrier, records, payment method, emergency supplies, puppy food, and a towel or blanket ready.
 
 When calling a clinic, provide {{puppy_name}}'s age, current weight, symptoms, when the problem began, and any possible exposure.
 
@@ -228,7 +228,7 @@ When calling a clinic, provide {{puppy_name}}'s age, current weight, symptoms, w
 - Bill of Sale, Animal History Certificate, and Health Guarantee included.
 - Vaccine and deworming record included.
 - Food and feeding instructions reviewed.
-- Pup-Lift information reviewed: {{pup_lift_website}} · {{pup_lift_phone}}.
+- Hypoglycemia and emergency information reviewed.
 - Registration and insurance information reviewed when applicable.
 - Veterinary examination arranged within the timeframe stated in the signed agreement.
 - Emergency and breeder contacts saved.

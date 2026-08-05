@@ -4,6 +4,9 @@ import nodemailer from "nodemailer";
 import { supabaseRequest } from "../db/supabase";
 
 type PuppyPacketEmailInput = {
+  kennelId: string;
+  kennelName: string;
+  kennelWebsite?: string;
   to: string;
   buyerId?: number | null;
   buyerName: string;
@@ -12,10 +15,9 @@ type PuppyPacketEmailInput = {
   testCopy?: boolean;
 };
 
-const smtpUser = () => process.env.SMTP_USER?.trim() || "support@swvachihuahua.com";
+const smtpUser = () => process.env.SMTP_USER?.trim() || "";
 const fromEmail = () => process.env.SMTP_FROM_EMAIL?.trim() || smtpUser();
-const fromName = () => process.env.SMTP_FROM_NAME?.trim() || "Southwest Virginia Chihuahua";
-const configured = () => Boolean(process.env.SMTP_PASSWORD?.trim());
+const configured = () => Boolean(process.env.SMTP_PASSWORD?.trim() && smtpUser());
 
 function escapeHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -41,6 +43,7 @@ async function logEmail(input: PuppyPacketEmailInput, status: "Completed" | "Fai
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
+      kennel_id: input.kennelId,
       title,
       event_type: "Email",
       event_date: now.slice(0, 10),
@@ -69,20 +72,19 @@ export async function sendPuppyPacketEmail(input: PuppyPacketEmailInput) {
     "",
     greeting,
     "",
-    "The attached PDF includes the personalized cover, puppy and family record, care guidance, Pup-Lift information, emergency preparation, training and safety resources, health logs, and notes pages.",
+    "The attached PDF includes the personalized cover, puppy and family record, care guidance, emergency preparation, training and safety resources, health logs, and notes pages.",
     "",
     "Please save the packet with your puppy's agreements, health records, registration documents, and veterinary information.",
     "",
-    "Southwest Virginia Chihuahua",
-    "swvachihuahua.com",
-    "Pup-Lift: pup-lift.com · 1-715-888-9526",
+    input.kennelName,
+    input.kennelWebsite || "",
   ].join("\n");
-  const html = `<div style="font-family:Arial,sans-serif;line-height:1.65;color:#17383d;max-width:680px"><div style="padding:22px 24px;border-radius:18px;background:linear-gradient(135deg,#063b44,#0d7278);color:white"><div style="font-size:10px;font-weight:800;letter-spacing:.14em;color:#9de9e1">SOUTHWEST VIRGINIA CHIHUAHUA</div><h1 style="margin:10px 0 0;font-family:Georgia,serif;font-size:29px;font-weight:500">${escapeHtml(input.puppyName)}'s Puppy Care Packet</h1></div><div style="padding:24px"><p>Hello ${escapeHtml(input.buyerName || "there")},</p><p>${escapeHtml(greeting)}</p><p>The attached PDF includes the personalized cover, puppy and family record, care guidance, Pup-Lift information, emergency preparation, training and safety resources, health logs, and notes pages.</p><p>Please save the packet with your puppy's agreements, health records, registration documents, and veterinary information.</p><div style="margin-top:22px;padding:14px 16px;border-radius:12px;background:#eef8f6;color:#42666a;font-size:13px"><b style="color:#0b777d">Attached:</b> ${escapeHtml(input.puppyName)}-Puppy-Care-Packet.pdf${input.testCopy ? " · TEST COPY" : ""}</div><hr style="border:0;border-top:1px solid #dbe8e6;margin:24px 0"><p style="font-size:12px;color:#687f82">Southwest Virginia Chihuahua<br>swvachihuahua.com<br>Pup-Lift: pup-lift.com · 1-715-888-9526</p></div></div>`;
+  const html = `<div style="font-family:Arial,sans-serif;line-height:1.65;color:#17383d;max-width:680px"><div style="padding:22px 24px;border-radius:18px;background:linear-gradient(135deg,#063b44,#0d7278);color:white"><div style="font-size:10px;font-weight:800;letter-spacing:.14em;color:#9de9e1">${escapeHtml(input.kennelName.toUpperCase())}</div><h1 style="margin:10px 0 0;font-family:Georgia,serif;font-size:29px;font-weight:500">${escapeHtml(input.puppyName)}'s Puppy Care Packet</h1></div><div style="padding:24px"><p>Hello ${escapeHtml(input.buyerName || "there")},</p><p>${escapeHtml(greeting)}</p><p>The attached PDF includes the personalized cover, puppy and family record, care guidance, emergency preparation, training and safety resources, health logs, and notes pages.</p><p>Please save the packet with your puppy's agreements, health records, registration documents, and veterinary information.</p><div style="margin-top:22px;padding:14px 16px;border-radius:12px;background:#eef8f6;color:#42666a;font-size:13px"><b style="color:#0b777d">Attached:</b> ${escapeHtml(input.puppyName)}-Puppy-Care-Packet.pdf${input.testCopy ? " · TEST COPY" : ""}</div><hr style="border:0;border-top:1px solid #dbe8e6;margin:24px 0"><p style="font-size:12px;color:#687f82">${escapeHtml(input.kennelName)}${input.kennelWebsite ? `<br>${escapeHtml(input.kennelWebsite)}` : ""}</p></div></div>`;
   const filename = `${input.puppyName.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "") || "Puppy"}-Puppy-Care-Packet${input.testCopy ? "-TEST" : ""}.pdf`;
 
   try {
     const result = await transport().sendMail({
-      from: { name: fromName(), address: fromEmail() },
+      from: { name: input.kennelName, address: fromEmail() },
       replyTo: process.env.SMTP_REPLY_TO?.trim() || fromEmail(),
       to,
       subject,

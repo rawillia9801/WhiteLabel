@@ -42,7 +42,7 @@ export async function GET(request: Request) {
 
     await syncPuppyJourneyMilestones(claims.buyerId);
     const [portal, milestoneConfig] = await Promise.all([
-      getPuppyPortalForBuyer(claims.buyerId),
+      getPuppyPortalForBuyer(claims.buyerId, claims.kennelId),
       getBuyerMilestoneConfig(),
     ]);
     if (!portal) return Response.json({ error: "The family account was not found." }, { status: 404 });

@@ -23,9 +23,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     form.set("notes", `[Family upload]\nCategory: ${category}\nSubmitted through Puppy Portal.`);
     form.set("file", file);
 
-    const document = await uploadBuyerDocumentToSupabase(form);
+    const document = await uploadBuyerDocumentToSupabase(form, claims.kennelId);
     try {
       await sendOwnerNotification({
+        kennelId: claims.kennelId,
         category: "Document",
         subject: `Family document uploaded: ${title}`,
         buyerId: claims.buyerId,
@@ -37,8 +38,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
           `File name: ${String((document as Record<string, unknown>).file_name || file.name)}`,
           `Buyer ID: ${claims.buyerId}`,
           "",
-          "Review it in SWVAOS:",
-          "https://swvaos.site/?view=Vault",
+          "Review it in Breeder Portal:",
+          `${new URL(request.url).origin}/?view=Vault`,
         ].join("\n"),
       });
     } catch (emailError) {

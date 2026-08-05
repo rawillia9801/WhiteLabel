@@ -5,6 +5,7 @@ import { readVoiceForm, twilio, validateVoiceRequest, voiceError, voiceXml } fro
 export const runtime = "nodejs";
 
 const voice = { voice: "Polly.Joanna" as const, language: "en-US" as const };
+const voiceBusinessName = () => process.env.VOICE_BUSINESS_NAME?.trim() || "the breeder";
 
 function routeWithLine(path: string, calledNumber: string) {
   const url = new URL(path, "https://voice.swvaos.local");
@@ -26,12 +27,12 @@ function privateSafeMainMenu(recognized: boolean, calledNumber: string) {
   if (recognized) {
     gather.say(
       voice,
-      "Thank you for calling Southwest Virginia Chihuahua. We found a family account connected to the phone number you are calling from. Press 1 if you are an existing applicant or buyer and would like to verify your account. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for Pup-Lift. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.",
+      `Thank you for calling ${voiceBusinessName()}. We found a family account connected to the phone number you are calling from. Press 1 if you are an existing applicant or buyer and would like to verify your account. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`,
     );
   } else {
     gather.say(
       voice,
-      "Thank you for calling Southwest Virginia Chihuahua. Press 1 if you are an existing applicant or buyer. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for Pup-Lift. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.",
+      `Thank you for calling ${voiceBusinessName()}. Press 1 if you are an existing applicant or buyer. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`,
     );
   }
 
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
           buyerId: profile.buyer?.id,
           title: pupLift ? `Pup-Lift inbound call${profile.recognized ? ` - ${profile.buyer?.name}` : ""}` : profile.recognized ? `Inbound call - ${profile.buyer?.name}` : "Inbound call - unrecognized caller",
           status: "Completed",
-          details: `${pupLift ? "Line: Pup-Lift Support\n" : "Line: SWVAOS Main\n"}${profile.recognized ? "Caller matched to family account." : "Caller was not matched to a family account."}`,
+          details: `${pupLift ? "Line: Emergency Support\n" : "Line: Breeder Main\n"}${profile.recognized ? "Caller matched to family account." : "Caller was not matched to a family account."}`,
         });
         console.info("[voice/incoming] Caller CRM event stored", { eventId: event?.id, callSid: form.CallSid, recognized: profile.recognized, line: pupLift ? "pup-lift" : "main" });
       } catch (eventError) {

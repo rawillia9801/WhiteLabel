@@ -31,6 +31,9 @@ export type CombinedAgreementInput = {
   microToy?: boolean;
   terms?: string[];
   details?: CombinedAgreementDetails;
+  sellerName?: string;
+  sellerLocation?: string;
+  puppyBreed?: string;
 };
 
 const text = (row: Row | null | undefined, key: string) => String(row?.[key] ?? "").trim();
@@ -40,10 +43,10 @@ const fullName = (row: Row) => [text(row, "first_name"), text(row, "last_name")]
 const settled = (row: Row) => ["Paid", "Complete"].includes(text(row, "status"));
 const moneyValue = (value: unknown) => Math.max(0, Number(value) || 0);
 
-function sellerDetails() {
+function sellerDetails(input?: { sellerName?: string; sellerLocation?: string }) {
   return {
-    name: process.env.SWVAOS_SELLER_NAME?.trim() || "Southwest Virginia Chihuahua LLC",
-    location: process.env.SWVAOS_SELLER_LOCATION?.trim() || "Marion, Virginia",
+    name: input?.sellerName?.trim() || "The Seller",
+    location: input?.sellerLocation?.trim() || "",
   };
 }
 
@@ -155,7 +158,7 @@ export async function prepareCombinedAgreement(input: CombinedAgreementInput) {
   const depositCents = reservationCreditCents + additionalPaymentsCents;
   const totalSaleCents = salePriceCents + salesTaxCents + transportCents + otherChargesCents;
   const balanceCents = Math.max(0, totalSaleCents - depositCents);
-  const seller = sellerDetails();
+  const seller = sellerDetails(input);
   const groupId = crypto.randomUUID();
   const createdAt = new Date().toISOString();
   const transferDate = dateValue(input.transferDate);
@@ -206,6 +209,7 @@ export async function prepareCombinedAgreement(input: CombinedAgreementInput) {
     buyerLocation: buyerCityStateZip,
     puppyId,
     puppyName: text(puppy, "name") || `Puppy #${puppyId}`,
+    puppyBreed: input.puppyBreed?.trim() || "Dog",
     puppySex: text(puppy, "sex"),
     puppyColor: text(puppy, "color"),
     puppyBirthDate: text(puppy, "birth_date"),
@@ -255,7 +259,7 @@ export async function prepareCombinedAgreement(input: CombinedAgreementInput) {
       event_time: createdAt.slice(11, 16),
       related_type: "buyers",
       related_id: buyerId,
-      location: "SWVAOS",
+      location: "Breeder Portal",
       status: "Awaiting signature",
       notes: `Combined production agreement document #${document.id}`,
       created_at: createdAt,

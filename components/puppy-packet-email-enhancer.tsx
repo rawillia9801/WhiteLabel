@@ -16,7 +16,7 @@ export function PuppyPacketEmailEnhancer() {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<DataSet | null>(null);
   const [mode, setMode] = useState<SendMode>("buyer");
-  const [testEmail, setTestEmail] = useState("swvachihuahua@gmail.com");
+  const [testEmail, setTestEmail] = useState("");
   const [selectedId, setSelectedId] = useState(0);
   const [loadingData, setLoadingData] = useState(false);
   const [sending, setSending] = useState(false);
@@ -119,7 +119,7 @@ export function PuppyPacketEmailEnhancer() {
     {open && createPortal(<div className="packet-email-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !sending) setOpen(false); }}>
       <section className="packet-email-dialog" role="dialog" aria-modal="true" aria-labelledby="packet-email-title">
         <header>
-          <div><span>COMPLETE PERSONALIZED PACKET</span><h2 id="packet-email-title">Email the puppy packet</h2><p>SWVAOS creates a personalized PDF and sends it through the connected Hostinger email account.</p></div>
+          <div><span>COMPLETE PERSONALIZED PACKET</span><h2 id="packet-email-title">Email the puppy packet</h2><p>Breeder Portal creates a personalized PDF and sends it through the connected Hostinger email account.</p></div>
           <button type="button" className="packet-email-close" aria-label="Close" disabled={sending} onClick={() => setOpen(false)}><X size={19}/></button>
         </header>
         <div className="packet-email-selection">
@@ -128,7 +128,7 @@ export function PuppyPacketEmailEnhancer() {
           <div><span>Buyer email</span><b>{loadingData ? "Loading…" : selected.buyer?.email || "Not recorded"}</b></div>
         </div>
         <div className="packet-email-modes">
-          <button type="button" className={mode === "buyer" ? "active" : ""} onClick={() => { setMode("buyer"); setError(""); setSuccess(""); }}><UserRound size={18}/><span><b>Send to buyer</b><small>Uses the buyer email stored in SWVAOS.</small></span></button>
+          <button type="button" className={mode === "buyer" ? "active" : ""} onClick={() => { setMode("buyer"); setError(""); setSuccess(""); }}><UserRound size={18}/><span><b>Send to buyer</b><small>Uses the buyer email stored in Breeder Portal.</small></span></button>
           <button type="button" className={mode === "test" ? "active" : ""} onClick={() => { setMode("test"); setError(""); setSuccess(""); }}><FlaskConical size={18}/><span><b>Send a test copy</b><small>Choose any email address without changing the buyer record.</small></span></button>
         </div>
         {mode === "test" && <label className="packet-test-email"><span>Test email address</span><input type="email" value={testEmail} onChange={(event) => setTestEmail(event.target.value)} placeholder="name@example.com" autoFocus/></label>}

@@ -12,7 +12,7 @@ export async function GET() {
     caller_id_configured: Boolean(process.env.SWVAOS_CALLER_ID?.trim()),
     caller_lookup_configured: Boolean(process.env.SWVAOS_CRM_API_KEY?.trim()),
     managed_lines: [
-      { id: "main", label: "SWVAOS Main Line", phone: mainNumber },
+      { id: "main", label: "Breeder Portal Main Line", phone: mainNumber },
       { id: "pup-lift", label: "Pup-Lift Support", phone: pupLiftNumber },
     ],
     pup_lift_number: pupLiftNumber,

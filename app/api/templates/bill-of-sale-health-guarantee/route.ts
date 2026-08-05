@@ -2,10 +2,13 @@ import { renderContractPdf, type ContractSnapshot } from "../../../../lib/contra
 import { parseCombinedAgreementContent } from "../../../../lib/combined-agreement";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
 import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/admin-session";
+import { findKennelById } from "../../../../lib/supabase-auth";
 
 export async function GET(request: Request) {
   const unauthorized = requireAdminSession(request); if (unauthorized) return unauthorized;
-  const config = await getTemplatesConfig(breederSessionFromRequest(request)!.kennelId);
+  const session = breederSessionFromRequest(request)!;
+  const [config, kennel] = await Promise.all([getTemplatesConfig(session.kennelId), findKennelById(session.kennelId)]);
+  const sellerName = kennel?.legal_name || kennel?.name || "The Seller";
   const createdAt = new Date().toISOString();
   const snapshot: ContractSnapshot = {
     version: 1,
@@ -14,12 +17,13 @@ export async function GET(request: Request) {
     status: "pending",
     createdAt,
     buyerId: 1,
-    buyerName: "Buyer information auto-populates from SWVAOS",
+    buyerName: "Buyer information auto-populates from Breeder Portal",
     buyerEmail: "buyer@example.com",
     buyerPhone: "(276) 555-0100",
-    buyerLocation: "City, Virginia 00000",
+    buyerLocation: "City, State 00000",
     puppyId: 1,
     puppyName: "Puppy name",
+    puppyBreed: kennel?.primary_breed || "Dog",
     puppySex: "Female",
     puppyColor: "Color and markings",
     puppyBirthDate: createdAt.slice(0, 10),
@@ -31,17 +35,17 @@ export async function GET(request: Request) {
     balanceCents: 200000,
     balanceDueDate: "",
     transferDate: "",
-    sellerName: "Southwest Virginia Chihuahua LLC",
-    sellerLocation: "Marion, Virginia",
+    sellerName,
+    sellerLocation: kennel?.location || "",
     title: "Bill of Sale, Animal History Certificate and One-Year Health Guarantee - Preview",
-    introduction: "This preview shows the production document structure. Buyer, puppy, payment, transfer, registration, health, and signature information is filled from SWVAOS and the preparation form.",
+    introduction: "This preview shows the production document structure. Buyer, puppy, payment, transfer, registration, health, and signature information is filled from Breeder Portal and the preparation form.",
     terms: parseCombinedAgreementContent(config.documents.bill_of_sale_health_guarantee.content) ?? [],
     agreementDetails: {
       agreementNumber: "PREVIEW",
       agreementDate: createdAt.slice(0, 10),
       coBuyerName: "Optional",
       buyerStreetAddress: "Street address",
-      buyerCityStateZip: "City, Virginia 00000",
+      buyerCityStateZip: "City, State 00000",
       buyerEmergencyContact: "Optional emergency contact",
       puppyAgeAtTransfer: "Calculated from birth and transfer dates",
       puppyCoatType: "Smooth or long coat",
@@ -66,7 +70,7 @@ export async function GET(request: Request) {
       insuranceSelection: "30-day Trupanion offer provided when applicable",
       registrationStatus: "Pending or delivered",
       registrationType: "Limited / pet only or full / breeding",
-      sellerRepresentative: "Southwest Virginia Chihuahua LLC",
+      sellerRepresentative: sellerName,
       attachments: "Animal history, health record, care guide, registration documents, insurance information",
     },
   };

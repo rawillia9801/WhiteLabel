@@ -1,4 +1,4 @@
--- Run after the existing SWVAOS schema when upgrading an already-created WhiteLabel database.
+-- Run after the pre-multi-tenant schema when upgrading an already-created WhiteLabel database.
 -- This file is intentionally idempotent. The same definitions are included in schema.sql.
 create table if not exists kennels (
   id uuid primary key default gen_random_uuid(),
@@ -9,8 +9,22 @@ create table if not exists kennels (
   custom_domain text unique,
   domain_status text not null default 'not_requested' check (domain_status in ('not_requested', 'pending', 'verified', 'failed')),
   primary_color text not null default '#087f8c', accent_color text not null default '#c68b24', font_family text not null default 'Geist',
+  primary_breed text not null default 'Dogs',
+  legal_name text, location text, contact_email text, contact_phone text, website_url text,
+  default_puppy_price_cents integer not null default 0 check (default_puppy_price_cents >= 0),
+  default_deposit_cents integer not null default 0 check (default_deposit_cents >= 0),
+  custom_policy_notice text not null default 'Have a qualified local attorney review all customer-facing policies and contracts before use.',
   created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
+alter table kennels add column if not exists legal_name text;
+alter table kennels add column if not exists primary_breed text not null default 'Dogs';
+alter table kennels add column if not exists location text;
+alter table kennels add column if not exists contact_email text;
+alter table kennels add column if not exists contact_phone text;
+alter table kennels add column if not exists website_url text;
+alter table kennels add column if not exists default_puppy_price_cents integer not null default 0;
+alter table kennels add column if not exists default_deposit_cents integer not null default 0;
+alter table kennels add column if not exists custom_policy_notice text not null default 'Have a qualified local attorney review all customer-facing policies and contracts before use.';
 create table if not exists kennel_members (
   kennel_id uuid not null references kennels(id) on delete cascade,
   auth_user_id uuid not null references auth.users(id) on delete cascade,

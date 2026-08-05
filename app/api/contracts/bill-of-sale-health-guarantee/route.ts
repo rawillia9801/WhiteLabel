@@ -3,6 +3,7 @@ import { breederSessionFromRequest, requireAdminSession } from "../../../../lib/
 import { sendBuyerAutomation } from "../../../../lib/automation-email";
 import { parseCombinedAgreementContent, type CombinedAgreementDetails } from "../../../../lib/combined-agreement";
 import { getTemplatesConfig } from "../../../../lib/templates-config";
+import { findKennelById } from "../../../../lib/supabase-auth";
 
 const cents = (value: unknown) => Math.round(Math.max(0, Number(value) || 0) * 100);
 const text = (value: unknown) => String(value ?? "").trim();
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const session = breederSessionFromRequest(request)!;
     const body = await request.json() as Record<string, unknown>;
-    const config = await getTemplatesConfig(session.kennelId);
+    const [config, kennel] = await Promise.all([getTemplatesConfig(session.kennelId), findKennelById(session.kennelId)]);
     const template = config.documents.bill_of_sale_health_guarantee;
     if (!template.enabled) return Response.json({ error: "The combined Bill of Sale and Health Guarantee template is disabled." }, { status: 400 });
 
@@ -92,6 +93,9 @@ export async function POST(request: Request) {
       microToy: checked(body.micro_toy),
       terms: parseCombinedAgreementContent(template.content),
       details,
+      sellerName: kennel?.legal_name || kennel?.name,
+      sellerLocation: kennel?.location || "",
+      puppyBreed: kennel?.primary_breed || "Dog",
     });
 
     const origin = new URL(request.url).origin;
