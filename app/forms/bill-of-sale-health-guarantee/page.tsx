@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import styles from "./form.module.css";
 import { useTenant } from "../../../components/tenant-runtime";
+import { applicationAnswerByMapping, readApplicationRecord } from "../../../lib/application-form";
 
 type BaseRecord = { id: number; created_at?: string; updated_at?: string };
 type Buyer = BaseRecord & {
@@ -28,6 +29,7 @@ type Buyer = BaseRecord & {
   street_address?: string | null;
   address?: string | null;
   application_status?: string | null;
+  notes?: string | null;
 };
 type Puppy = BaseRecord & {
   litter_id?: number | null;
@@ -101,7 +103,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
   const [loadError, setLoadError] = useState("");
   const [buyerId, setBuyerId] = useState(0);
   const [puppyId, setPuppyId] = useState(0);
-  const [transferDate, setTransferDate] = useState("");
+  const [transferDateDraft, setTransferDateDraft] = useState<{ puppyId: number; value: string }>({ puppyId: 0, value: "" });
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [prepared, setPrepared] = useState<PreparedResult | null>(null);
@@ -123,8 +125,13 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
         events: Array.isArray(payload.events) ? payload.events : [],
       };
       setData(nextData);
-      const firstBuyer = nextData.buyers.find((buyer) => nextData.puppies.some((puppy) => Number(puppy.buyer_id) === buyer.id));
+      const params = new URLSearchParams(window.location.search);
+      const requestedBuyerId = Number(params.get("buyer_id"));
+      const requestedPuppyId = Number(params.get("puppy_id"));
+      const requestedBuyer = Number.isFinite(requestedBuyerId) ? nextData.buyers.find((buyer) => buyer.id === requestedBuyerId) : null;
+      const firstBuyer = requestedBuyer ?? nextData.buyers.find((buyer) => nextData.puppies.some((puppy) => Number(puppy.buyer_id) === buyer.id));
       if (firstBuyer) setBuyerId((current) => current || firstBuyer.id);
+      if (requestedPuppyId && nextData.puppies.some((puppy) => puppy.id === requestedPuppyId && Number(puppy.buyer_id) === firstBuyer?.id)) setPuppyId(requestedPuppyId);
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "Unable to load Breeder Portal records.");
     } finally {
@@ -132,10 +139,16 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const buyer = useMemo(() => data.buyers.find((item) => item.id === buyerId) ?? null, [buyerId, data.buyers]);
+  const applicationRecord = useMemo(() => readApplicationRecord(buyer?.notes), [buyer?.notes]);
+  const applicationCoBuyer = applicationAnswerByMapping(applicationRecord, "co_buyer_name");
+  const applicationStreetAddress = applicationAnswerByMapping(applicationRecord, "buyer_street_address");
+  const applicationEmergencyContact = applicationAnswerByMapping(applicationRecord, "buyer_emergency_contact");
+  const applicationPaymentMethod = applicationAnswerByMapping(applicationRecord, "payment_method");
+  const applicationTransferMethod = applicationAnswerByMapping(applicationRecord, "transfer_method");
+  const applicationVetClinic = applicationAnswerByMapping(applicationRecord, "first_vet_clinic");
   const assignedPuppies = useMemo(() => data.puppies.filter((puppy) => Number(puppy.buyer_id) === buyerId), [buyerId, data.puppies]);
-  useEffect(() => { if (!assignedPuppies.some((puppy) => puppy.id === puppyId)) setPuppyId(assignedPuppies[0]?.id ?? 0); }, [assignedPuppies, puppyId]);
   const puppy = useMemo(() => assignedPuppies.find((item) => item.id === puppyId) ?? assignedPuppies[0] ?? null, [assignedPuppies, puppyId]);
   const litter = useMemo(() => data.litters.find((item) => item.id === Number(puppy?.litter_id)) ?? null, [data.litters, puppy?.litter_id]);
   const dam = useMemo(() => data.dogs.find((item) => item.id === Number(litter?.dam_id)) ?? null, [data.dogs, litter?.dam_id]);
@@ -153,7 +166,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
     return data.events.filter((event) => /pickup|delivery|transport|go.?home/i.test(`${event.event_type ?? ""} ${event.title ?? ""}`)).filter((event) => (event.related_type === "buyers" && Number(event.related_id) === buyer.id) || (event.related_type === "puppies" && Number(event.related_id) === puppy.id)).filter((event) => !["Completed", "Cancelled"].includes(String(event.status ?? ""))).sort((left, right) => `${left.event_date ?? ""}${left.event_time ?? ""}`.localeCompare(`${right.event_date ?? ""}${right.event_time ?? ""}`))[0] ?? null;
   }, [buyer, data.events, puppy]);
 
-  useEffect(() => { setTransferDate(dateInput(transferEvent?.event_date)); }, [transferEvent?.event_date, puppyId]);
+  const transferDate = transferDateDraft.puppyId === puppy?.id ? transferDateDraft.value : dateInput(transferEvent?.event_date);
   const salePrice = Number(puppy?.price_cents ?? 0) / 100;
   const cityStateZip = buyer ? [[[buyer.city, buyer.state].filter(Boolean).join(", "), buyer.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(" ") : "";
   const puppyAge = ageAtTransfer(puppy?.birth_date, transferDate);
@@ -162,7 +175,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
     event.preventDefault(); setSaving(true); setSubmitError(""); setPrepared(null);
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
     try {
-      const response = await fetch("/api/contracts/bill-of-sale-health-guarantee", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...values, buyer_id: buyerId, puppy_id: puppyId }) });
+      const response = await fetch("/api/contracts/bill-of-sale-health-guarantee", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...values, buyer_id: buyerId, puppy_id: puppy?.id || puppyId }) });
       const payload = await response.json() as PreparedResult & { error?: string };
       if (!response.ok || !payload.portalUrl) throw new Error(payload.error || "Unable to prepare the agreement.");
       setPrepared(payload); window.scrollTo({ top: 0, behavior: "smooth" });
@@ -198,12 +211,12 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
             <InputField label="Agreement number" name="agreement_number" placeholder="Automatically assigned when left blank" />
             <InputField label="Agreement date" name="agreement_date" type="date" defaultValue={today()} required />
             <InputField label="Buyer legal name" name="buyer_display_name" defaultValue={fullName(buyer)} required readOnly />
-            <InputField label="Co-Buyer legal name" name="co_buyer_name" />
-            <InputField label="Street address" name="buyer_street_address" defaultValue={buyer.street_address || buyer.address || ""} />
+            <InputField label="Co-Buyer legal name" name="co_buyer_name" defaultValue={applicationCoBuyer} />
+            <InputField label="Street address" name="buyer_street_address" defaultValue={buyer.street_address || buyer.address || applicationStreetAddress} />
             <InputField label="City / State / ZIP" name="buyer_city_state_zip" defaultValue={cityStateZip} />
             <InputField label="Primary phone" name="buyer_display_phone" defaultValue={buyer.phone || ""} readOnly />
             <InputField label="Email" name="buyer_display_email" type="email" defaultValue={buyer.email || ""} readOnly />
-            <InputField label="Emergency contact" name="buyer_emergency_contact" placeholder="Name, relationship, and phone" />
+            <InputField label="Emergency contact" name="buyer_emergency_contact" defaultValue={applicationEmergencyContact} placeholder="Name, relationship, and phone" />
             <SelectField label="Preferred written-notice method" name="buyer_notice_method" defaultValue="Email"><option>Email</option><option>Buyer portal</option><option>Mail</option><option>Text message</option></SelectField>
           </FormSection>
 
@@ -251,13 +264,13 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
             <InputField label="Deposit / reservation credit" name="reservation_credit" type="number" min="0" step="0.01" defaultValue={(paymentSummary.reservation / 100).toFixed(2)} />
             <InputField label="Additional payments received" name="additional_payments" type="number" min="0" step="0.01" defaultValue={(paymentSummary.additional / 100).toFixed(2)} />
             <InputField label="Balance due date" name="balance_due_date" type="date" />
-            <SelectField label="Payment method" name="payment_method" defaultValue={paymentSummary.method || ""}><option value="">Not recorded</option>{["Good Dog", "Cash", "Check", "Credit card", "Debit card", "Bank transfer / ACH", "PayPal", "Venmo", "Cash App", "Zelle", "Financing", "Other"].map((method) => <option key={method}>{method}</option>)}</SelectField>
+            <SelectField label="Payment method" name="payment_method" defaultValue={paymentSummary.method || applicationPaymentMethod || ""}><option value="">Not recorded</option>{["Good Dog", "Cash", "Check", "Credit card", "Debit card", "Bank transfer / ACH", "PayPal", "Venmo", "Cash App", "Zelle", "Financing", "Other"].map((method) => <option key={method}>{method}</option>)}</SelectField>
           </FormSection>
 
           <FormSection title="Transfer and delivery record" step="7">
-            <label><span>Transfer / pickup date</span><input name="transfer_date" type="date" value={transferDate} onChange={(event) => setTransferDate(event.target.value)} required /></label>
+            <label><span>Transfer / pickup date</span><input name="transfer_date" type="date" value={transferDate} onChange={(event) => setTransferDateDraft({ puppyId: puppy.id, value: event.target.value })} required /></label>
             <InputField label="Transfer time" name="transfer_time" type="time" defaultValue={transferEvent?.event_time || ""} />
-            <SelectField label="Transfer method" name="transfer_method" defaultValue={transferEvent ? (/deliver|transport/i.test(`${transferEvent.event_type} ${transferEvent.title}`) ? "Ground delivery / transporter" : "Buyer pickup") : "Buyer pickup"}><option>Buyer pickup</option><option>Ground delivery / transporter</option><option>Flight nanny</option><option>Other written arrangement</option></SelectField>
+            <SelectField label="Transfer method" name="transfer_method" defaultValue={transferEvent ? (/deliver|transport/i.test(`${transferEvent.event_type} ${transferEvent.title}`) ? "Ground delivery / transporter" : "Buyer pickup") : applicationTransferMethod || "Buyer pickup"}><option>Buyer pickup</option><option>Ground delivery / transporter</option><option>Flight nanny</option><option>Other written arrangement</option></SelectField>
             <InputField label="Transfer location" name="transfer_location" defaultValue={transferEvent?.location || ""} />
             <InputField label="Person receiving puppy" name="recipient_name" defaultValue={fullName(buyer)} />
           </FormSection>
@@ -276,7 +289,7 @@ export default function BillOfSaleHealthGuaranteeFormPage() {
           </FormSection>
 
           <FormSection title="First veterinary examination plan" step="9">
-            <InputField label="Veterinary clinic" name="first_vet_clinic" />
+            <InputField label="Veterinary clinic" name="first_vet_clinic" defaultValue={applicationVetClinic} />
             <InputField label="Veterinarian" name="first_vet_name" />
             <InputField label="Appointment date / time" name="first_vet_appointment" type="datetime-local" />
             <InputField label="Clinic phone" name="first_vet_phone" type="tel" />
