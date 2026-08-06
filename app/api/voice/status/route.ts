@@ -1,6 +1,9 @@
+import { DEFAULT_GOLDEN_NUMBER, DEFAULT_MAIN_NUMBER } from "../../../../lib/caller-voice";
+
 export const runtime = "nodejs";
 
-const mainNumber = process.env.SWVAOS_CALLER_ID?.trim() || "+18555065425";
+const mainNumber = process.env.SWVAOS_MAIN_NUMBER?.trim() || process.env.SWVAOS_CALLER_ID?.trim() || DEFAULT_MAIN_NUMBER;
+const goldenNumber = process.env.SWVAOS_GOLDEN_NUMBER?.trim() || DEFAULT_GOLDEN_NUMBER;
 const pupLiftNumber = process.env.SWVAOS_PUP_LIFT_NUMBER?.trim() || "+17158889526";
 
 export async function GET() {
@@ -13,6 +16,7 @@ export async function GET() {
     caller_lookup_configured: Boolean(process.env.SWVAOS_CRM_API_KEY?.trim()),
     managed_lines: [
       { id: "main", label: "Breeder Portal Main Line", phone: mainNumber },
+      { id: "golden-retriever", label: "Cedar & Creek Goldens", phone: goldenNumber },
       { id: "pup-lift", label: "Pup-Lift Support", phone: pupLiftNumber },
     ],
     pup_lift_number: pupLiftNumber,
