@@ -3,9 +3,9 @@ import { shortenSpeech, twilio } from "./voice-webhook";
 
 const voice = { voice: "Polly.Joanna" as const, language: "en-US" as const };
 const incomingPath = "/api/voice/incoming?repeat=1";
-export const DEFAULT_MAIN_NUMBER = "+12762761669";
+export const DEFAULT_MAIN_NUMBER = "+12762509512";
+export const DEFAULT_GOLDEN_NUMBER = "+12762762757";
 export const DEFAULT_PUP_LIFT_NUMBER = "+17158889526";
-const voiceBusinessName = () => process.env.VOICE_BUSINESS_NAME?.trim() || "the breeder";
 
 function normalizePhone(value: string | null | undefined) {
   const raw = String(value ?? "").trim();
@@ -14,6 +14,13 @@ function normalizePhone(value: string | null | undefined) {
   if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
   if (raw.startsWith("+") && digits.length >= 8 && digits.length <= 15) return `+${digits}`;
   return "";
+}
+
+export function voiceBusinessNameForLine(calledNumber: string | null | undefined) {
+  const line = normalizePhone(calledNumber);
+  if (line === normalizePhone(process.env.SWVAOS_GOLDEN_NUMBER || DEFAULT_GOLDEN_NUMBER)) return process.env.GOLDEN_VOICE_BUSINESS_NAME?.trim() || "Cedar & Creek Goldens";
+  if (line === normalizePhone(process.env.SWVAOS_MAIN_NUMBER || DEFAULT_MAIN_NUMBER)) return process.env.VOICE_BUSINESS_NAME?.trim() || "Willow Creek Chihuahuas";
+  return process.env.VOICE_BUSINESS_NAME?.trim() || "the breeder";
 }
 
 export function isPupLiftLine(calledNumber: string | null | undefined) {
@@ -36,8 +43,8 @@ const spokenDate = (value: string) => value ? new Intl.DateTimeFormat("en-US", {
 function publicMenu(response: InstanceType<typeof twilio.twiml.VoiceResponse>, profile: CallerCrmProfile, calledNumber: string | null | undefined) {
   const gather = response.gather({ action: routeWithContext("/api/voice/menu", calledNumber), method: "POST", input: ["dtmf"], numDigits: 1, timeout: 8, actionOnEmptyResult: true });
   gather.say(voice, profile.recognized
-    ? `Thank you for calling ${voiceBusinessName()}. We found a family account associated with the phone number you are calling from. Press 1 to verify the account. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`
-    : `Thank you for calling ${voiceBusinessName()}. Press 1 if you are an existing applicant or buyer and need account help. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`);
+    ? `Thank you for calling ${voiceBusinessNameForLine(calledNumber)}. We found a family account associated with the phone number you are calling from. Press 1 to verify the account. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`
+    : `Thank you for calling ${voiceBusinessNameForLine(calledNumber)}. Press 1 if you are an existing applicant or buyer and need account help. Press 2 for available puppies and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`);
 }
 
 function pupLiftMenu(response: InstanceType<typeof twilio.twiml.VoiceResponse>, calledNumber: string | null | undefined) {
@@ -126,7 +133,7 @@ function secureMenu(response: InstanceType<typeof twilio.twiml.VoiceResponse>, p
 
 export function accountVoiceResponse(profile: CallerCrmProfile, digit: string, calledNumber: string | null | undefined, session: string) {
   if (digit === "6") return messageVoiceResponse(true);
-  if (digit === "7") return connectToTeamVoiceResponse();
+  if (digit === "7") return connectToTeamVoiceResponse(calledNumber);
   const response = new twilio.twiml.VoiceResponse();
   if (!digit || digit === "9") {
     secureMenu(response, profile, calledNumber, session);
@@ -157,12 +164,12 @@ export function messageVoiceResponse(recognized: boolean) {
   return response;
 }
 
-function connectToTeamVoiceResponse() {
+function connectToTeamVoiceResponse(calledNumber?: string | null) {
   const response = new twilio.twiml.VoiceResponse();
   const numbers = (process.env.SWVAOS_CALL_TEAM_NUMBERS || "").split(",").map((number) => number.trim()).filter(Boolean);
   if (!numbers.length) return messageVoiceResponse(false);
   response.say(voice, "Please hold while we connect your call.");
-  const callerId = process.env.SWVAOS_MAIN_NUMBER?.trim() || DEFAULT_MAIN_NUMBER;
+  const callerId = normalizePhone(calledNumber) || process.env.SWVAOS_MAIN_NUMBER?.trim() || DEFAULT_MAIN_NUMBER;
   const dial = response.dial({ timeout: 30, answerOnBridge: true, callerId });
   numbers.forEach((number) => dial.number(number));
   return response;
@@ -177,7 +184,7 @@ export function unavailableVoiceResponse() {
 
 function pupLiftMenuVoiceResponse(digit: string, calledNumber: string | null | undefined) {
   if (digit === "5") return messageVoiceResponse(false);
-  if (digit === "6") return connectToTeamVoiceResponse();
+  if (digit === "6") return connectToTeamVoiceResponse(calledNumber);
   const response = new twilio.twiml.VoiceResponse();
   if (digit === "9" || !digit) {
     response.redirect(routeWithContext(incomingPath, calledNumber));
@@ -196,7 +203,7 @@ function pupLiftMenuVoiceResponse(digit: string, calledNumber: string | null | u
 export function menuVoiceResponse(profile: CallerCrmProfile, digit: string, calledNumber?: string | null) {
   if (isPupLiftLine(calledNumber)) return pupLiftMenuVoiceResponse(digit, calledNumber);
   if (digit === "6") return messageVoiceResponse(profile.recognized);
-  if (digit === "7") return connectToTeamVoiceResponse();
+  if (digit === "7") return connectToTeamVoiceResponse(calledNumber);
   const response = new twilio.twiml.VoiceResponse();
   if (digit === "9" || !digit) {
     response.redirect(routeWithContext(incomingPath, calledNumber));
