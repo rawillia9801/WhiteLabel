@@ -3,8 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { ApplicationStatusSelectEnhancer } from "../components/application-status-select-enhancer";
 import { PuppyStatusSelectEnhancer } from "../components/puppy-status-select-enhancer";
-import { CommandDashboardEnhancer } from "../components/command-dashboard-enhancer";
-import { NavigationGroupEnhancer } from "../components/navigation-group-enhancer";
 import { BuyerEditEnhancer } from "../components/buyer-edit-enhancer";
 import { PortalJourneyEnhancer } from "../components/portal-journey-enhancer";
 import { PuppyPacketDesignEnhancer } from "../components/puppy-packet-design-enhancer";
@@ -19,8 +17,6 @@ import { findKennelByHost, findKennelById } from "../lib/supabase-auth";
 import "./globals.css";
 import "./breeder-os.css";
 import "./breeder-os-sidebar.css";
-import "./command-dashboard-cards.css";
-import "./navigation-group-enhancer.css";
 import "./buyer-edit-enhancer.css";
 import "./portal-journey-enhancer.css";
 import "./milestone-manager.css";
@@ -74,5 +70,5 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const tenant = await requestTenant();
   const publicSurface = (await headers()).get("x-public-surface") === "1";
-  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme primary={tenant?.primaryColor} accent={tenant?.accentColor} fontFamily={tenant?.fontFamily}/><TenantRuntimeProvider tenant={tenant}>{!publicSurface && <><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><CommandDashboardEnhancer /><NavigationGroupEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer /></>}{children}</TenantRuntimeProvider></body></html>;
+  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme primary={tenant?.primaryColor} accent={tenant?.accentColor} fontFamily={tenant?.fontFamily}/><TenantRuntimeProvider tenant={tenant}>{!publicSurface && <><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer /></>}{children}</TenantRuntimeProvider></body></html>;
 }
