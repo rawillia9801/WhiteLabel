@@ -147,7 +147,8 @@ test("ships a breeder workflow operating system rather than decorative desktop c
   assert.match(page, /bos-sidebar-nav/);
   assert.match(page, /Find dogs, puppies, families/);
   assert.match(page, /groupLabels/);
-  assert.match(dashboard, /KENNEL DAY/);
+  assert.match(dashboard, /KENNEL COMMAND CENTER/);
+  assert.match(dashboard, /Kennel operating pulse/);
   assert.match(dashboard, /NEEDS ATTENTION/);
   assert.match(dashboard, /Application to go-home/);
   assert.doesNotMatch(page, /breeder-sidebar|breeder-nav-groups|workspace-window|os-taskbar|app-launcher|control-center|windowMinimized|focusMode/);
