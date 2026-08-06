@@ -70,6 +70,16 @@ async function select<T extends Row>(table: string, query: string) {
   return jsonRequest<T[]>(`rest/v1/${table}?${query}`);
 }
 
+async function selectOptional<T extends Row>(table: string, query: string) {
+  try {
+    return await select<T>(table, query);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (/could not find the table|does not exist|schema cache/i.test(message)) return [];
+    throw error;
+  }
+}
+
 async function first<T extends Row>(table: string, query: string) {
   return (await select<T>(table, `${query}&limit=1`))[0] ?? null;
 }
@@ -331,12 +341,13 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
   const puppyIds = puppies.map((puppy) => Number(puppy.id));
   const litterIds = [...new Set(puppies.map((puppy) => positiveId(puppy.litter_id)).filter((id): id is number => Boolean(id)))];
   const today = new Date().toISOString().slice(0, 10);
-  const [updates, links, litters, buyerActivity, puppyEvents] = await Promise.all([
+  const [updates, links, litters, buyerActivity, puppyEvents, healthRecords] = await Promise.all([
     puppyIds.length ? select<Row>("puppy_updates", `select=*&published=eq.true&puppy_id=in.(${puppyIds.join(",")})${scoped}&order=created_at.desc`) : Promise.resolve([]),
     documents.length ? select<Row>("buyer_document_puppies", `select=*&document_id=in.(${documents.map((document) => document.id).join(",")})${scoped}`) : Promise.resolve([]),
     litterIds.length ? select<Row>("litters", `select=*&id=in.(${litterIds.join(",")})${scoped}`) : Promise.resolve([]),
     select<Row>("events", `select=*&related_type=eq.buyers&related_id=eq.${buyerId}${scoped}&order=event_date.desc,event_time.desc&limit=100`),
     puppyIds.length ? select<Row>("events", `select=*&related_type=eq.puppies&related_id=in.(${puppyIds.join(",")})${scoped}&event_date=gte.${today}&status=neq.Completed&order=event_date.asc,event_time.asc`) : Promise.resolve([]),
+    puppyIds.length ? selectOptional<Row>("puppy_care_records", `select=*&visible_in_portal=eq.true&puppy_id=in.(${puppyIds.join(",")})${scoped}&order=care_date.desc`) : Promise.resolve([]),
   ]);
   const parentIds = [...new Set(litters.flatMap((litter) => [positiveId(litter.dam_id), positiveId(litter.sire_id)]).filter((id): id is number => Boolean(id)))];
   const parents = parentIds.length ? await select<Row>("dogs", `select=id,name,registered_name&id=in.(${parentIds.join(",")})${scoped}`) : [];
@@ -379,10 +390,11 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
       const dam = parents.find((candidate) => Number(candidate.id) === Number(litter?.dam_id));
       const sire = parents.find((candidate) => Number(candidate.id) === Number(litter?.sire_id));
       return {
-        id: Number(puppy.id), name: text(puppy, "name"), sex: text(puppy, "sex"), color: text(puppy, "color"), birthDate: text(puppy, "birth_date"), birthWeight: number(puppy, "birth_weight"), currentWeight: number(puppy, "current_weight"), status: text(puppy, "status"), priceCents: number(puppy, "price_cents"), notes: text(puppy, "notes"), litterName: text(litter, "name"), damName: text(dam, "registered_name") || text(dam, "name"), sireName: text(sire, "registered_name") || text(sire, "name"),
+        id: Number(puppy.id), name: text(puppy, "name"), sex: text(puppy, "sex"), color: text(puppy, "color"), birthDate: text(puppy, "birth_date"), birthWeight: number(puppy, "birth_weight"), birthWeightUnit: text(puppy, "birth_weight_unit") || "lb", currentWeight: number(puppy, "current_weight"), status: text(puppy, "status"), priceCents: number(puppy, "price_cents"), notes: text(puppy, "notes"), litterName: text(litter, "name"), damName: text(dam, "registered_name") || text(dam, "name"), sireName: text(sire, "registered_name") || text(sire, "name"),
       };
     }),
     updates: updates.map((update) => ({ id: Number(update.id), puppyId: Number(update.puppy_id), title: text(update, "title"), body: text(update, "body"), weekNumber: number(update, "week_number") || null, weight: number(update, "weight") || null, createdAt: text(update, "created_at") })),
+    healthRecords: healthRecords.map((record) => ({ id: Number(record.id), puppyId: Number(record.puppy_id), careType: text(record, "care_type"), title: text(record, "title"), careDate: text(record, "care_date"), product: text(record, "product"), lotNumber: text(record, "lot_number"), provider: text(record, "provider"), nextDueDate: text(record, "next_due_date"), notes: text(record, "notes") })),
     contracts,
     documents: documents.map((document) => ({ id: Number(document.id), title: text(document, "title"), documentType: text(document, "document_type"), fileName: text(document, "file_name"), createdAt: text(document, "created_at"), isContract: Boolean(parseContractNotes(document.notes)), puppyIds: links.filter((link) => Number(link.document_id) === document.id).map((link) => Number(link.puppy_id)) })),
     upcomingEvents: upcomingEvents.map((event) => ({ id: Number(event.id), title: text(event, "title"), eventType: text(event, "event_type"), date: text(event, "event_date"), time: text(event, "event_time"), location: text(event, "location"), status: text(event, "status"), puppyName: text(event, "related_type") === "puppies" ? text(puppies.find((puppy) => Number(puppy.id) === Number(event.related_id)), "name") : "" })),

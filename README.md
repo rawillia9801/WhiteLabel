@@ -12,7 +12,7 @@ The platform runs as one multi-tenant Vercel application backed by one Supabase 
 
 1. Copy `.env.example` to `.env.local`.
 2. Change every value in the **Branding**, **Theme**, **Locale and business rules**, and **Optional modules** sections.
-3. Create the platform Supabase project and run `supabase/schema.sql` in its SQL editor. For an existing installation, run `supabase/multi-tenant-migration.sql` instead.
+3. Create the platform Supabase project and run `supabase/schema.sql` in its SQL editor. For an existing installation, run `supabase/multi-tenant-migration.sql` instead. Then run `supabase/migrations/20260805230000_breeding_program_modules.sql` to add the pedigree/genetics, reproduction, whelping, breeding-calendar, and operational waitlist modules.
 4. Create the Vercel project from this GitHub repository, add `breederportal.site` and `*.breederportal.site`, and add the variables from `.env.example` in Vercel Project Settings.
 5. Add the same development values to `.env.local`. Never expose the service-role key, session secret, or Vercel API token to the browser.
 6. Run `npm install`, then `npm run dev`.

@@ -2,11 +2,14 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Activity,
+  Baby,
   CalendarDays,
   ChartNoAxesCombined,
   ChevronRight,
   Command as CommandIcon,
   Dog as DogIcon,
+  Dna,
   ExternalLink,
   FileText,
   FileSignature,
@@ -16,6 +19,7 @@ import {
   Headphones,
   LayoutDashboard,
   ListTree,
+  ListOrdered,
   Mail,
   MessagesSquare,
   MonitorSmartphone,
@@ -47,15 +51,16 @@ import { healthGuaranteeTerms } from "../lib/contract-templates";
 import { uploadDocumentDirect } from "../lib/direct-document-upload";
 import { defaultTemplatesConfig, type TemplatesConfig } from "../lib/template-defaults";
 import { TemplatesCenter } from "../components/templates-center";
+import { BreedingProgramCenter } from "../components/breeding-program-center";
 import { publicTenant } from "../lib/public-tenant";
 import { useTenant } from "../components/tenant-runtime";
 
 type Resource = "dogs" | "litters" | "buyers" | "puppies" | "payment_plans" | "transactions" | "events" | "updates" | "dog_medical_records" | "dog_registrations";
 type BaseRecord = { id: number; created_at: string; updated_at: string };
-type Dog = BaseRecord & { name: string; registered_name: string | null; sex: string; role: string; date_of_birth: string | null; color: string | null; weight: number | null; status: string; registration_number: string | null; microchip_number: string | null; health_testing: string | null; acquired_from: string | null; acquisition_date: string | null; acquisition_notes: string | null; next_heat_date: string | null; notes: string | null; purchase_price_cents: number | null };
-type Litter = BaseRecord & { name: string; dam_id: number | null; sire_id: number | null; breeding_date: string | null; due_date: string | null; birth_date: string | null; expected_count: number | null; status: string; notes: string | null };
-type Buyer = BaseRecord & { first_name: string; last_name: string; email: string; phone: string | null; city: string | null; state: string | null; postal_code?: string | null; application_status: string; preferred_sex: string | null; preferred_color: string | null; notes: string | null };
-type Puppy = BaseRecord & { litter_id: number; buyer_id: number | null; name: string; sex: string | null; color: string | null; birth_date: string | null; birth_weight: number | null; current_weight: number | null; status: string; price_cents: number | null; notes: string | null };
+type Dog = BaseRecord & { name: string; registered_name: string | null; sex: string; role: string; date_of_birth: string | null; color: string | null; breed?: string | null; markings?: string | null; coat_type?: string | null; breeder_name?: string | null; owner_name?: string | null; sire_id?: number | null; dam_id?: number | null; weight: number | null; status: string; registration_number: string | null; microchip_number: string | null; health_testing: string | null; acquired_from: string | null; acquisition_date: string | null; acquisition_notes: string | null; next_heat_date: string | null; notes: string | null; purchase_price_cents: number | null };
+type Litter = BaseRecord & { name: string; dam_id: number | null; sire_id: number | null; breeding_date: string | null; due_date: string | null; birth_date: string | null; expected_count: number | null; pregnancy_status?: string | null; pregnancy_confirmed_date?: string | null; ultrasound_date?: string | null; xray_date?: string | null; whelping_started_at?: string | null; whelping_completed_at?: string | null; status: string; notes: string | null };
+type Buyer = BaseRecord & { first_name: string; last_name: string; email: string; phone: string | null; city: string | null; state: string | null; postal_code?: string | null; application_status: string; preferred_sex: string | null; preferred_color: string | null; preferred_coat_type?: string | null; notes: string | null };
+type Puppy = BaseRecord & { litter_id: number; buyer_id: number | null; name: string; sex: string | null; color: string | null; markings?: string | null; coat_type?: string | null; collar_color?: string | null; birth_date: string | null; birth_time?: string | null; birth_weight: number | null; birth_weight_unit?: string | null; current_weight: number | null; placenta_observed?: boolean | null; nursing_status?: string | null; status: string; price_cents: number | null; notes: string | null };
 type PaymentPlan = BaseRecord & { buyer_id: number; name: string; total_amount_cents: number; payment_amount_cents: number; term_count: number; frequency: string; next_due_date: string | null; status: string; puppy_ids: number[] };
 type Transaction = BaseRecord & { type: "Payment" | "Deposit" | "Cost"; dog_id: number | null; buyer_id: number | null; litter_id: number | null; puppy_id: number | null; payment_plan_id: number | null; category: string | null; description: string; amount_cents: number; due_date: string | null; paid_date: string | null; status: string; method: string | null; notes: string | null };
 type KennelEvent = BaseRecord & { title: string; event_type: string; event_date: string; event_time: string | null; related_type: string | null; related_id: number | null; location: string | null; status: string; notes: string | null };
@@ -70,7 +75,7 @@ type ModalState = { resource: Resource; record?: Record<string, unknown>; preset
 type DocumentKind = "dog" | "buyer";
 type DocumentModalState = { kind: DocumentKind; ownerId?: number } | null;
 type ContractModalState = { buyerId: number; portalUrl?: string } | null;
-type View = "Command" | "Breeding" | "Litters" | "Puppies" | "Care" | "Applications" | "Families" | "Placement" | "Delivery" | "Finance" | "Inventory" | "Comms" | "Portal" | "CRM" | "Calendar" | "Vault" | "Templates" | "Reports";
+type View = "Command" | "Breeding" | "Pedigree" | "Reproduction" | "Whelping" | "Litters" | "Puppies" | "Care" | "Applications" | "Families" | "Waitlist" | "Placement" | "Delivery" | "Finance" | "Inventory" | "Comms" | "Portal" | "CRM" | "Calendar" | "Vault" | "Templates" | "Reports";
 type ViewGroup = "Daily work" | "Breeding program" | "Placement journey" | "Business" | "Tools";
 type ViewDefinition = { id: View; label: string; icon: LucideIcon; group: ViewGroup; shortcut: string };
 
@@ -79,11 +84,15 @@ const allViews: ViewDefinition[] = [
   { id: "Command", label: "Daily overview", icon: LayoutDashboard, group: "Daily work", shortcut: "1" },
   { id: "Calendar", label: "Kennel calendar", icon: CalendarDays, group: "Daily work", shortcut: "C" },
   { id: "Breeding", label: "Breeding dogs", icon: DogIcon, group: "Breeding program", shortcut: "2" },
+  { id: "Pedigree", label: "Pedigree & genetics", icon: Dna, group: "Breeding program", shortcut: "G" },
+  { id: "Reproduction", label: "Reproduction", icon: Activity, group: "Breeding program", shortcut: "H" },
+  { id: "Whelping", label: "Whelping mode", icon: Baby, group: "Breeding program", shortcut: "W" },
   { id: "Litters", label: "Litters", icon: ListTree, group: "Breeding program", shortcut: "L" },
   { id: "Puppies", label: "Puppies", icon: PawPrint, group: "Breeding program", shortcut: "P" },
   { id: "Care", label: "Health records", icon: HeartPulse, group: "Breeding program", shortcut: "4" },
   { id: "Applications", label: "Puppy applications", icon: ClipboardCheck, group: "Placement journey", shortcut: "A" },
   { id: "Families", label: "Families & waitlist", icon: UsersRound, group: "Placement journey", shortcut: "3" },
+  { id: "Waitlist", label: "Waitlist & picking", icon: ListOrdered, group: "Placement journey", shortcut: "Q" },
   { id: "Placement", label: "Puppy matching", icon: UserRound, group: "Placement journey", shortcut: "M" },
   { id: "Delivery", label: "Go-home planning", icon: Route, group: "Placement journey", shortcut: "D" },
   { id: "Finance", label: "Sales & payments", icon: WalletCards, group: "Business", shortcut: "5" },
@@ -1383,15 +1392,19 @@ export default function Home() {
   }, [data, search]);
 
   const activeViewProps = { data, openCreate, openEdit, openDocumentUpload, remove, removeDocument, openContracts };
-  const quickResource = view === "Litters" ? "litters" : view === "Puppies" || view === "Placement" ? "puppies" : view === "Calendar" || view === "Care" || view === "CRM" || view === "Delivery" ? "events" : view === "Applications" || view === "Families" || view === "Comms" || view === "Portal" ? "buyers" : view === "Breeding" ? "dogs" : view === "Finance" || view === "Inventory" || view === "Reports" ? "transactions" : "events";
+  const quickResource = view === "Litters" || view === "Reproduction" ? "litters" : view === "Puppies" || view === "Placement" || view === "Whelping" ? "puppies" : view === "Calendar" || view === "Care" || view === "CRM" || view === "Delivery" ? "events" : view === "Applications" || view === "Families" || view === "Waitlist" || view === "Comms" || view === "Portal" ? "buyers" : view === "Breeding" || view === "Pedigree" ? "dogs" : view === "Finance" || view === "Inventory" || view === "Reports" ? "transactions" : "events";
   const viewCopy: Record<View, { title: string; text: string }> = {
     Command: { title: "Breeder daily run", text: "The next care, placement, payment, communication, and go-home work across the program." },
     Breeding: { title: "Dogs & breeding", text: "Manage breeding dogs, pairings, heat dates, registrations, and program records." },
+    Pedigree: { title: "Pedigree & genetics", text: "Build 3–5 generation pedigrees, calculate COI and common ancestors, record genetic results, and evaluate planned matings." },
+    Reproduction: { title: "Reproductive management", text: "Track heat history, progesterone results, breeding attempts, pregnancy milestones, due dates, and the automatically generated breeding calendar." },
+    Whelping: { title: "Whelping mode", text: "Record each birth in real time, monitor nursing and newborn weights, flag losses, and keep deworming, vaccine, and medication care together." },
     Litters: { title: "Litters", text: "Track every litter from planned pairing and due date through whelping and puppy roster." },
     Puppies: { title: "Puppies", text: "Keep identity, growth, care, availability, pricing, and family assignment on one record." },
     Care: { title: "Health & care", text: "Run medical schedules, puppy milestones, recurring care, and kennel work." },
     Applications: { title: "Applications", text: "Screen families, record preferences, approve the right homes, and build the waitlist." },
     Families: { title: "Buyers & waitlist", text: "Open the complete family relationship: contact, preferences, puppies, payments, documents, and portal." },
+    Waitlist: { title: "Waitlist & puppy picking", text: "Run family ranking, deposits, preferences, picking order, assignment, passes, and moves to future litters with a full history." },
     Placement: { title: "Puppy placement", text: "Match approved families to puppies and carry every placement into payment and contract work." },
     Delivery: { title: "Pickup & delivery", text: "Control final balances, signed documents, handoff schedules, and go-home readiness." },
     Finance: { title: "Payments & sales", text: "Credit every payment to the right buyer and puppy, then manage balances and sale revenue." },
@@ -1409,10 +1422,14 @@ export default function Home() {
   const coreRecordCount = data.dogs.length + data.litters.length + data.buyers.length + data.puppies.length;
   const viewBadges: Partial<Record<View, number>> = {
     Breeding: analytics.activeLitters.length,
+    Pedigree: data.dogs.length,
+    Reproduction: data.litters.filter((item) => /planned|expecting|pregnant|active/i.test(`${item.status} ${item.pregnancy_status ?? ""}`)).length,
+    Whelping: data.litters.filter((item) => Boolean(item.whelping_started_at) && !item.whelping_completed_at).length,
     Litters: analytics.activeLitters.length,
     Puppies: analytics.unmatched.length,
     Applications: analytics.pendingBuyers.length,
     Families: analytics.approvedBuyers.length,
+    Waitlist: analytics.approvedBuyers.length,
     Placement: analytics.unmatched.length,
     Delivery: data.events.filter((item) => /pickup|delivery|transport|go.home/i.test(`${item.event_type} ${item.title}`) && item.status !== "Completed").length,
     Care: analytics.upcomingCare.length,
@@ -1454,11 +1471,15 @@ export default function Home() {
       {loading ? <div className="loading"><span />Loading records...</div> : <>
         {view === "Command" && <CommandView data={data} openCreate={openCreate} setView={navigateTo} />}
         {view === "Breeding" && <BreedingView {...activeViewProps} />}
+        {view === "Pedigree" && <BreedingProgramCenter mode="Pedigree" data={data} onDataChanged={loadData} />}
+        {view === "Reproduction" && <BreedingProgramCenter mode="Reproduction" data={data} onDataChanged={loadData} />}
+        {view === "Whelping" && <BreedingProgramCenter mode="Whelping" data={data} onDataChanged={loadData} />}
         {view === "Litters" && <LittersView {...activeViewProps} />}
         {view === "Puppies" && <PuppiesView {...activeViewProps} />}
         {view === "Care" && <CareView {...activeViewProps} />}
         {view === "Applications" && <ApplicationsView {...activeViewProps} />}
         {view === "Families" && <FamiliesView {...activeViewProps} />}
+        {view === "Waitlist" && <BreedingProgramCenter mode="Waitlist" data={data} onDataChanged={loadData} />}
         {view === "Placement" && <PlacementView {...activeViewProps} />}
         {view === "Delivery" && <DeliveryView {...activeViewProps} />}
         {view === "Finance" && <FinanceView {...activeViewProps} />}

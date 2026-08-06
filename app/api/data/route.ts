@@ -7,6 +7,7 @@ import { enrichProfileImages } from "../../../lib/profile-images";
 import { syncPuppyJourneyMilestones } from "../../../lib/puppy-journey";
 import { recordWeeklyPuppyWeight } from "../../../lib/puppy-weight-log";
 import { findKennelById } from "../../../lib/supabase-auth";
+import { syncBreedingCalendarEvents } from "../../../db/breeding-program";
 
 function writeError(error: unknown, fallback: string) {
   return Response.json(
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
         if (weightUpdate) await sendPublishedUpdate(weightUpdate, new URL(request.url).origin);
         await syncPuppyJourneyMilestones(Number(created.buyer_id) || null);
       }
+      if (body.resource === "litters") await syncBreedingCalendarEvents(Number(created.id), String(created.breeding_date ?? ""), session.kennelId);
     } catch (automationError) {
       console.error("Workflow failed after record creation", automationError instanceof Error ? automationError.message : automationError);
     }
@@ -84,6 +86,7 @@ export async function PUT(request: Request) {
         if (weightUpdate) await sendPublishedUpdate(weightUpdate, new URL(request.url).origin);
         await syncPuppyJourneyMilestones(Number(updated.buyer_id) || null);
       }
+      if (body.resource === "litters") await syncBreedingCalendarEvents(Number(updated.id), String(updated.breeding_date ?? ""), session.kennelId);
     } catch (automationError) {
       console.error("Workflow failed after record update", automationError instanceof Error ? automationError.message : automationError);
     }
