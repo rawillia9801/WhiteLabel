@@ -28,6 +28,11 @@ const subscriptions = [
   { name: "Studio", price: 99, buttonId: "C5G2BVYNMMUPN", description: "Expanded operating capacity plus a professional customizable breeder website connected to MyDogPortal.", featured: false },
 ] as const;
 
+const websiteTemplates = [
+  { id: "willow-creek", name: "Willow Creek", breed: "Chihuahua", description: "Bright, polished and boutique—with a clean presentation for a small companion-breed program.", preview: "https://willowcreekchihuahuas.com" },
+  { id: "cedar-creek", name: "Cedar & Creek", breed: "Golden Retriever", description: "Warm, editorial and outdoors-inspired—with a story-first presentation for a family sporting-breed program.", preview: "/templates/cedar-creek" },
+] as const;
+
 const setupServices = [
   {
     id: "brand-launch",
@@ -77,6 +82,14 @@ export default function SignupPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [setupRequests, setSetupRequests] = useState<string[]>([]);
+  const [websiteTemplate, setWebsiteTemplate] = useState("");
+
+  useEffect(() => {
+    const requestedTemplate = new URLSearchParams(window.location.search).get("website_template") || "";
+    if (!websiteTemplates.some((template) => template.id === requestedTemplate)) return;
+    const timer = window.setTimeout(() => setWebsiteTemplate(requestedTemplate), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (slug.length < 3) return;
@@ -107,7 +120,7 @@ export default function SignupPage() {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kennel_name: form.get("kennel_name"), kennel_slug: form.get("kennel_slug"), email: form.get("email"), password: form.get("password"), plan: "starter", setup_requests: setupRequests }),
+        body: JSON.stringify({ kennel_name: form.get("kennel_name"), kennel_slug: form.get("kennel_slug"), email: form.get("email"), password: form.get("password"), plan: "starter", setup_requests: setupRequests, website_template: websiteTemplate }),
       });
       const result = await response.json() as { error?: string; redirect?: string };
       if (!response.ok) throw new Error(result.error || "Unable to create your kennel account.");
@@ -143,6 +156,24 @@ export default function SignupPage() {
             <button className="signup-submit" disabled={busy || available === false}>{busy ? "Creating your kennel…" : "Create account and open kennel"}<ArrowRight size={17} /></button>
             <footer>Already registered? <Link href="/login">Sign in</Link></footer>
           </form>
+
+          <section className="website-template-picker" aria-labelledby="website-template-heading">
+            <header><small>WEBSITE TEMPLATE GALLERY</small><h2 id="website-template-heading">Choose the look you want to start with</h2><p>Pick a starting style now or leave it open. Your kennel name, breed, dogs, photography, colors, policies, and content replace everything shown in the demonstrations.</p></header>
+            <div className="website-template-grid">
+              {websiteTemplates.map((template, index) => {
+                const selected = websiteTemplate === template.id;
+                return (
+                  <article className={selected ? "selected" : ""} key={template.id}>
+                    <small>WEBSITE TEMPLATE {String(index + 1).padStart(2, "0")}</small>
+                    <h3>{template.name}</h3>
+                    <b>{template.breed} demonstration</b>
+                    <p>{template.description}</p>
+                    <div><a href={template.preview} target="_blank" rel="noreferrer">Preview template <ExternalLink size={13} /></a><button type="button" aria-pressed={selected} onClick={() => setWebsiteTemplate(selected ? "" : template.id)}>{selected ? <><Check size={14} /> Selected</> : "Choose this style"}</button></div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
 
           <section className="subscription-section" aria-labelledby="subscription-heading">
             <header><span><WalletCards size={17} /></span><div><small>14-DAY PLATFORM FREE TRIAL</small><h2 id="subscription-heading">Choose the plan that fits your program</h2><p>Core MyDogPortal subscriptions are handled securely by PayPal. MyDogPortal does not process puppy purchases between breeders and their families.</p></div></header>
@@ -180,7 +211,7 @@ export default function SignupPage() {
 
           <section className="studio-website-note">
             <div><small>STUDIO WEBSITE</small><h2>Your public breeder website, connected</h2><p>Studio includes a professional customizable breeder website that can use breeder-maintained MyDogPortal information for available puppies, litters, dams, sires, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
-            <a href="https://willowcreekchihuahuas.com" target="_blank" rel="noreferrer"><span>Demonstration breeder website</span><b>See MyDogPortal in action</b><small>View Willow Creek Chihuahuas <ExternalLink size={13} /></small></a>
+            <Link href="/#examples"><span>CONNECTED TEMPLATE GALLERY</span><b>Compare the website styles</b><small>View all live examples <ArrowRight size={13} /></small></Link>
           </section>
         </div>
       </section>
