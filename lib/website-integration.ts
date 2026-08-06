@@ -1,4 +1,5 @@
 import type { ResourceInput } from "../db/resources";
+import { applicationRecordBlock, type ApplicationFieldMapping, type ApplicationFormConfig, type StoredApplicationRecord } from "./application-form";
 
 const configuredOrigins = () => new Set((process.env.WEBSITE_ALLOWED_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean));
 
@@ -117,7 +118,9 @@ export function websiteCorsHeaders(origin: string | null, requestHost?: string |
   return headers;
 }
 
-export function normalizeWebsiteApplication(body: unknown) {
+const mappedKey = (config: ApplicationFormConfig | undefined, mapping: ApplicationFieldMapping, fallback: string) => config?.fields.find((field) => field.mapping === mapping)?.key || fallback;
+
+export function normalizeWebsiteApplication(body: unknown, config?: ApplicationFormConfig) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new Error("The application payload is invalid.");
   }
@@ -129,25 +132,38 @@ export function normalizeWebsiteApplication(body: unknown) {
     : record;
   const application: WebsiteApplication = {};
 
-  for (const [key] of APPLICATION_FIELDS) application[key] = cleanString(source[key]);
-  for (const key of ["full_name", "email", "phone", "city_state", "company"]) {
-    application[key] = cleanString(source[key], key === "email" ? 254 : 200);
+  if (config) {
+    for (const field of config.fields) application[field.key] = field.type === "checkbox" ? cleanBoolean(source[field.key]) : cleanString(source[field.key]);
   }
-  for (const key of REQUIRED_ACKNOWLEDGEMENTS) application[key] = cleanBoolean(source[key]);
+  for (const [key] of APPLICATION_FIELDS) if (!(key in application) && source[key] != null) application[key] = cleanString(source[key]);
+  for (const key of ["full_name", "email", "phone", "city_state", "company"]) {
+    if (!(key in application) || source[key] != null) application[key] = cleanString(source[key], key === "email" ? 254 : 200);
+  }
+  for (const key of REQUIRED_ACKNOWLEDGEMENTS) if (!(key in application) || source[key] != null) application[key] = cleanBoolean(source[key]);
 
-  const fullName = String(application.full_name);
-  const email = String(application.email).toLowerCase();
-  const phone = String(application.phone);
+  const fullNameKey = mappedKey(config, "full_name", "full_name");
+  const emailKey = mappedKey(config, "email", "email");
+  const phoneKey = mappedKey(config, "phone", "phone");
+  const fullName = String(application[fullNameKey] ?? "");
+  const email = String(application[emailKey] ?? "").toLowerCase();
+  const phone = String(application[phoneKey] ?? "");
   if (application.company) throw new Error("Unable to accept this application.");
   if (fullName.length < 2) throw new Error("Enter the applicant's full name.");
   if (!EMAIL_PATTERN.test(email)) throw new Error("Enter a valid email address.");
   if (phone.replace(/\D/g, "").length < 10) throw new Error("Enter a valid phone number.");
-  if (application.age_confirm !== "Yes") throw new Error("The applicant must be 18 or older.");
-  if (!REQUIRED_ACKNOWLEDGEMENTS.every((key) => application[key] === true)) {
-    throw new Error("All required acknowledgements must be accepted, including the small-puppy policy.");
+  if (config) {
+    for (const field of config.fields.filter((item) => item.required)) {
+      const value = application[field.key];
+      if (field.type === "checkbox" ? value !== true : !String(value ?? "").trim()) throw new Error(`${field.label} is required.`);
+    }
+  } else {
+    if (application.age_confirm !== "Yes") throw new Error("The applicant must be 18 or older.");
+    if (!REQUIRED_ACKNOWLEDGEMENTS.every((key) => application[key] === true)) {
+      throw new Error("All required acknowledgements must be accepted, including the small-puppy policy.");
+    }
   }
 
-  application.email = email;
+  application[emailKey] = email;
   return application;
 }
 
@@ -167,34 +183,44 @@ function splitCityState(value: string) {
   };
 }
 
-export function formatApplicationNotes(application: WebsiteApplication, receivedAt: string) {
-  const lines = APPLICATION_FIELDS.flatMap(([key, label]) => {
+export function formatApplicationNotes(application: WebsiteApplication, receivedAt: string, config?: ApplicationFormConfig) {
+  const recordFields = config?.fields ?? APPLICATION_FIELDS.map(([key, label]) => ({ key, label, section: "Application", mapping: "none" as const }));
+  const lines = recordFields.flatMap(({ key, label }) => {
     const value = application[key];
-    return value === "" || value == null ? [] : [`${label}: ${String(value)}`];
+    return value === "" || value == null ? [] : [`${label}: ${typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}`];
   });
+  const record: StoredApplicationRecord = {
+    version: 1,
+    submittedAt: receivedAt,
+    formTitle: config?.title || "Puppy Application",
+    answers: Object.fromEntries(recordFields.map(({ key }) => [key, application[key] ?? ""])),
+    fields: recordFields.map(({ key, label, section, mapping }) => ({ key, label, section, mapping })),
+  };
   return [
     `Website puppy application received ${receivedAt}`,
     "Source: kennel website application",
-    "Small-puppy policy acknowledged: Yes",
-    "Applicant record-use authorization acknowledged: Yes",
+    "Submission is pending breeder review and is not an approval, reservation, or sales agreement.",
     "",
     ...lines,
-  ].join("\n").slice(0, 30_000);
+    "",
+    applicationRecordBlock(record),
+  ].join("\n");
 }
 
-export function applicationBuyerInput(application: WebsiteApplication, receivedAt: string): ResourceInput {
-  const { firstName, lastName } = splitName(String(application.full_name));
-  const { city, state } = splitCityState(String(application.city_state));
+export function applicationBuyerInput(application: WebsiteApplication, receivedAt: string, config?: ApplicationFormConfig): ResourceInput {
+  const valueFor = (mapping: ApplicationFieldMapping, fallback: string) => application[mappedKey(config, mapping, fallback)];
+  const { firstName, lastName } = splitName(String(valueFor("full_name", "full_name") ?? ""));
+  const { city, state } = splitCityState(String(valueFor("city_state", "city_state") ?? ""));
   return {
     first_name: firstName,
     last_name: lastName,
-    email: String(application.email),
-    phone: String(application.phone),
+    email: String(valueFor("email", "email") ?? ""),
+    phone: String(valueFor("phone", "phone") ?? ""),
     city,
     state,
     application_status: "Applied",
-    preferred_sex: cleanString(application.sex_pref, 80) || null,
-    preferred_color: cleanString(application.color_pref, 160) || null,
+    preferred_sex: cleanString(valueFor("preferred_sex", "sex_pref"), 80) || null,
+    preferred_color: cleanString(valueFor("preferred_color", "color_pref"), 160) || null,
     household_notes: [
       cleanString(application.street_address, 300),
       cleanString(application.home_type, 120),
@@ -204,7 +230,7 @@ export function applicationBuyerInput(application: WebsiteApplication, receivedA
       cleanString(application.children_ages, 500),
       cleanString(application.current_pets, 1_000),
     ].filter(Boolean).join(" | ") || null,
-    notes: formatApplicationNotes(application, receivedAt),
+    notes: formatApplicationNotes(application, receivedAt, config),
   };
 }
 
