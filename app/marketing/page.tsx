@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, Dog, FileSignature, Globe2, HeartPulse, MessageSquareText, MonitorSmartphone, PawPrint, PhoneCall, ShieldCheck, UsersRound, WalletCards } from "lucide-react";
+import { ArrowRight, Check, Dog, ExternalLink, FileSignature, Globe2, HeartPulse, MessageSquareText, MonitorSmartphone, PawPrint, PhoneCall, ShieldCheck, UsersRound, WalletCards } from "lucide-react";
 import "./marketing.css";
 import "./services.css";
 
@@ -21,7 +21,7 @@ const plans = [
 const services = [
   [Globe2, "Brand Launch", "$149 one-time", "Launch an available standard .com under your brand.", ["First-year standard .com registration", "SSL and hosting configuration", "Two branded business email addresses", "Standard .com renewal: $29/year", "Premium domains priced separately"]],
   [MonitorSmartphone, "Custom Breeder Website", "$299 one-time", "A breeder website designed around your program when the Studio template is not enough.", ["Custom layout, branding, colors, and pages", "Your photography, content, and program presentation", "Connected MyDogPortal information", "Out-of-scope custom functionality quoted separately"]],
-  [PhoneCall, "Business Voice", "$69 setup", "A professionally configured local business line with your greeting and breeder information.", ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "IVR/menu, business hours, voicemail, and routing"]],
+  [PhoneCall, "Business Voice", "$69 setup", "A professionally configured local business line with your greeting and breeder information.", ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "IVR/menu, business hours, voicemail, and routing", "Live phone system example: (276) 276-1669"]],
   [MessageSquareText, "Business SMS", "$59 activation", "Optional registered business messaging, separate from Business Voice and the software subscription.", ["$14.99/month per active registered campaign", "$25 activation per additional campaign", "Incoming: $0.02 per SMS segment", "Outgoing: $0.03 per SMS segment", "Approval required; allow up to 30 days"]],
 ] as const;
 
@@ -29,7 +29,7 @@ export default function MarketingPage() {
   return <main className="marketing-page">
     <nav className="marketing-nav" aria-label="Main navigation">
       <Link className="marketing-brand" href="/"><span><PawPrint size={21}/></span><b>MyDogPortal</b></Link>
-      <div><a href="#platform">Platform</a><a href="#pricing">Pricing</a><Link href="/login">Sign in</Link><Link className="marketing-nav-cta" href="/signup">Start free trial</Link></div>
+      <div><a href="#platform">Platform</a><a href="#pricing">Pricing</a><a href="#examples">Examples</a><Link href="/login">Sign in</Link><Link className="marketing-nav-cta" href="/signup">Start free trial</Link></div>
     </nav>
     <section className="marketing-hero">
       <div className="marketing-hero-copy">
@@ -49,6 +49,25 @@ export default function MarketingPage() {
     <section className="marketing-section" id="platform"><header><span className="marketing-kicker">THE COMPLETE BREEDER OPERATING SYSTEM</span><h2>Run the program. Serve the families. Protect the records.</h2><p>Replace disconnected spreadsheets, inboxes, folders, and payment notes with one operational source of truth.</p></header><div className="marketing-capabilities">{features.map(([Icon,title,text])=><article key={title}><span><Icon size={20}/></span><h3>{title}</h3><p>{text}</p></article>)}</div></section>
     <section className="marketing-section marketing-pricing" id="pricing"><header><span className="marketing-kicker">SIMPLE MONTHLY PRICING</span><h2>Choose the workspace that fits your program.</h2><p>Every plan starts with a 14-day platform trial. Optional domains, websites, voice, and messaging remain separate.</p></header><div className="marketing-plans">{plans.map(([name,price,note,items])=><article className={name === "Professional" ? "featured" : ""} key={name}>{name === "Professional" && <em>MOST POPULAR</em>}<h3>{name}</h3><p><b>{price}</b><span>/month</span></p><small>{note}</small><ul>{items.map(item=><li key={item}><Check size={14}/>{item}</li>)}</ul><Link href="/signup">Start free trial <ArrowRight size={15}/></Link></article>)}</div></section>
     <section className="marketing-section marketing-services" id="services"><header><span className="marketing-kicker">OPTIONAL LAUNCH & COMMUNICATION SERVICES</span><h2>Add the business infrastructure your kennel needs.</h2><p>These services are separate from your MyDogPortal subscription. Request them during signup—no add-on payment is taken until the service is confirmed.</p></header><div className="marketing-service-grid">{services.map(([Icon,name,price,text,items])=><article key={name}><header><span><Icon size={21}/></span><div><h3>{name}</h3><strong>{price}</strong></div></header><p>{text}</p><ul>{items.map(item=><li key={item}><Check size={13}/>{item}</li>)}</ul><Link href="/signup">Add to my setup <ArrowRight size={15}/></Link></article>)}</div><aside><ShieldCheck size={18}/><p><b>Clear, separate billing.</b> Voice and SMS usage charges are billed separately from your software plan. SMS registration and carrier approval are required and activation is not guaranteed.</p></aside></section>
+    <section className="marketing-section marketing-examples" id="examples">
+      <header><span className="marketing-kicker">SEE THE CONNECTED EXPERIENCE</span><h2>See the website. Call the phone system.</h2><p>These working examples show how MyDogPortal can extend beyond the breeder workspace into a branded public website and professional business phone experience.</p></header>
+      <div className="marketing-example-grid">
+        <article>
+          <span><MonitorSmartphone size={23}/></span>
+          <small>BREEDER WEBSITE EXAMPLE</small>
+          <h3>Willow Creek Chihuahuas</h3>
+          <p>See a breeder-facing website example with its own brand and public customer experience.</p>
+          <a href="https://willowcreekchihuahuas.com" target="_blank" rel="noreferrer">Visit Willow Creek Chihuahuas <ExternalLink size={15}/></a>
+        </article>
+        <article>
+          <span><PhoneCall size={23}/></span>
+          <small>BUSINESS VOICE EXAMPLE</small>
+          <h3>(276) 276-1669</h3>
+          <p>Call the live phone-system example to hear the professionally configured voice menu and routing experience.</p>
+          <a href="tel:+12762761669">Call (276) 276-1669 <PhoneCall size={15}/></a>
+        </article>
+      </div>
+    </section>
     <section className="marketing-final"><span><PawPrint size={25}/></span><div><small>MYDOGPORTAL</small><h2>Give your breeding program the operating system it deserves.</h2></div><Link href="/signup">Create your kennel workspace <ArrowRight size={17}/></Link></section>
     <footer className="marketing-footer"><Link className="marketing-brand" href="/"><span><PawPrint size={18}/></span><b>MyDogPortal</b></Link><p>White-label breeder operations and family portals.</p><div><Link href="/login">Sign in</Link><Link href="/signup">Create account</Link></div></footer>
   </main>;
