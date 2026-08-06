@@ -5,9 +5,10 @@ create table if not exists kennels (
   owner_auth_user_id uuid not null references auth.users(id) on delete restrict,
   name text not null,
   slug text not null unique check (slug ~ '^[a-z0-9](?:[a-z0-9-]{1,46}[a-z0-9])$'),
-  plan text not null default 'starter' check (plan in ('starter', 'professional', 'custom_domain')),
+  plan text not null default 'starter' check (plan in ('starter', 'professional', 'studio')),
   custom_domain text unique,
   domain_status text not null default 'not_requested' check (domain_status in ('not_requested', 'pending', 'verified', 'failed')),
+  domain_addon_enabled boolean not null default false,
   primary_color text not null default '#087f8c', accent_color text not null default '#c68b24', font_family text not null default 'Geist',
   primary_breed text not null default 'Dogs',
   legal_name text, location text, contact_email text, contact_phone text, website_url text,
@@ -17,6 +18,7 @@ create table if not exists kennels (
   created_at timestamptz not null default now(), updated_at timestamptz not null default now()
 );
 alter table kennels add column if not exists legal_name text;
+alter table kennels add column if not exists domain_addon_enabled boolean not null default false;
 alter table kennels add column if not exists primary_breed text not null default 'Dogs';
 alter table kennels add column if not exists location text;
 alter table kennels add column if not exists contact_email text;
