@@ -430,5 +430,9 @@ test("serves the public marketing homepage on the platform apex", async () => {
   assert.match(marketing, /Business SMS/);
   assert.match(marketing, /\$14\.99\/month per active registered campaign/);
   assert.match(marketing, /allow up to 30 days/);
+  assert.match(marketing, /https:\/\/willowcreekchihuahuas\.com/);
+  assert.match(marketing, /Willow Creek Chihuahuas/);
+  assert.match(marketing, /\(276\) 276-1669/);
+  assert.match(marketing, /tel:\+12762761669/);
   assert.doesNotMatch(proxy, /reserved for the MyDogPortal marketing website/);
 });
