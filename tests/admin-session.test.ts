@@ -17,7 +17,7 @@ test("breeder sessions are signed, tenant-bound, and required by protected route
   assert.equal(isValidAdminSessionToken(token), true);
   assert.equal(isValidAdminSessionToken(`${token}0`), false);
 
-  const authorizedRequest = new Request("https://willow-creek.breederportal.site/api/data", { headers: { cookie: `${ADMIN_SESSION_COOKIE}=${token}` } });
+  const authorizedRequest = new Request("https://willow-creek.mydogportal.site/api/data", { headers: { cookie: `${ADMIN_SESSION_COOKIE}=${token}` } });
   assert.equal(adminSessionTokenFromRequest(authorizedRequest), token);
   assert.equal(breederSessionFromRequest(authorizedRequest)?.kennelSlug, "willow-creek");
   assert.equal(requireAdminSession(authorizedRequest), null);

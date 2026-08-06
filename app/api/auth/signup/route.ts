@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 function cookieDomain(request: Request) {
   if (process.env.NODE_ENV !== "production") return undefined;
   const host = new URL(request.url).hostname.toLowerCase();
-  const platform = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "breederportal.site";
+  const platform = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.site";
   return host === platform || host.endsWith(`.${platform}`) ? `.${platform}` : undefined;
 }
 

@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     const claims = token ? await verifyPortalToken(token) : null;
     if (!claims) return Response.json({ error: "Your Puppy Portal session is not available." }, { status: 401 });
 
-    await syncPuppyJourneyMilestones(claims.buyerId);
+    await syncPuppyJourneyMilestones(claims.kennelId, claims.buyerId);
     const [portal, milestoneConfig] = await Promise.all([
       getPuppyPortalForBuyer(claims.buyerId, claims.kennelId),
       getBuyerMilestoneConfig(),
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     const portalContracts = portal.contracts.filter((item): item is NonNullable<typeof item> => Boolean(item));
     const puppyIds = portal.puppies.map((puppy) => puppy.id);
     const rawUpdates = puppyIds.length
-      ? await rows(`rest/v1/puppy_updates?select=*&puppy_id=in.(${puppyIds.join(",")})&order=created_at.desc`)
+      ? await rows(`rest/v1/puppy_updates?select=*&puppy_id=in.(${puppyIds.join(",")})&kennel_id=eq.${encodeURIComponent(claims.kennelId)}&order=created_at.desc`)
       : [];
 
     const agreements = [

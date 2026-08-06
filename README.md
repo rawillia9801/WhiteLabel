@@ -6,14 +6,14 @@ A customizable, independently hosted operating system for responsible dog breede
 
 WhiteLabel uses **Vercel** for the Next.js application, API routes, scheduled jobs, previews, and production deployments. It uses **Supabase** for Postgres data and document storage. It does not require or use OpenAI hosting or OpenAI services.
 
-The platform runs as one multi-tenant Vercel application backed by one Supabase project. Every kennel receives an isolated `kennel_id`, owner/member accounts, and an included `kennelname.breederportal.site` address. The Custom Domain package can attach a verified customer-owned domain to the same Vercel project.
+The platform runs as one multi-tenant Vercel application backed by one Supabase project. Every kennel receives an isolated `kennel_id`, owner/member accounts, and an included `kennelname.mydogportal.site` address. A configured custom-domain package can attach a verified customer-owned domain to the same Vercel project.
 
 ## Five-minute setup
 
 1. Copy `.env.example` to `.env.local`.
 2. Change every value in the **Branding**, **Theme**, **Locale and business rules**, and **Optional modules** sections.
-3. Create the platform Supabase project and run `supabase/schema.sql` in its SQL editor. For an existing installation, run `supabase/multi-tenant-migration.sql` instead.
-4. Create the Vercel project from this GitHub repository, add `breederportal.site` and `*.breederportal.site`, and add the variables from `.env.example` in Vercel Project Settings.
+3. Create the platform Supabase project, run `supabase/schema.sql` in its SQL editor, then apply every file under `supabase/migrations` in timestamp order. On the linked production project use `npx supabase db push --linked`—never reset the database.
+4. Create the Vercel project from this GitHub repository, add `mydogportal.site` and `*.mydogportal.site`, and add the variables from `.env.example` in Vercel Project Settings.
 5. Add the same development values to `.env.local`. Never expose the service-role key, session secret, or Vercel API token to the browser.
 6. Run `npm install`, then `npm run dev`.
 7. Replace `public/favicon.svg` and `public/og.png`, or point the branding variables to other assets.
@@ -51,4 +51,5 @@ This software provides editable operational templates, not legal advice. Pricing
 npm run lint
 npm run build
 npm test
+npx supabase db query --linked --file tests/rls-isolation.sql
 ```

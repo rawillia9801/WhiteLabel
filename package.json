@@ -9,7 +9,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs && node --experimental-strip-types --test tests/admin-session.test.ts tests/contracts.test.ts tests/website-integration.test.ts",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs && node --experimental-strip-types --test tests/admin-session.test.ts tests/contracts.test.ts tests/website-integration.test.ts tests/pedigree.test.ts tests/breeding-calculations.test.ts tests/tenant-isolation.test.ts",
+    "test:breeding": "node --experimental-strip-types --test tests/pedigree.test.ts tests/breeding-calculations.test.ts tests/tenant-isolation.test.ts",
+    "test:workflow:live": "node --env-file=.env.local tests/live-breeding-workflow.mjs",
     "lint": "eslint . --ignore-pattern .next",
     "migrate:legacy-to-supabase": "node scripts/migrate-legacy-site-to-supabase.mjs"
   },

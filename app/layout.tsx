@@ -30,6 +30,7 @@ import "./swvaos-professional.css";
 import "./swvaos-contrast.css";
 import "./swvaos-locked-theme.css";
 import "./premium-breeder-workspace.css";
+import "./breeding-management.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });

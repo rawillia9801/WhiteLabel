@@ -29,7 +29,7 @@ test("accepts configured and platform website origins", () => {
   process.env.WEBSITE_ALLOWED_ORIGINS = "https://willowcreekgoldens.com,https://www.willowcreekgoldens.com";
   assert.equal(isAllowedWebsiteOrigin("https://willowcreekgoldens.com"), true);
   assert.equal(isAllowedWebsiteOrigin("https://www.willowcreekgoldens.com"), true);
-  assert.equal(isAllowedWebsiteOrigin("https://willow-creek.breederportal.site"), true);
+  assert.equal(isAllowedWebsiteOrigin("https://willow-creek.mydogportal.site"), true);
   assert.equal(isAllowedWebsiteOrigin("https://example.com"), false);
   assert.equal(websiteCorsHeaders("https://willowcreekgoldens.com").get("access-control-allow-origin"), "https://willowcreekgoldens.com");
   assert.equal(websiteCorsHeaders("https://example.com").has("access-control-allow-origin"), false);

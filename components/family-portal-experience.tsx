@@ -19,12 +19,14 @@ import {
   FileText,
   HelpCircle,
   Home,
+  HeartPulse,
   LogOut,
   Mail,
   Menu,
   MessageSquareText,
   Phone,
   Route,
+  Scale,
   Send,
   ShieldCheck,
   Sparkles,
@@ -36,8 +38,10 @@ import {
 } from "lucide-react";
 import { useTenant } from "./tenant-runtime";
 
-type Puppy = { id: number; name: string; sex: string; color: string; birthDate: string; birthWeight: number; currentWeight: number; status: string; priceCents: number; litterName: string; damName: string; sireName: string };
+type Puppy = { id: number; name: string; sex: string; color: string; birthDate: string; birthWeight: number; currentWeight: number; weightUnit: string; status: string; priceCents: number; litterName: string; damName: string; sireName: string };
 type Update = { id: number; puppyId: number; title: string; body: string; weekNumber: number | null; weight: number | null; createdAt: string };
+type WeightLog = { id: number; puppyId: number; measuredAt: string; weight: number; unit: string; feedingStatus: string; notes: string };
+type CareRecord = { id: number; puppyId: number; careType: string; title: string; occurredAt: string; nextDueAt: string; provider: string; medication: string; dosage: string; status: string; notes: string };
 type Contract = { id: number; title: string; documentType: string; status: "pending" | "signed"; kind: string; puppyId: number; puppyName: string; createdAt: string; signedAt: string | null; signerName: string | null };
 type Payment = { id: number; description: string; category: string; method: string; amountCents: number; status: string; dueDate: string; paidDate: string };
 type PortalDocument = { id: number; title: string; documentType: string; fileName: string; createdAt: string; isContract: boolean; puppyIds: number[] };
@@ -47,6 +51,8 @@ type PortalData = {
   buyer: { id: number; name: string; email: string; phone: string; location: string; applicationStatus: string; preferredSex: string; preferredColor: string };
   puppies: Puppy[];
   updates: Update[];
+  weights: WeightLog[];
+  careRecords: CareRecord[];
   contracts: Contract[];
   documents: PortalDocument[];
   upcomingEvents: PortalEvent[];
@@ -153,7 +159,11 @@ export function FamilyPortalExperience({ token, accountMode = false }: { token: 
   const [data, setData] = useState<PortalData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window === "undefined") return "overview";
+    const hash = window.location.hash.replace("#", "") as Tab;
+    return navigation.some((item) => item.id === hash) ? hash : "overview";
+  });
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -170,12 +180,10 @@ export function FamilyPortalExperience({ token, accountMode = false }: { token: 
     }
   }, [token]);
 
-  useEffect(() => { void load(); }, [load]);
-
   useEffect(() => {
-    const hash = window.location.hash.replace("#", "") as Tab;
-    if (navigation.some((item) => item.id === hash)) setActiveTab(hash);
-  }, []);
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   function chooseTab(tab: Tab) {
     setActiveTab(tab);
@@ -247,7 +255,7 @@ export function FamilyPortalExperience({ token, accountMode = false }: { token: 
         </div>
       </>}
 
-      {activeTab === "puppy" && <section className="portal-panel">{data.puppies.length ? data.puppies.map((puppy) => <div key={puppy.id} style={{marginBottom:18}}><div className="puppy-hero"><span className="puppy-avatar">{puppy.name.slice(0,1).toUpperCase()}</span><div><h2>{puppy.name}</h2><p>{[puppy.sex,puppy.color,puppy.litterName].filter(Boolean).join(" · ")}</p></div><span>{puppy.status}</span></div><div className="facts-grid"><div className="fact"><small>Birthday</small><b>{shortDate(puppy.birthDate)}</b></div><div className="fact"><small>Birth weight</small><b>{puppy.birthWeight ? `${puppy.birthWeight} lb` : "Not recorded"}</b></div><div className="fact"><small>Latest weight</small><b>{puppy.currentWeight ? `${puppy.currentWeight} lb` : "Not recorded"}</b></div><div className="fact"><small>Dam</small><b>{puppy.damName || "Not recorded"}</b></div><div className="fact"><small>Sire</small><b>{puppy.sireName || "Not recorded"}</b></div><div className="fact"><small>Recorded price</small><b>{money(puppy.priceCents)}</b></div></div></div>) : <div className="empty-state"><Dog size={30}/><h3>No puppy assigned yet</h3><p>Your assigned puppy will appear here when placement is confirmed.</p></div>}</section>}
+      {activeTab === "puppy" && <section className="portal-panel">{data.puppies.length ? data.puppies.map((puppy) => { const weights = (data.weights || []).filter((entry) => entry.puppyId === puppy.id); const care = (data.careRecords || []).filter((entry) => entry.puppyId === puppy.id); const latestWeight = weights[0]; return <div key={puppy.id} style={{marginBottom:18}}><div className="puppy-hero"><span className="puppy-avatar">{puppy.name.slice(0,1).toUpperCase()}</span><div><h2>{puppy.name}</h2><p>{[puppy.sex,puppy.color,puppy.litterName].filter(Boolean).join(" · ")}</p></div><span>{puppy.status}</span></div><div className="facts-grid"><div className="fact"><small>Birthday</small><b>{shortDate(puppy.birthDate)}</b></div><div className="fact"><small>Birth weight</small><b>{puppy.birthWeight ? `${puppy.birthWeight} ${puppy.weightUnit || "lb"}` : "Not recorded"}</b></div><div className="fact"><small>Latest weight</small><b>{latestWeight ? `${latestWeight.weight} ${latestWeight.unit}` : puppy.currentWeight ? `${puppy.currentWeight} ${puppy.weightUnit || "lb"}` : "Not recorded"}</b></div><div className="fact"><small>Dam</small><b>{puppy.damName || "Not recorded"}</b></div><div className="fact"><small>Sire</small><b>{puppy.sireName || "Not recorded"}</b></div><div className="fact"><small>Recorded price</small><b>{money(puppy.priceCents)}</b></div></div>{(weights.length > 0 || care.length > 0) && <div className="content-list" style={{marginTop:13}}>{weights.slice(0,3).map((entry) => <div className="content-row" key={`weight-${entry.id}`}><span className="row-icon"><Scale size={17}/></span><div><b>{entry.weight} {entry.unit}</b><small>{shortDate(entry.measuredAt)}{entry.feedingStatus ? ` · ${entry.feedingStatus}` : ""}</small></div><span className="status-pill good">Weight</span></div>)}{care.slice(0,6).map((entry) => <div className="content-row" key={`care-${entry.id}`}><span className="row-icon"><HeartPulse size={17}/></span><div><b>{entry.title}</b><small>{shortDate(entry.occurredAt)}{entry.medication ? ` · ${entry.medication}${entry.dosage ? ` ${entry.dosage}` : ""}` : ""}</small></div><span className="status-pill good">{entry.status}</span></div>)}</div>}</div>; }) : <div className="empty-state"><Dog size={30}/><h3>No puppy assigned yet</h3><p>Your assigned puppy will appear here when placement is confirmed.</p></div>}</section>}
 
       {activeTab === "updates" && <section className="portal-panel"><div className="portal-panel-head"><div><span>PUPPY UPDATES</span><h2>Milestones and family notes</h2><p>Updates published by your breeder for your assigned puppy.</p></div></div><div className="updates-grid">{data.updates.map((update) => <article className="update-card" key={update.id}><header><span><Sparkles size={16}/><b>{update.weekNumber ? `Week ${update.weekNumber}` : "Puppy update"}</b></span><small>{shortDate(update.createdAt)}</small></header><h3>{update.title}</h3><p>{update.body}</p><footer>{update.weight ? `Recorded weight: ${update.weight} lb` : ""}</footer></article>)}{!data.updates.length && <div className="empty-state"><BellRing size={30}/><h3>No published updates yet</h3><p>New puppy updates will appear here when they are released.</p></div>}</div></section>}
 

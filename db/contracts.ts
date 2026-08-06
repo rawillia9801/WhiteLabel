@@ -265,12 +265,14 @@ export async function prepareContractPackage(input: ContractPackageInput) {
   };
 }
 
-export async function reconcileContractDeposits(buyerIdValue: number) {
+export async function reconcileContractDeposits(buyerIdValue: number, kennelId: string) {
   const buyerId = positiveId(buyerIdValue);
   if (!buyerId) throw new Error("Choose a valid family account.");
+  if (!/^[0-9a-f-]{36}$/i.test(kennelId)) throw new Error("Choose a valid kennel workspace.");
+  const tenantFilter = `&kennel_id=eq.${encodeURIComponent(kennelId)}`;
   const [documents, payments] = await Promise.all([
-    select<DocumentRow>("buyer_documents", `select=*&buyer_id=eq.${buyerId}&document_type=eq.Bill%20of%20Sale&order=created_at.desc`),
-    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}&type=in.(Payment,Deposit)`),
+    select<DocumentRow>("buyer_documents", `select=*&buyer_id=eq.${buyerId}${tenantFilter}&document_type=eq.Bill%20of%20Sale&order=created_at.desc`),
+    select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}${tenantFilter}&type=in.(Payment,Deposit)`),
   ]);
   const latestByPuppy = new Map<number, ContractSnapshot>();
   for (const document of documents) {
@@ -285,6 +287,7 @@ export async function reconcileContractDeposits(buyerIdValue: number) {
   if (!missingDeposit || !snapshot) return 0;
   const now = new Date().toISOString();
   await insert("transactions", {
+    kennel_id: kennelId,
     type: "Payment",
     dog_id: null,
     buyer_id: buyerId,
@@ -331,8 +334,10 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
   const puppyIds = puppies.map((puppy) => Number(puppy.id));
   const litterIds = [...new Set(puppies.map((puppy) => positiveId(puppy.litter_id)).filter((id): id is number => Boolean(id)))];
   const today = new Date().toISOString().slice(0, 10);
-  const [updates, links, litters, buyerActivity, puppyEvents] = await Promise.all([
+  const [updates, weights, careRecords, links, litters, buyerActivity, puppyEvents] = await Promise.all([
     puppyIds.length ? select<Row>("puppy_updates", `select=*&published=eq.true&puppy_id=in.(${puppyIds.join(",")})${scoped}&order=created_at.desc`) : Promise.resolve([]),
+    puppyIds.length ? select<Row>("puppy_weight_logs", `select=*&puppy_id=in.(${puppyIds.join(",")})${scoped}&order=measured_at.desc`) : Promise.resolve([]),
+    puppyIds.length ? select<Row>("puppy_care_records", `select=*&visible_to_family=eq.true&puppy_id=in.(${puppyIds.join(",")})${scoped}&order=occurred_at.desc`) : Promise.resolve([]),
     documents.length ? select<Row>("buyer_document_puppies", `select=*&document_id=in.(${documents.map((document) => document.id).join(",")})${scoped}`) : Promise.resolve([]),
     litterIds.length ? select<Row>("litters", `select=*&id=in.(${litterIds.join(",")})${scoped}`) : Promise.resolve([]),
     select<Row>("events", `select=*&related_type=eq.buyers&related_id=eq.${buyerId}${scoped}&order=event_date.desc,event_time.desc&limit=100`),
@@ -379,10 +384,12 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
       const dam = parents.find((candidate) => Number(candidate.id) === Number(litter?.dam_id));
       const sire = parents.find((candidate) => Number(candidate.id) === Number(litter?.sire_id));
       return {
-        id: Number(puppy.id), name: text(puppy, "name"), sex: text(puppy, "sex"), color: text(puppy, "color"), birthDate: text(puppy, "birth_date"), birthWeight: number(puppy, "birth_weight"), currentWeight: number(puppy, "current_weight"), status: text(puppy, "status"), priceCents: number(puppy, "price_cents"), notes: text(puppy, "notes"), litterName: text(litter, "name"), damName: text(dam, "registered_name") || text(dam, "name"), sireName: text(sire, "registered_name") || text(sire, "name"),
+        id: Number(puppy.id), name: text(puppy, "name"), sex: text(puppy, "sex"), color: text(puppy, "color"), birthDate: text(puppy, "birth_date"), birthWeight: number(puppy, "birth_weight"), currentWeight: number(puppy, "current_weight"), weightUnit: text(puppy, "weight_unit") || "lb", status: text(puppy, "status"), priceCents: number(puppy, "price_cents"), notes: text(puppy, "notes"), litterName: text(litter, "name"), damName: text(dam, "registered_name") || text(dam, "name"), sireName: text(sire, "registered_name") || text(sire, "name"),
       };
     }),
     updates: updates.map((update) => ({ id: Number(update.id), puppyId: Number(update.puppy_id), title: text(update, "title"), body: text(update, "body"), weekNumber: number(update, "week_number") || null, weight: number(update, "weight") || null, createdAt: text(update, "created_at") })),
+    weights: weights.map((entry) => ({ id: Number(entry.id), puppyId: Number(entry.puppy_id), measuredAt: text(entry, "measured_at"), weight: number(entry, "weight"), unit: text(entry, "unit"), feedingStatus: text(entry, "feeding_status"), notes: text(entry, "notes") })),
+    careRecords: careRecords.map((entry) => ({ id: Number(entry.id), puppyId: Number(entry.puppy_id), careType: text(entry, "care_type"), title: text(entry, "title"), occurredAt: text(entry, "occurred_at"), nextDueAt: text(entry, "next_due_at"), provider: text(entry, "provider"), medication: text(entry, "medication"), dosage: text(entry, "dosage"), status: text(entry, "status"), notes: text(entry, "notes") })),
     contracts,
     documents: documents.map((document) => ({ id: Number(document.id), title: text(document, "title"), documentType: text(document, "document_type"), fileName: text(document, "file_name"), createdAt: text(document, "created_at"), isContract: Boolean(parseContractNotes(document.notes)), puppyIds: links.filter((link) => Number(link.document_id) === document.id).map((link) => Number(link.puppy_id)) })),
     upcomingEvents: upcomingEvents.map((event) => ({ id: Number(event.id), title: text(event, "title"), eventType: text(event, "event_type"), date: text(event, "event_date"), time: text(event, "event_time"), location: text(event, "location"), status: text(event, "status"), puppyName: text(event, "related_type") === "puppies" ? text(puppies.find((puppy) => Number(puppy.id) === Number(event.related_id)), "name") : "" })),

@@ -183,7 +183,7 @@ function rowFor(resource: ResourceName, data: ResourceInput) {
   const now = new Date().toISOString();
   switch (resource) {
     case "dogs":
-      return { name: str(data, "name"), registered_name: nullable(data, "registered_name"), sex: str(data, "sex"), role: str(data, "role"), date_of_birth: nullable(data, "date_of_birth"), color: nullable(data, "color"), weight: num(data, "weight"), registration_number: nullable(data, "registration_number"), microchip_number: nullable(data, "microchip_number"), health_testing: nullable(data, "health_testing"), acquired_from: nullable(data, "acquired_from"), acquisition_date: nullable(data, "acquisition_date"), purchase_price_cents: cents(data, "purchase_price") || null, acquisition_notes: nullable(data, "acquisition_notes"), status: str(data, "status") || "Active", next_heat_date: nullable(data, "next_heat_date"), notes: nullable(data, "notes"), updated_at: now };
+      return { name: str(data, "name"), call_name: nullable(data, "call_name") || str(data, "name"), registered_name: nullable(data, "registered_name"), breed: nullable(data, "breed"), sex: str(data, "sex"), role: str(data, "role"), date_of_birth: nullable(data, "date_of_birth"), color: nullable(data, "color"), markings: nullable(data, "markings"), coat_type: nullable(data, "coat_type"), weight: num(data, "weight"), registration_number: nullable(data, "registration_number"), microchip_number: nullable(data, "microchip_number"), breeder_name: nullable(data, "breeder_name"), owner_name: nullable(data, "owner_name"), sire_id: id(data, "sire_id"), dam_id: id(data, "dam_id"), health_testing: nullable(data, "health_testing"), acquired_from: nullable(data, "acquired_from"), acquisition_date: nullable(data, "acquisition_date"), purchase_price_cents: cents(data, "purchase_price") || null, acquisition_notes: nullable(data, "acquisition_notes"), status: str(data, "status") || "Active", next_heat_date: nullable(data, "next_heat_date"), notes: nullable(data, "notes"), updated_at: now };
     case "dog_medical_records":
       return { dog_id: id(data, "dog_id"), record_type: str(data, "record_type"), title: str(data, "title"), record_date: nullable(data, "record_date"), provider: nullable(data, "provider"), cost_cents: cents(data, "cost"), next_due_date: nullable(data, "next_due_date"), notes: nullable(data, "notes"), updated_at: now };
     case "dog_registrations":
@@ -235,8 +235,43 @@ async function transactionRowFor(data: ResourceInput, kennelId: string) {
   return { ...row, buyer_id: buyerId };
 }
 
+async function assertTenantLink(table: "dogs" | "litters" | "buyers" | "puppies" | "payment_plans", recordId: number | null, kennelId: string, label: string) {
+  if (!recordId) return;
+  const rows = await selectAll<Record<string, unknown>>(table, kennelId, `select=id&id=eq.${recordId}&limit=1`);
+  if (!rows.length) throw new ResourceValidationError(`${label} is not available in this kennel workspace.`);
+}
+
 async function preparedRowFor(resource: ResourceName, data: ResourceInput, kennelId: string) {
-  return resource === "transactions" ? transactionRowFor(data, kennelId) : rowFor(resource, data);
+  const row = resource === "transactions" ? await transactionRowFor(data, kennelId) : rowFor(resource, data);
+  if (!row) return row;
+  if (resource === "dogs") {
+    const sireId = id(data, "sire_id");
+    const damId = id(data, "dam_id");
+    if (sireId && damId && sireId === damId) throw new ResourceValidationError("Sire and dam must be different dogs.");
+    await Promise.all([assertTenantLink("dogs", sireId, kennelId, "Sire"), assertTenantLink("dogs", damId, kennelId, "Dam")]);
+  }
+  if (resource === "dog_medical_records" || resource === "dog_registrations") await assertTenantLink("dogs", id(data, "dog_id"), kennelId, "Dog");
+  if (resource === "litters") await Promise.all([assertTenantLink("dogs", id(data, "dam_id"), kennelId, "Dam"), assertTenantLink("dogs", id(data, "sire_id"), kennelId, "Sire")]);
+  if (resource === "puppies") await Promise.all([assertTenantLink("litters", id(data, "litter_id"), kennelId, "Litter"), assertTenantLink("buyers", id(data, "buyer_id"), kennelId, "Family")]);
+  if (resource === "updates") await assertTenantLink("puppies", id(data, "puppy_id"), kennelId, "Puppy");
+  if (resource === "payment_plans") {
+    await assertTenantLink("buyers", id(data, "buyer_id"), kennelId, "Family");
+    await Promise.all(ids(data, "puppy_ids").map((puppyId) => assertTenantLink("puppies", puppyId, kennelId, "Puppy")));
+  }
+  if (resource === "transactions") await Promise.all([
+    assertTenantLink("dogs", id(data, "dog_id"), kennelId, "Dog"),
+    assertTenantLink("buyers", id(data, "buyer_id"), kennelId, "Family"),
+    assertTenantLink("litters", id(data, "litter_id"), kennelId, "Litter"),
+    assertTenantLink("puppies", id(data, "puppy_id"), kennelId, "Puppy"),
+    assertTenantLink("payment_plans", id(data, "payment_plan_id"), kennelId, "Payment plan"),
+  ]);
+  if (resource === "events") {
+    const relatedType = str(data, "related_type");
+    const relatedId = id(data, "related_id");
+    const table = ({ dogs: "dogs", litters: "litters", puppies: "puppies", buyers: "buyers" } as const)[relatedType as "dogs" | "litters" | "puppies" | "buyers"];
+    if (relatedId && table) await assertTenantLink(table, relatedId, kennelId, "Related record");
+  }
+  return row;
 }
 
 export async function createSupabaseResource(resource: ResourceName, data: ResourceInput, kennelId?: string) {

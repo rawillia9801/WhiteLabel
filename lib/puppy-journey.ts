@@ -25,8 +25,8 @@ async function insert(table: string, data: Row) {
   return ((await response.json()) as Row[])[0] ?? null;
 }
 
-async function update(table: string, id: number, data: Row) {
-  const response = await supabaseRequest(`rest/v1/${table}?id=eq.${id}`, {
+async function update(table: string, id: number, data: Row, kennelId: string) {
+  const response = await supabaseRequest(`rest/v1/${table}?id=eq.${id}&kennel_id=eq.${encodeURIComponent(kennelId)}`, {
     method: "PATCH",
     headers: { "content-type": "application/json", prefer: "return=representation" },
     body: JSON.stringify(data),
@@ -35,8 +35,8 @@ async function update(table: string, id: number, data: Row) {
   return ((await response.json()) as Row[])[0] ?? null;
 }
 
-async function remove(table: string, id: number) {
-  const response = await supabaseRequest(`rest/v1/${table}?id=eq.${id}`, { method: "DELETE" });
+async function remove(table: string, id: number, kennelId: string) {
+  const response = await supabaseRequest(`rest/v1/${table}?id=eq.${id}&kennel_id=eq.${encodeURIComponent(kennelId)}`, { method: "DELETE" });
   if (!response.ok) throw new Error((await response.text()) || `Unable to delete ${table} record.`);
 }
 
@@ -146,15 +146,17 @@ export function cleanManagedMilestoneTitle(value: string) {
   return cleanBuyerWording(puppyName ? `${friendly} — ${puppyName}` : friendly);
 }
 
-export async function syncPuppyJourneyMilestones(buyerId?: number | null) {
+export async function syncPuppyJourneyMilestones(kennelId: string, buyerId?: number | null) {
+  if (!/^[0-9a-f-]{36}$/i.test(kennelId)) throw new Error("A valid kennel workspace is required for puppy milestones.");
   const config = await getBuyerMilestoneConfig();
   const rules = config.milestones;
   const buyerFilter = buyerId && buyerId > 0 ? `&buyer_id=eq.${buyerId}` : "";
-  const puppies = await rows(`rest/v1/puppies?select=*&birth_date=not.is.null${buyerFilter}`);
+  const tenantFilter = `&kennel_id=eq.${encodeURIComponent(kennelId)}`;
+  const puppies = await rows(`rest/v1/puppies?select=*&birth_date=not.is.null${buyerFilter}${tenantFilter}`);
   if (!puppies.length) return { puppies: 0, updatesCreated: 0, updatesChanged: 0, updatesRemoved: 0 };
 
   const puppyIds = puppies.map((puppy) => Number(puppy.id)).filter((id) => Number.isInteger(id) && id > 0);
-  const updates = puppyIds.length ? await rows(`rest/v1/puppy_updates?select=*&puppy_id=in.(${puppyIds.join(",")})`) : [];
+  const updates = puppyIds.length ? await rows(`rest/v1/puppy_updates?select=*&puppy_id=in.(${puppyIds.join(",")})${tenantFilter}`) : [];
   const now = new Date();
   const updatedAt = now.toISOString();
   const configuredIds = new Set(rules.map((rule) => rule.id));
@@ -190,7 +192,7 @@ export async function syncPuppyJourneyMilestones(buyerId?: number | null) {
       );
       if (!shouldExist) {
         const existingId = Number(existing.id);
-        await remove("puppy_updates", existingId);
+        await remove("puppy_updates", existingId, kennelId);
         removedIds.add(existingId);
         updatesRemoved += 1;
       }
@@ -206,7 +208,7 @@ export async function syncPuppyJourneyMilestones(buyerId?: number | null) {
       if (!rule.enabled || !due || ruleExcluded) {
         if (existing && (managedRuleId(text(existing, "title")) || legacyRuleId(text(existing, "title")))) {
           const existingId = Number(existing.id);
-          await remove("puppy_updates", existingId);
+          await remove("puppy_updates", existingId, kennelId);
           removedIds.add(existingId);
           updatesRemoved += 1;
         }
@@ -234,13 +236,13 @@ export async function syncPuppyJourneyMilestones(buyerId?: number | null) {
           || existing.published !== true
           || text(existing, "created_at") !== createdAt;
         if (needsUpdate) {
-          await update("puppy_updates", Number(existing.id), payload);
+          await update("puppy_updates", Number(existing.id), payload, kennelId);
           updatesChanged += 1;
         }
         continue;
       }
 
-      await insert("puppy_updates", { puppy_id: puppyId, ...payload });
+      await insert("puppy_updates", { kennel_id: kennelId, puppy_id: puppyId, ...payload });
       updatesCreated += 1;
     }
   }

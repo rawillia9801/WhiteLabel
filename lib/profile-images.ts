@@ -55,13 +55,13 @@ async function ensureBucket() {
   if (!created.ok && created.status !== 409) throw new Error((await created.text()) || "Unable to create profile-image storage.");
 }
 
-export async function uploadProfileImage(kind: ProfileImageKind, recordId: number, file: File) {
+export async function uploadProfileImage(kind: ProfileImageKind, recordId: number, file: File, kennelId: string) {
   if (!Number.isInteger(recordId) || recordId <= 0) throw new Error("A valid dog or puppy record is required.");
   if (file.size <= 0) throw new Error("Choose an image to upload.");
   if (file.size > 8 * 1024 * 1024) throw new Error("Profile images must be 8 MB or smaller.");
   const extension = safeExtension(file);
   await ensureBucket();
-  const objectPath = `${kind}s/${recordId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const objectPath = `kennels/${kennelId}/${kind}s/${recordId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
   const uploaded = await supabaseRequest(`storage/v1/object/${bucket}/${objectPath}`, {
     method: "POST",
     headers: { "content-type": file.type, "x-upsert": "true", "cache-control": "3600" },
@@ -72,13 +72,14 @@ export async function uploadProfileImage(kind: ProfileImageKind, recordId: numbe
   return `${url}/storage/v1/object/public/${bucket}/${objectPath}`;
 }
 
-export async function saveProfileImage(kind: ProfileImageKind, recordId: number, url: string | null) {
+export async function saveProfileImage(kind: ProfileImageKind, recordId: number, url: string | null, kennelId: string) {
   const table = kind === "dog" ? "dogs" : "puppies";
-  const currentResponse = await supabaseRequest(`rest/v1/${table}?select=id,notes&id=eq.${recordId}&limit=1`, { cache: "no-store" });
+  const tenantFilter = `&kennel_id=eq.${encodeURIComponent(kennelId)}`;
+  const currentResponse = await supabaseRequest(`rest/v1/${table}?select=id,notes&id=eq.${recordId}${tenantFilter}&limit=1`, { cache: "no-store" });
   if (!currentResponse.ok) throw new Error((await currentResponse.text()) || "Unable to open the selected record.");
   const current = ((await currentResponse.json()) as Array<Record<string, unknown>>)[0];
   if (!current) throw new Error("The selected record no longer exists.");
-  const response = await supabaseRequest(`rest/v1/${table}?id=eq.${recordId}`, {
+  const response = await supabaseRequest(`rest/v1/${table}?id=eq.${recordId}${tenantFilter}`, {
     method: "PATCH",
     headers: { "content-type": "application/json", prefer: "return=representation" },
     body: JSON.stringify({ notes: notesWithProfileImage(current.notes, url), updated_at: new Date().toISOString() }),

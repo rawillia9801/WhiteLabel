@@ -54,9 +54,9 @@ export async function POST(request: Request) {
       if (body.resource === "transactions") await sendTransactionReceipt(created);
       if (body.resource === "updates") await sendPublishedUpdate(created, new URL(request.url).origin);
       if (body.resource === "puppies") {
-        const weightUpdate = await recordWeeklyPuppyWeight(created);
+        const weightUpdate = await recordWeeklyPuppyWeight(created, session.kennelId);
         if (weightUpdate) await sendPublishedUpdate(weightUpdate, new URL(request.url).origin);
-        await syncPuppyJourneyMilestones(Number(created.buyer_id) || null);
+        await syncPuppyJourneyMilestones(session.kennelId, Number(created.buyer_id) || null);
       }
     } catch (automationError) {
       console.error("Workflow failed after record creation", automationError instanceof Error ? automationError.message : automationError);
@@ -80,9 +80,9 @@ export async function PUT(request: Request) {
       if (body.resource === "transactions") await sendTransactionReceipt(updated);
       if (body.resource === "updates") await sendPublishedUpdate(updated, new URL(request.url).origin);
       if (body.resource === "puppies") {
-        const weightUpdate = await recordWeeklyPuppyWeight(updated);
+        const weightUpdate = await recordWeeklyPuppyWeight(updated, session.kennelId);
         if (weightUpdate) await sendPublishedUpdate(weightUpdate, new URL(request.url).origin);
-        await syncPuppyJourneyMilestones(Number(updated.buyer_id) || null);
+        await syncPuppyJourneyMilestones(session.kennelId, Number(updated.buyer_id) || null);
       }
     } catch (automationError) {
       console.error("Workflow failed after record update", automationError instanceof Error ? automationError.message : automationError);

@@ -1,15 +1,18 @@
 import { getPuppyPortal } from "../../../../db/contracts";
 import { cleanManagedMilestoneTitle, syncPuppyJourneyMilestones } from "../../../../lib/puppy-journey";
+import { verifyPortalToken } from "../../../../lib/portal-token";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
+    const claims = await verifyPortalToken(token);
+    if (!claims) return Response.json({ error: "This puppy portal link is invalid or has expired." }, { status: 404 });
     let portal = await getPuppyPortal(token);
     if (!portal) return Response.json({ error: "This puppy portal link is invalid or has expired." }, { status: 404 });
 
-    await syncPuppyJourneyMilestones(Number(portal.buyer.id));
+    await syncPuppyJourneyMilestones(claims.kennelId, Number(portal.buyer.id));
     portal = await getPuppyPortal(token);
 
     if (!portal) return Response.json({ error: "This puppy portal link is invalid or has expired." }, { status: 404 });

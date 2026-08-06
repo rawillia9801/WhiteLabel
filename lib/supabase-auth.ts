@@ -220,7 +220,7 @@ export function breederSessionClaims(account: { user: AuthUser; kennel: KennelRo
 
 export async function findKennelByHost(hostValue: string) {
   const host = hostValue.trim().toLowerCase().replace(/:\d+$/, "").replace(/^www\./, "");
-  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "breederportal.site";
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
   const suffix = `.${platformDomain}`;
   if (host.endsWith(suffix)) {
     const slug = host.slice(0, -suffix.length);

@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CalendarDays,
   CircleDollarSign,
+  Dna,
   Dog as DogIcon,
   ExternalLink,
   FileText,
@@ -220,7 +221,7 @@ export default function DogProfilePage({ params }: { params: Promise<{ id: strin
   return <main className="dog-profile-page">
     <header className="profile-topbar">
       <Link href="/" className="profile-brand"><span><DogIcon size={20} /></span><b>Breeder Portal</b><small>Dog profile</small></Link>
-      <div className="profile-top-actions"><Link href="/"><ArrowLeft size={16} /> Back to operating system</Link><button onClick={() => openModal("dog", profileRecord)}><Pencil size={16} /> Edit profile</button></div>
+      <div className="profile-top-actions"><Link href="/"><ArrowLeft size={16} /> Back to operating system</Link><Link href={`/dogs/${dog.id}/pedigree`}><Dna size={16} /> Pedigree & COI</Link><button onClick={() => openModal("dog", profileRecord)}><Pencil size={16} /> Edit profile</button></div>
     </header>
 
     <div className="profile-content">

@@ -74,6 +74,6 @@ export function breederSessionFromRequest(request: Request) {
 export function tenantUrl(session: Pick<BreederSession, "kennelSlug" | "plan" | "customDomain">, path = "/") {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   if (session.plan === "custom_domain" && session.customDomain) return `https://${session.customDomain}${cleanPath}`;
-  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "breederportal.site";
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
   return `https://${session.kennelSlug}.${platformDomain}${cleanPath}`;
 }

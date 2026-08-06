@@ -95,7 +95,7 @@ export function isAllowedWebsiteOrigin(origin: string | null, requestHost?: stri
   if (!origin) return false;
   try {
     const hostname = new URL(origin).hostname.toLowerCase();
-    const platform = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "breederportal.site";
+    const platform = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
     const sameHost = requestHost?.split(":")[0].toLowerCase();
     return configuredOrigins().has(origin)
       || hostname === platform

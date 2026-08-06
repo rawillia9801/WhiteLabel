@@ -1,4 +1,4 @@
-import { requireAdminSession } from "../../../lib/admin-session";
+import { breederSessionFromRequest, requireAdminSession } from "../../../lib/admin-session";
 import { saveProfileImage, uploadProfileImage, type ProfileImageKind } from "../../../lib/profile-images";
 
 export const runtime = "nodejs";
@@ -12,6 +12,7 @@ function kindOf(value: unknown): ProfileImageKind {
 export async function POST(request: Request) {
   const unauthorized = requireAdminSession(request);
   if (unauthorized) return unauthorized;
+  const session = breederSessionFromRequest(request)!;
   try {
     const form = await request.formData();
     const kind = kindOf(form.get("kind"));
@@ -19,8 +20,8 @@ export async function POST(request: Request) {
     const file = form.get("file");
     if (!Number.isInteger(recordId) || recordId <= 0) throw new Error("A valid profile record is required.");
     if (!(file instanceof File)) throw new Error("Choose an image to upload.");
-    const url = await uploadProfileImage(kind, recordId, file);
-    await saveProfileImage(kind, recordId, url);
+    const url = await uploadProfileImage(kind, recordId, file, session.kennelId);
+    await saveProfileImage(kind, recordId, url, session.kennelId);
     return Response.json({ ok: true, url });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Unable to upload the profile image." }, { status: 400 });
@@ -30,12 +31,13 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const unauthorized = requireAdminSession(request);
   if (unauthorized) return unauthorized;
+  const session = breederSessionFromRequest(request)!;
   try {
     const body = await request.json() as { kind?: unknown; recordId?: unknown };
     const kind = kindOf(body.kind);
     const recordId = Number(body.recordId);
     if (!Number.isInteger(recordId) || recordId <= 0) throw new Error("A valid profile record is required.");
-    await saveProfileImage(kind, recordId, null);
+    await saveProfileImage(kind, recordId, null, session.kennelId);
     return new Response(null, { status: 204 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Unable to remove the profile image." }, { status: 400 });

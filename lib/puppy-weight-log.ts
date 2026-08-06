@@ -7,14 +7,14 @@ type Row = Record<string, unknown>;
 const text = (row: Row | null | undefined, key: string) => String(row?.[key] ?? "").trim();
 const number = (row: Row | null | undefined, key: string) => Number(row?.[key] ?? 0) || 0;
 
-export async function recordWeeklyPuppyWeight(puppy: Row) {
+export async function recordWeeklyPuppyWeight(puppy: Row, kennelId: string) {
   const puppyId = Number(puppy.id);
   const recordedWeight = number(puppy, "current_weight");
   if (!Number.isInteger(puppyId) || puppyId <= 0 || recordedWeight <= 0) return null;
 
   const today = new Date().toISOString().slice(0, 10);
   const title = `[Weekly weight:${today}] ${text(puppy, "name") || `Puppy #${puppyId}`}`;
-  const query = new URLSearchParams({ select: "id", puppy_id: `eq.${puppyId}`, title: `eq.${title}`, limit: "1" });
+  const query = new URLSearchParams({ select: "id", kennel_id: `eq.${kennelId}`, puppy_id: `eq.${puppyId}`, title: `eq.${title}`, limit: "1" });
   const existingResponse = await supabaseRequest(`rest/v1/puppy_updates?${query}`, { cache: "no-store" });
   if (existingResponse.ok && ((await existingResponse.json()) as Row[]).length) return null;
 
@@ -28,6 +28,7 @@ export async function recordWeeklyPuppyWeight(puppy: Row) {
     method: "POST",
     headers: { "content-type": "application/json", prefer: "return=representation" },
     body: JSON.stringify({
+      kennel_id: kennelId,
       puppy_id: puppyId,
       title,
       body: `${text(puppy, "name") || "The puppy"}'s weekly weight was recorded as ${recordedWeight.toFixed(recordedWeight < 2 ? 2 : 1)} lb${ageWeeks ? ` at approximately ${ageWeeks} weeks old` : ""}. The Puppy Portal growth estimate will update from the newest recorded weight.`,

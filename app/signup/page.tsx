@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Building2, Check, Eye, EyeOff, Globe2, KeyRound, Mail, PawPrint } from "lucide-react";
 
-const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "breederportal.site";
+const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.site";
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").replace(/-{2,}/g,"-").slice(0,48);
 
 export default function SignupPage() {

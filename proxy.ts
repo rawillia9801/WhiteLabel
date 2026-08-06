@@ -27,7 +27,7 @@ export function proxy(request: NextRequest) {
   }
 
   const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").split(":")[0].toLowerCase();
-  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "breederportal.site";
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
   const expectedSubdomain = `${session.kennelSlug}.${platformDomain}`;
   const localOrPreview = host === "localhost" || host === "127.0.0.1" || host.endsWith(".vercel.app");
   const expectedHost = session.plan === "custom_domain" && session.customDomain ? session.customDomain : expectedSubdomain;

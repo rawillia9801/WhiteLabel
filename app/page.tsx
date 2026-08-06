@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Baby,
   CalendarDays,
   ChartNoAxesCombined,
   ChevronRight,
@@ -10,12 +11,14 @@ import {
   ExternalLink,
   FileText,
   FileSignature,
+  FlaskConical,
   FolderOpen,
   Globe2,
   HeartPulse,
   Headphones,
   LayoutDashboard,
   ListTree,
+  ListOrdered,
   Mail,
   MessagesSquare,
   MonitorSmartphone,
@@ -47,12 +50,16 @@ import { healthGuaranteeTerms } from "../lib/contract-templates";
 import { uploadDocumentDirect } from "../lib/direct-document-upload";
 import { defaultTemplatesConfig, type TemplatesConfig } from "../lib/template-defaults";
 import { TemplatesCenter } from "../components/templates-center";
+import { BreedingProgramWorkspace } from "../components/breeding-program-workspace";
+import { WhelpingWorkspace } from "../components/whelping-workspace";
+import { WaitlistWorkspace } from "../components/waitlist-workspace";
+import { BreedingCalendarWorkspace } from "../components/breeding-calendar-workspace";
 import { publicTenant } from "../lib/public-tenant";
 import { useTenant } from "../components/tenant-runtime";
 
 type Resource = "dogs" | "litters" | "buyers" | "puppies" | "payment_plans" | "transactions" | "events" | "updates" | "dog_medical_records" | "dog_registrations";
 type BaseRecord = { id: number; created_at: string; updated_at: string };
-type Dog = BaseRecord & { name: string; registered_name: string | null; sex: string; role: string; date_of_birth: string | null; color: string | null; weight: number | null; status: string; registration_number: string | null; microchip_number: string | null; health_testing: string | null; acquired_from: string | null; acquisition_date: string | null; acquisition_notes: string | null; next_heat_date: string | null; notes: string | null; purchase_price_cents: number | null };
+type Dog = BaseRecord & { name: string; call_name: string | null; registered_name: string | null; sex: string; role: string; breed: string | null; date_of_birth: string | null; color: string | null; markings: string | null; coat_type: string | null; weight: number | null; status: string; registration_number: string | null; microchip_number: string | null; breeder_name: string | null; owner_name: string | null; sire_id: number | null; dam_id: number | null; health_testing: string | null; acquired_from: string | null; acquisition_date: string | null; acquisition_notes: string | null; next_heat_date: string | null; notes: string | null; purchase_price_cents: number | null };
 type Litter = BaseRecord & { name: string; dam_id: number | null; sire_id: number | null; breeding_date: string | null; due_date: string | null; birth_date: string | null; expected_count: number | null; status: string; notes: string | null };
 type Buyer = BaseRecord & { first_name: string; last_name: string; email: string; phone: string | null; city: string | null; state: string | null; postal_code?: string | null; application_status: string; preferred_sex: string | null; preferred_color: string | null; notes: string | null };
 type Puppy = BaseRecord & { litter_id: number; buyer_id: number | null; name: string; sex: string | null; color: string | null; birth_date: string | null; birth_weight: number | null; current_weight: number | null; status: string; price_cents: number | null; notes: string | null };
@@ -70,7 +77,7 @@ type ModalState = { resource: Resource; record?: Record<string, unknown>; preset
 type DocumentKind = "dog" | "buyer";
 type DocumentModalState = { kind: DocumentKind; ownerId?: number } | null;
 type ContractModalState = { buyerId: number; portalUrl?: string } | null;
-type View = "Command" | "Breeding" | "Litters" | "Puppies" | "Care" | "Applications" | "Families" | "Placement" | "Delivery" | "Finance" | "Inventory" | "Comms" | "Portal" | "CRM" | "Calendar" | "Vault" | "Templates" | "Reports";
+type View = "Command" | "Breeding" | "Breedings" | "Litters" | "Whelping" | "Puppies" | "Care" | "Applications" | "Families" | "Waitlist" | "Placement" | "Delivery" | "Finance" | "Inventory" | "Comms" | "Portal" | "CRM" | "Calendar" | "Vault" | "Templates" | "Reports";
 type ViewGroup = "Daily work" | "Breeding program" | "Placement journey" | "Business" | "Tools";
 type ViewDefinition = { id: View; label: string; icon: LucideIcon; group: ViewGroup; shortcut: string };
 
@@ -78,12 +85,15 @@ const emptyData: DataSet = { dogs: [], litters: [], buyers: [], puppies: [], pay
 const allViews: ViewDefinition[] = [
   { id: "Command", label: "Daily overview", icon: LayoutDashboard, group: "Daily work", shortcut: "1" },
   { id: "Calendar", label: "Kennel calendar", icon: CalendarDays, group: "Daily work", shortcut: "C" },
-  { id: "Breeding", label: "Breeding dogs", icon: DogIcon, group: "Breeding program", shortcut: "2" },
+  { id: "Breeding", label: "Dogs", icon: DogIcon, group: "Breeding program", shortcut: "2" },
+  { id: "Breedings", label: "Breedings", icon: FlaskConical, group: "Breeding program", shortcut: "B" },
   { id: "Litters", label: "Litters", icon: ListTree, group: "Breeding program", shortcut: "L" },
+  { id: "Whelping", label: "Whelping", icon: Baby, group: "Breeding program", shortcut: "W" },
   { id: "Puppies", label: "Puppies", icon: PawPrint, group: "Breeding program", shortcut: "P" },
   { id: "Care", label: "Health records", icon: HeartPulse, group: "Breeding program", shortcut: "4" },
   { id: "Applications", label: "Puppy applications", icon: ClipboardCheck, group: "Placement journey", shortcut: "A" },
   { id: "Families", label: "Families & waitlist", icon: UsersRound, group: "Placement journey", shortcut: "3" },
+  { id: "Waitlist", label: "Waitlist", icon: ListOrdered, group: "Placement journey", shortcut: "Q" },
   { id: "Placement", label: "Puppy matching", icon: UserRound, group: "Placement journey", shortcut: "M" },
   { id: "Delivery", label: "Go-home planning", icon: Route, group: "Placement journey", shortcut: "D" },
   { id: "Finance", label: "Sales & payments", icon: WalletCards, group: "Business", shortcut: "5" },
@@ -861,15 +871,6 @@ function FinanceView({ data, openCreate, openEdit }: ViewProps) {
   </div>;
 }
 
-function CalendarView({ data, openCreate, openEdit, remove }: ViewProps) {
-  const events = [...data.events].sort((a, b) => `${a.event_date}${a.event_time ?? ""}`.localeCompare(`${b.event_date}${b.event_time ?? ""}`));
-  return <div className="grid">
-    <Section eyebrow="Mission Calendar" title="Events and reminders" action={<button className="ghost" onClick={() => openCreate("events")}>Add event</button>}>
-      {events.length ? <div className="calendar-list">{events.map((event) => <article key={event.id}><time><b>{new Date(`${event.event_date}T12:00:00`).getDate()}</b><small>{new Date(`${event.event_date}T12:00:00`).toLocaleString("en-US", { month: "short" })}</small></time><div><h3>{event.title}</h3><p>{[event.event_type, event.event_time, event.location].filter(Boolean).join(" / ")}</p></div><Status tone={event.status === "Completed" ? "good" : "neutral"}>{event.status}</Status><footer><button onClick={() => openEdit("events", event as unknown as Record<string, unknown>)}>Edit</button><button onClick={() => remove("events", event.id, event.title)}>Delete</button></footer></article>)}</div> : <Empty title="No events" text="Schedule care, breeding, pickup, buyer, and reminder events." action="Add event" onAction={() => openCreate("events")} />}
-    </Section>
-  </div>;
-}
-
 function VaultView({ data, openDocumentUpload, removeDocument }: Pick<ViewProps, "data" | "openDocumentUpload" | "removeDocument">) {
   const buyerDocs = data.buyer_documents.map((doc) => ({ ...doc, kind: "buyer" as const, href: `/api/documents/${doc.id}`, owner: data.buyers.find((buyer) => buyer.id === doc.buyer_id) ? fullName(data.buyers.find((buyer) => buyer.id === doc.buyer_id)!) : `Buyer #${doc.buyer_id}` }));
   const dogDocs = data.dog_documents.map((doc) => ({ ...doc, kind: "dog" as const, href: `/api/dog-documents/${doc.id}`, owner: data.dogs.find((dog) => dog.id === doc.dog_id)?.name ?? `Dog #${doc.dog_id}` }));
@@ -1030,7 +1031,7 @@ function RecordModal({ modal, data, saving, onClose, onSubmit }: { modal: Exclud
   const litterOptions = data.litters.map((litter) => ({ value: litter.id, label: litter.name }));
   const puppyOptions = data.puppies.map((puppy) => ({ value: puppy.id, label: puppy.name }));
   return <div className="modal-backdrop" role="dialog" aria-modal="true"><form className="modal" onSubmit={onSubmit}><header><span>{editing ? "Edit record" : "Create record"}</span><h2>{resource.replaceAll("_", " ")}</h2><button type="button" onClick={onClose}>Close</button></header><div className="form-grid">
-    {resource === "dogs" && <><Field label="Name" name="name" record={record} preset={preset} required /><Field label="Registered name" name="registered_name" record={record} preset={preset} /><Field label="Sex" name="sex" record={record} preset={preset} required /><Field label="Role" name="role" record={record} preset={preset} required /><Field label="Birth date" name="date_of_birth" type="date" record={record} preset={preset} /><Field label="Color" name="color" record={record} preset={preset} /><Field label="Weight" name="weight" type="number" record={record} preset={preset} /><Field label="Status" name="status" record={record} preset={preset} /><Field label="Microchip number" name="microchip_number" record={record} preset={preset} /><Field label="Primary registration number" name="registration_number" record={record} preset={preset} /><Field label="Acquired from" name="acquired_from" record={record} preset={preset} /><Field label="Acquisition date" name="acquisition_date" type="date" record={record} preset={preset} /><Field label="Purchase price" name="purchase_price" type="number" record={record} preset={preset} defaultValue={dollarDefault(record, "purchase_price", "purchase_price_cents", preset)} /><Field label="Next heat" name="next_heat_date" type="date" record={record} preset={preset} /><TextArea label="Health testing" name="health_testing" record={record} preset={preset} /><TextArea label="Acquisition notes" name="acquisition_notes" record={record} preset={preset} /><TextArea label="Notes" name="notes" record={record} preset={preset} /></>}
+    {resource === "dogs" && <><Field label="Name" name="name" record={record} preset={preset} required /><Field label="Call name" name="call_name" record={record} preset={preset} /><Field label="Registered name" name="registered_name" record={record} preset={preset} /><SelectField label="Sex" name="sex" options={[{value:"Female",label:"Female"},{value:"Male",label:"Male"}]} record={record} preset={preset} required /><SelectField label="Role" name="role" options={[{value:"Dam",label:"Dam"},{value:"Sire",label:"Sire"},{value:"Prospect",label:"Prospect"},{value:"Companion",label:"Companion"}]} record={record} preset={preset} required /><SelectField label="Status" name="status" options={[{value:"Active",label:"Active"},{value:"Prospect",label:"Prospect"},{value:"Retired",label:"Retired"},{value:"Deceased",label:"Deceased"}]} record={record} preset={preset} required /><Field label="Breed" name="breed" record={record} preset={preset} /><Field label="Birth date" name="date_of_birth" type="date" record={record} preset={preset} /><Field label="Color" name="color" record={record} preset={preset} /><Field label="Markings" name="markings" record={record} preset={preset} /><Field label="Coat type" name="coat_type" record={record} preset={preset} /><Field label="Weight" name="weight" type="number" record={record} preset={preset} /><SelectField label="Sire" name="sire_id" options={dogOptions} record={record} preset={preset} empty="Unknown sire" /><SelectField label="Dam" name="dam_id" options={dogOptions} record={record} preset={preset} empty="Unknown dam" /><Field label="Breeder" name="breeder_name" record={record} preset={preset} /><Field label="Owner" name="owner_name" record={record} preset={preset} /><Field label="Microchip number" name="microchip_number" record={record} preset={preset} /><Field label="Primary registration number" name="registration_number" record={record} preset={preset} /><Field label="Acquired from" name="acquired_from" record={record} preset={preset} /><Field label="Acquisition date" name="acquisition_date" type="date" record={record} preset={preset} /><Field label="Purchase price" name="purchase_price" type="number" record={record} preset={preset} defaultValue={dollarDefault(record, "purchase_price", "purchase_price_cents", preset)} /><Field label="Next heat" name="next_heat_date" type="date" record={record} preset={preset} /><TextArea label="Health testing" name="health_testing" record={record} preset={preset} /><TextArea label="Acquisition notes" name="acquisition_notes" record={record} preset={preset} /><TextArea label="Notes" name="notes" record={record} preset={preset} /></>}
     {resource === "litters" && <><Field label="Name" name="name" record={record} preset={preset} required /><SelectField label="Dam" name="dam_id" options={dogOptions} record={record} preset={preset} empty="No dam" /><SelectField label="Sire" name="sire_id" options={dogOptions} record={record} preset={preset} empty="No sire" /><Field label="Breeding date" name="breeding_date" type="date" record={record} preset={preset} /><Field label="Due date" name="due_date" type="date" record={record} preset={preset} /><Field label="Birth date" name="birth_date" type="date" record={record} preset={preset} /><Field label="Expected count" name="expected_count" type="number" record={record} preset={preset} /><Field label="Status" name="status" record={record} preset={preset} /><TextArea label="Notes" name="notes" record={record} preset={preset} /></>}
     {resource === "buyers" && <><Field label="First name" name="first_name" record={record} preset={preset} required /><Field label="Last name" name="last_name" record={record} preset={preset} required /><Field label="Email (optional)" name="email" type="email" record={record} preset={preset} /><Field label="Phone" name="phone" record={record} preset={preset} /><Field label="City" name="city" record={record} preset={preset} /><Field label="State" name="state" record={record} preset={preset} /><Field label="Application status" name="application_status" record={record} preset={preset} /><Field label="Preferred sex" name="preferred_sex" record={record} preset={preset} /><Field label="Preferred color" name="preferred_color" record={record} preset={preset} /><TextArea label="Notes" name="notes" record={record} preset={preset} /></>}
     {resource === "puppies" && <><SelectField label="Litter" name="litter_id" options={litterOptions} record={record} preset={preset} required /><SelectField label="Buyer" name="buyer_id" options={buyerOptions} record={record} preset={preset} empty="No buyer" /><Field label="Name" name="name" record={record} preset={preset} required /><Field label="Sex" name="sex" record={record} preset={preset} /><Field label="Color" name="color" record={record} preset={preset} /><Field label="Birth date" name="birth_date" type="date" record={record} preset={preset} /><Field label="Birth weight" name="birth_weight" type="number" record={record} preset={preset} /><Field label="Current weight" name="current_weight" type="number" record={record} preset={preset} /><Field label="Status" name="status" record={record} preset={preset} /><Field label="Price" name="price" type="number" record={record} preset={preset} defaultValue={dollarDefault(record, "price", "price_cents", preset)} /><TextArea label="Notes" name="notes" record={record} preset={preset} /></>}
@@ -1383,15 +1384,18 @@ export default function Home() {
   }, [data, search]);
 
   const activeViewProps = { data, openCreate, openEdit, openDocumentUpload, remove, removeDocument, openContracts };
-  const quickResource = view === "Litters" ? "litters" : view === "Puppies" || view === "Placement" ? "puppies" : view === "Calendar" || view === "Care" || view === "CRM" || view === "Delivery" ? "events" : view === "Applications" || view === "Families" || view === "Comms" || view === "Portal" ? "buyers" : view === "Breeding" ? "dogs" : view === "Finance" || view === "Inventory" || view === "Reports" ? "transactions" : "events";
+  const quickResource = view === "Litters" ? "litters" : view === "Puppies" || view === "Placement" || view === "Whelping" ? "puppies" : view === "Calendar" || view === "Care" || view === "CRM" || view === "Delivery" ? "events" : view === "Applications" || view === "Families" || view === "Waitlist" || view === "Comms" || view === "Portal" ? "buyers" : view === "Breeding" || view === "Breedings" ? "dogs" : view === "Finance" || view === "Inventory" || view === "Reports" ? "transactions" : "events";
   const viewCopy: Record<View, { title: string; text: string }> = {
     Command: { title: "Breeder daily run", text: "The next care, placement, payment, communication, and go-home work across the program." },
-    Breeding: { title: "Dogs & breeding", text: "Manage breeding dogs, pairings, heat dates, registrations, and program records." },
+    Breeding: { title: "Dogs", text: "Manage breeding dogs, identity, parentage, registrations, health records, and status." },
+    Breedings: { title: "Breedings & test mating", text: "Evaluate pedigree and genetics, then manage heat cycles, breeding attempts, and pregnancy milestones." },
     Litters: { title: "Litters", text: "Track every litter from planned pairing and due date through whelping and puppy roster." },
+    Whelping: { title: "Whelping Mode", text: "Use the mobile birth workflow, then continue weights, nursing, care, and litter records without duplicate entry." },
     Puppies: { title: "Puppies", text: "Keep identity, growth, care, availability, pricing, and family assignment on one record." },
     Care: { title: "Health & care", text: "Run medical schedules, puppy milestones, recurring care, and kennel work." },
     Applications: { title: "Applications", text: "Screen families, record preferences, approve the right homes, and build the waitlist." },
     Families: { title: "Buyers & waitlist", text: "Open the complete family relationship: contact, preferences, puppies, payments, documents, and portal." },
+    Waitlist: { title: "Waitlist & picking order", text: "Manage approved families, preferences, deposit state, queue history, passes, and puppy assignment." },
     Placement: { title: "Puppy placement", text: "Match approved families to puppies and carry every placement into payment and contract work." },
     Delivery: { title: "Pickup & delivery", text: "Control final balances, signed documents, handoff schedules, and go-home readiness." },
     Finance: { title: "Payments & sales", text: "Credit every payment to the right buyer and puppy, then manage balances and sale revenue." },
@@ -1409,10 +1413,12 @@ export default function Home() {
   const coreRecordCount = data.dogs.length + data.litters.length + data.buyers.length + data.puppies.length;
   const viewBadges: Partial<Record<View, number>> = {
     Breeding: analytics.activeLitters.length,
+    Breedings: data.events.filter((item) => /breed|heat|pregnan|ultrasound|x-ray/i.test(`${item.event_type} ${item.title}`) && item.status !== "Completed").length,
     Litters: analytics.activeLitters.length,
     Puppies: analytics.unmatched.length,
     Applications: analytics.pendingBuyers.length,
     Families: analytics.approvedBuyers.length,
+    Waitlist: analytics.approvedBuyers.length,
     Placement: analytics.unmatched.length,
     Delivery: data.events.filter((item) => /pickup|delivery|transport|go.home/i.test(`${item.event_type} ${item.title}`) && item.status !== "Completed").length,
     Care: analytics.upcomingCare.length,
@@ -1454,11 +1460,14 @@ export default function Home() {
       {loading ? <div className="loading"><span />Loading records...</div> : <>
         {view === "Command" && <CommandView data={data} openCreate={openCreate} setView={navigateTo} />}
         {view === "Breeding" && <BreedingView {...activeViewProps} />}
+        {view === "Breedings" && <BreedingProgramWorkspace />}
         {view === "Litters" && <LittersView {...activeViewProps} />}
+        {view === "Whelping" && <WhelpingWorkspace />}
         {view === "Puppies" && <PuppiesView {...activeViewProps} />}
         {view === "Care" && <CareView {...activeViewProps} />}
         {view === "Applications" && <ApplicationsView {...activeViewProps} />}
         {view === "Families" && <FamiliesView {...activeViewProps} />}
+        {view === "Waitlist" && <WaitlistWorkspace />}
         {view === "Placement" && <PlacementView {...activeViewProps} />}
         {view === "Delivery" && <DeliveryView {...activeViewProps} />}
         {view === "Finance" && <FinanceView {...activeViewProps} />}
@@ -1466,7 +1475,7 @@ export default function Home() {
         {view === "Comms" && <CommunicationsView {...activeViewProps} />}
         {view === "Portal" && <PortalPreviewView data={data} />}
         {view === "CRM" && <CallerCrmView {...activeViewProps} refreshActivity={refreshActivity} activityRefreshing={activityRefreshing} activitySyncedAt={activitySyncedAt} activityError={activityError} newCallId={newCallId} />}
-        {view === "Calendar" && <CalendarView {...activeViewProps} />}
+        {view === "Calendar" && <BreedingCalendarWorkspace onCreateManual={() => openCreate("events")} />}
         {view === "Vault" && <VaultView data={data} openDocumentUpload={openDocumentUpload} removeDocument={removeDocument} />}
         {view === "Templates" && <TemplatesCenter initialConfig={templates} onSaved={setTemplates} />}
         {view === "Reports" && <ReportsView data={data} openCreate={openCreate} />}
