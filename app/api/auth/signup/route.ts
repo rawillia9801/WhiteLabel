@@ -12,6 +12,11 @@ const setupRequestDetails: Record<string, { name: string; notes: string }> = {
   "business-sms": { name: "Business SMS", notes: "$59 activation/setup, $14.99/month per active registered campaign, and $25 activation for each additional campaign. Incoming is $0.02 per segment and outgoing is $0.03 per segment. Registration and approval are required, activation is not guaranteed, and approval may take up to 30 days." },
 };
 
+const websiteTemplateDetails: Record<string, { name: string; notes: string }> = {
+  "willow-creek": { name: "Willow Creek", notes: "Website Template 01 — boutique Chihuahua demonstration style. Replace demonstration kennel identity, breed, dogs, photography, colors, policies, and content with the customer's program." },
+  "cedar-creek": { name: "Cedar & Creek", notes: "Website Template 02 — warm editorial Golden Retriever demonstration style. Replace demonstration kennel identity, breed, dogs, photography, colors, policies, and content with the customer's program." },
+};
+
 function cookieDomain(request: Request) {
   if (process.env.NODE_ENV !== "production") return undefined;
   const host = new URL(request.url).hostname.toLowerCase();
@@ -31,9 +36,10 @@ export async function POST(request: Request) {
     const requestedSetupIds = Array.isArray(body.setup_requests)
       ? [...new Set(body.setup_requests.map((item) => String(item)).filter((item) => setupRequestDetails[item]))]
       : [];
-    if (requestedSetupIds.length) {
+    const requestedWebsiteTemplate = websiteTemplateDetails[String(body.website_template ?? "")];
+    if (requestedSetupIds.length || requestedWebsiteTemplate) {
       const eventDate = new Date().toISOString().slice(0, 10);
-      await Promise.all(requestedSetupIds.map((id) => {
+      const setupEvents = requestedSetupIds.map((id) => {
         const service = setupRequestDetails[id];
         return createSupabaseResource("events", {
           title: `Setup request: ${service.name}`,
@@ -42,7 +48,15 @@ export async function POST(request: Request) {
           status: "Requested",
           notes: service.notes,
         }, account.kennel.id);
-      }));
+      });
+      if (requestedWebsiteTemplate) setupEvents.push(createSupabaseResource("events", {
+        title: `Website template: ${requestedWebsiteTemplate.name}`,
+        event_type: "Setup Request",
+        event_date: eventDate,
+        status: "Requested",
+        notes: requestedWebsiteTemplate.notes,
+      }, account.kennel.id));
+      await Promise.all(setupEvents);
     }
     const claims = breederSessionClaims(account);
     const token = createBreederSessionToken(claims);
