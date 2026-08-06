@@ -88,6 +88,7 @@ export function BreederCommandCenter({
   const paidBuyers = new Set(data.transactions.filter((item) => item.type !== "Cost" && isPaid(item.status) && item.buyer_id).map((item) => item.buyer_id));
   const contractedBuyers = new Set(data.buyer_documents.filter((item) => /bill of sale|health guarantee|agreement/i.test(item.document_type)).map((item) => item.buyer_id));
   const deliveryEvents = data.events.filter((item) => /pickup|delivery|transport/i.test(`${item.event_type} ${item.title}`) && isOpen(item.status));
+  const upcomingThirtyDays = upcoming.filter((item) => item.event_date <= addDays(30)).length;
 
   const weightAlerts = breedingData.puppies.flatMap((puppy) => {
     const birthWeight = Number(puppy.birth_weight);
@@ -115,7 +116,7 @@ export function BreederCommandCenter({
     { label: "Active litters", value: String(activeLitters.length), detail: activePregnancies.length ? `${activePregnancies.length} active pregnancy record${activePregnancies.length === 1 ? "" : "s"}` : "No active pregnancies", view: "Litters", icon: ListTree },
     { label: "Puppies", value: String(activePuppies.length), detail: unmatched.length ? `${unmatched.length} awaiting placement` : "All active puppies matched", view: "Puppies", icon: PawPrint },
     { label: "Applications", value: String(pendingApplications.length), detail: pendingApplications.length ? "Waiting for your decision" : "Inbox is clear", view: "Applications", icon: ClipboardCheck, tone: pendingApplications.length ? "attention" : "" },
-    { label: "Next 30 days", value: String(upcoming.filter((item) => item.event_date <= addDays(30)).length), detail: upcoming[0] ? `${upcoming[0].title} · ${shortDate(upcoming[0].event_date)}` : "No events scheduled", view: "Calendar", icon: CalendarDays },
+    { label: "Next 30 days", value: String(upcomingThirtyDays), detail: upcoming[0] ? `${upcoming[0].title} · ${shortDate(upcoming[0].event_date)}` : "No events scheduled", view: "Calendar", icon: CalendarDays },
     { label: "Payments due", value: money(outstanding), detail: `${money(receivedThisMonth)} received this month`, view: "Finance", icon: WalletCards, tone: overdue.length ? "attention" : "" },
   ];
   const lifecycle: Array<{ label: string; count: number; view: DashboardView; note: string }> = [
@@ -129,7 +130,16 @@ export function BreederCommandCenter({
 
   return <div className="bos-today">
     <header className="dashboard-command-header">
-      <div><span>KENNEL DAY</span><h1>Today at a glance</h1><p>{currentDate} · {kennelName || "Your kennel"}</p></div>
+      <div className="dashboard-command-copy">
+        <span>KENNEL COMMAND CENTER</span>
+        <h1>Today at a glance</h1>
+        <p>{currentDate} · {kennelName || "Your kennel"}</p>
+        <div className="dashboard-day-meta" aria-label="Kennel operating pulse">
+          <span className={attention.length ? "needs-work" : "all-clear"}><i /> <b>{attention.length ? `${attention.length} item${attention.length === 1 ? "" : "s"} need attention` : "Operations all clear"}</b></span>
+          <span><CalendarDays size={13} /> {upcomingThirtyDays} next 30 days</span>
+          <span><PawPrint size={13} /> {activePuppies.length} active pupp{activePuppies.length === 1 ? "y" : "ies"}</span>
+        </div>
+      </div>
       <div className="dashboard-quick-actions"><button onClick={() => onCreate("events", { event_type: "Task", status: "Scheduled" })}><CalendarDays size={16} /> Schedule</button><button onClick={() => onCreate("transactions", { type: "Payment" })}><ReceiptText size={16} /> Payment</button><button className="primary-action" onClick={() => onCreate("litters")}><Plus size={16} /> Quick add</button></div>
     </header>
 
