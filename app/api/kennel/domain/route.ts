@@ -39,11 +39,18 @@ async function saveDomain(kennelId: string, domain: string, verified: boolean) {
   if (!response.ok) throw new Error("The custom-domain status could not be saved.");
 }
 
+async function domainAddonEnabled(kennelId: string) {
+  const response = await supabaseRequest(`rest/v1/kennels?select=domain_addon_enabled&id=eq.${encodeURIComponent(kennelId)}&limit=1`, { cache: "no-store" });
+  if (!response.ok) return false;
+  const rows = await response.json().catch(() => []) as Array<{ domain_addon_enabled?: boolean }>;
+  return rows[0]?.domain_addon_enabled === true;
+}
+
 export async function POST(request: Request) {
   const unauthorized = requireAdminSession(request); if (unauthorized) return unauthorized;
   const session = breederSessionFromRequest(request)!;
   if (session.role !== "owner") return Response.json({ error: "Only the kennel owner can connect a custom domain." }, { status: 403 });
-  if (session.plan !== "custom_domain") return Response.json({ error: "Choose the Custom Domain package before connecting a domain." }, { status: 402 });
+  if (!(await domainAddonEnabled(session.kennelId))) return Response.json({ error: "Activate the $149 Brand Launch add-on before connecting a custom domain." }, { status: 402 });
   try {
     const domain = cleanDomain(String((await request.json() as { domain?: unknown }).domain ?? ""));
     if (!validDomain(domain)) return Response.json({ error: "Enter a valid domain such as portal.yourkennel.com." }, { status: 400 });
