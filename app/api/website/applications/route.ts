@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { createSupabaseResource, updateSupabaseResource } from "../../../../db/supabase-kennel";
 import { getSupabaseConfig, supabaseRequest } from "../../../../db/supabase";
+import { getApplicationFormConfig } from "../../../../lib/application-form-store";
 import { sendOwnerNotification, sendTemplateEmail } from "../../../../lib/email-service";
-import { createPortalToken } from "../../../../lib/portal-token";
 import { findKennelByHost } from "../../../../lib/supabase-auth";
 import {
   applicationBuyerInput,
@@ -52,9 +52,10 @@ export async function POST(request: Request) {
     }
     const kennel = await findKennelByHost(host || "");
     if (!kennel) return response(origin, host, { error: "This application form is not connected to a kennel." }, 404);
-    const application = normalizeWebsiteApplication(await request.json());
+    const formConfig = await getApplicationFormConfig(kennel.id);
+    const application = normalizeWebsiteApplication(await request.json(), formConfig);
     const receivedAt = new Date().toISOString();
-    const input = applicationBuyerInput(application, receivedAt);
+    const input = applicationBuyerInput(application, receivedAt, formConfig);
     const current = await existingBuyer(String(input.email), kennel.id);
     let buyer: BuyerRow;
 
@@ -62,21 +63,18 @@ export async function POST(request: Request) {
       buyer = await updateSupabaseResource("buyers", Number(current.id), {
         ...input,
         application_status: retainAdvancedStatus(current.application_status),
-        notes: [String(current.notes ?? "").trim(), String(input.notes)].filter(Boolean).join("\n\n---\n\n").slice(-30_000),
+        notes: [String(current.notes ?? "").trim(), String(input.notes)].filter(Boolean).join("\n\n---\n\n"),
       }, kennel.id) as BuyerRow;
     } else {
       buyer = await createSupabaseResource("buyers", input, kennel.id) as BuyerRow;
     }
 
     let confirmationEmailSent = false;
-    let portalSetupUrl = "";
     try {
       const fingerprint = createHash("sha256")
         .update(`${String(input.email)}|${JSON.stringify(application)}`)
         .digest("hex")
         .slice(0, 20);
-      const setupToken = await createPortalToken(Number(buyer.id), 7, kennel.id);
-      portalSetupUrl = `${new URL(request.url).origin}/portal/setup?token=${encodeURIComponent(setupToken)}`;
       const email = await sendTemplateEmail({
         kennelId: kennel.id,
         templateKey: "application_received",
@@ -84,8 +82,7 @@ export async function POST(request: Request) {
         to: String(buyer.email || input.email),
         dedupeKey: `website-application-${fingerprint}`,
         variables: {
-          first_name: String(buyer.first_name || String(application.full_name).split(/\s+/)[0] || "there"),
-          portal_url: portalSetupUrl,
+          first_name: String(buyer.first_name || input.first_name || "there"),
         },
       });
       confirmationEmailSent = email.sent === true;
@@ -99,20 +96,20 @@ export async function POST(request: Request) {
         kennelId: kennel.id,
         kennelName: kennel.name,
         category: "Application",
-        subject: `New puppy application from ${String(application.full_name)}`,
+        subject: `New puppy application from ${[input.first_name, input.last_name].filter(Boolean).join(" ")}`,
         buyerId: Number(buyer.id),
         body: [
           `A puppy application was submitted through ${new URL(request.url).host}.`,
           "",
-          `Applicant: ${String(application.full_name)}`,
-          `Email: ${String(application.email)}`,
-          `Phone: ${String(application.phone)}`,
-          `Location: ${String(application.city_state || "Not provided")}`,
+          `Applicant: ${[input.first_name, input.last_name].filter(Boolean).join(" ")}`,
+          `Email: ${String(input.email)}`,
+          `Phone: ${String(input.phone)}`,
+          `Location: ${[input.city, input.state].filter(Boolean).join(", ") || "Not provided"}`,
           `Preferred size: ${String(application.placement_pref || "Not provided")}`,
           `Specific puppy or litter: ${String(application.specific_puppy || "Not provided")}`,
           `Application status: ${retainAdvancedStatus(buyer.application_status)}`,
-          "Small-puppy policy acknowledged: Yes",
-          `Portal setup email: ${confirmationEmailSent ? "Sent" : "Not sent"}`,
+          `Application confirmation email: ${confirmationEmailSent ? "Sent" : "Not sent"}`,
+          "Approval, reservation, contracts, and buyer-portal access remain breeder-controlled next steps.",
           "",
           "Review the full application in Breeder Portal:",
           `${new URL(request.url).origin}/?view=Applications`,
@@ -128,7 +125,7 @@ export async function POST(request: Request) {
       application_id: Number(buyer.id),
       status: retainAdvancedStatus(buyer.application_status),
       confirmation_email_sent: confirmationEmailSent,
-      portal_setup_ready: Boolean(portalSetupUrl),
+      portal_setup_ready: false,
       owner_notification_sent: ownerNotificationSent,
     }, current ? 200 : 201);
   } catch (error) {
