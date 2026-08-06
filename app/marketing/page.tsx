@@ -21,7 +21,7 @@ const plans = [
 const services = [
   [Globe2, "Brand Launch", "$149 one-time", "Launch an available standard .com under your brand.", ["First-year standard .com registration", "SSL and hosting configuration", "Two branded business email addresses", "Standard .com renewal: $29/year", "Premium domains priced separately"]],
   [MonitorSmartphone, "Custom Breeder Website", "$299 one-time", "A breeder website designed around your program when the Studio template is not enough.", ["Custom layout, branding, colors, and pages", "Your photography, content, and program presentation", "Connected MyDogPortal information", "Out-of-scope custom functionality quoted separately"]],
-  [PhoneCall, "Business Voice", "$69 setup", "A professionally configured local business line with your greeting and breeder information.", ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "IVR/menu, business hours, voicemail, and routing", "Live phone system example: (276) 276-1669"]],
+  [PhoneCall, "Business Voice", "$69 setup", "A professionally configured local business line with your greeting and breeder information.", ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "IVR/menu, business hours, voicemail, and routing", "Live examples: Willow Creek (276) 250-9512 · Cedar & Creek (276) 276-2757"]],
   [MessageSquareText, "Business SMS", "$59 activation", "Optional registered business messaging, separate from Business Voice and the software subscription.", ["$14.99/month per active registered campaign", "$25 activation per additional campaign", "Incoming: $0.02 per SMS segment", "Outgoing: $0.03 per SMS segment", "Approval required; allow up to 30 days"]],
 ] as const;
 
@@ -56,22 +56,15 @@ export default function MarketingPage() {
           <span><MonitorSmartphone size={23}/></span>
           <small>WEBSITE TEMPLATE 01 · CHIHUAHUA</small>
           <h3>Willow Creek Chihuahuas</h3>
-          <p>See a breeder-facing website example with its own brand and public customer experience.</p>
-          <a href="https://willowcreekchihuahuas.com" target="_blank" rel="noreferrer">Visit Willow Creek Chihuahuas <ExternalLink size={15}/></a>
+          <p>See a breeder-facing website example with its own brand and public customer experience. Business Voice: <b>(276) 250-9512</b>.</p>
+          <div className="marketing-example-actions"><a href="https://willowcreekchihuahuas.com" target="_blank" rel="noreferrer">Visit website <ExternalLink size={15}/></a><a href="tel:+12762509512">Call (276) 250-9512 <PhoneCall size={15}/></a></div>
         </article>
         <article>
           <span><Dog size={23}/></span>
           <small>WEBSITE TEMPLATE 02 · GOLDEN RETRIEVER</small>
           <h3>Cedar & Creek Goldens</h3>
-          <p>A completely different warm, editorial breeder website built around outdoor photography, family connection, health testing, and Golden Retriever storytelling.</p>
-          <Link href="/templates/cedar-creek">View Golden Retriever template <ArrowRight size={15}/></Link>
-        </article>
-        <article>
-          <span><PhoneCall size={23}/></span>
-          <small>BUSINESS VOICE EXAMPLE</small>
-          <h3>(276) 276-1669</h3>
-          <p>Call the live phone-system example to hear the professionally configured voice menu and routing experience.</p>
-          <a href="tel:+12762761669">Call (276) 276-1669 <PhoneCall size={15}/></a>
+          <p>A completely different warm, editorial breeder website built around outdoor photography, family connection, health testing, and Golden Retriever storytelling. Business Voice: <b>(276) 276-2757</b>.</p>
+          <div className="marketing-example-actions"><Link href="/templates/cedar-creek">View template <ArrowRight size={15}/></Link><a href="tel:+12762762757">Call (276) 276-2757 <PhoneCall size={15}/></a></div>
         </article>
       </div>
     </section>
