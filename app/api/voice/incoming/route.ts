@@ -1,11 +1,10 @@
 import { getCallerCrmProfile, logCallerEvent, type CallerCrmProfile } from "../../../../db/caller-crm";
-import { incomingVoiceResponse, isPupLiftLine, unavailableVoiceResponse } from "../../../../lib/caller-voice";
+import { incomingVoiceResponse, isPupLiftLine, unavailableVoiceResponse, voiceBusinessNameForLine } from "../../../../lib/caller-voice";
 import { readVoiceForm, twilio, validateVoiceRequest, voiceError, voiceXml } from "../../../../lib/voice-webhook";
 
 export const runtime = "nodejs";
 
 const voice = { voice: "Polly.Joanna" as const, language: "en-US" as const };
-const voiceBusinessName = () => process.env.VOICE_BUSINESS_NAME?.trim() || "the breeder";
 
 function routeWithLine(path: string, calledNumber: string) {
   const url = new URL(path, "https://voice.swvaos.local");
@@ -27,12 +26,12 @@ function privateSafeMainMenu(recognized: boolean, calledNumber: string) {
   if (recognized) {
     gather.say(
       voice,
-      `Thank you for calling ${voiceBusinessName()}. We found a family account connected to the phone number you are calling from. Press 1 if you are an existing applicant or buyer and would like to verify your account. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`,
+      `Thank you for calling ${voiceBusinessNameForLine(calledNumber)}. We found a family account connected to the phone number you are calling from. Press 1 if you are an existing applicant or buyer and would like to verify your account. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`,
     );
   } else {
     gather.say(
       voice,
-      `Thank you for calling ${voiceBusinessName()}. Press 1 if you are an existing applicant or buyer. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`,
+      `Thank you for calling ${voiceBusinessNameForLine(calledNumber)}. Press 1 if you are an existing applicant or buyer. Press 2 for puppy availability and applications. Press 3 for pickup, delivery, and transportation. Press 4 for payments and financing. Press 5 for emergency-care information. Press 6 to leave a message. Press 7 to speak with our team. Press 9 to repeat this menu.`,
     );
   }
 
