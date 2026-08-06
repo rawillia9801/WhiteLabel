@@ -12,7 +12,6 @@ import {
   Globe2,
   KeyRound,
   Mail,
-  MessageSquareText,
   MonitorSmartphone,
   PawPrint,
   PhoneCall,
@@ -23,9 +22,9 @@ const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.s
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-").slice(0, 48);
 
 const subscriptions = [
-  { name: "Starter", price: 29, buttonId: "W8DM75982MX26", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
-  { name: "Professional", price: 59, buttonId: "J7HBTK2F9AMDN", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
-  { name: "Studio", price: 99, buttonId: "C5G2BVYNMMUPN", description: "Expanded operating capacity plus a professional customizable breeder website connected to MyDogPortal.", featured: false },
+  { name: "Starter", price: 29, annual: 290, position: "GET ORGANIZED", buttonId: "W8DM75982MX26", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
+  { name: "Professional", price: 59, annual: 590, position: "RUN YOUR BREEDING BUSINESS", buttonId: "J7HBTK2F9AMDN", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
+  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Expanded operating capacity plus a professional customizable breeder website connected to MyDogPortal.", featured: false },
 ] as const;
 
 const websiteTemplates = [
@@ -35,22 +34,40 @@ const websiteTemplates = [
 
 const setupServices = [
   {
+    id: "hosting-email",
+    name: "Website Hosting + Business Email",
+    price: "$17.95/month",
+    action: "Add hosting + email to my setup",
+    icon: Mail,
+    description: "Standalone managed hosting for your breeder website, including SSL and two branded business email addresses. No MyDogPortal software features are included.",
+    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support"],
+  },
+  {
     id: "brand-launch",
     name: "Brand Launch",
     price: "$149 one-time",
     action: "Add Brand Launch to my setup",
     icon: Globe2,
-    description: "Launch an available standard .com with the domain, SSL, and hosting configured while a qualifying MyDogPortal service remains active.",
-    details: ["First-year standard .com registration", "Two branded business email addresses", "Standard .com renewal: $29/year", "Premium domains priced separately"],
+    description: "Launch an available standard .com with registration, DNS, and SSL configuration. Hosting and business email remain a separate $17.95/month service.",
+    details: ["First-year available standard .com registration", "Domain, DNS, and SSL configuration", "Managed domain renewal: $29/year", "Premium domains priced separately"],
+  },
+  {
+    id: "website-personalization",
+    name: "Breeder Website Personalization",
+    price: "$299 one-time",
+    action: "Request website personalization",
+    icon: MonitorSmartphone,
+    description: "Personalize a supported MyDogPortal website style around your kennel so the demonstration content becomes your brand and breeding program.",
+    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported"],
   },
   {
     id: "custom-website",
-    name: "Custom Breeder Website Design",
-    price: "$299 one-time",
-    action: "Request custom website",
+    name: "Custom Breeder Website",
+    price: "From $749",
+    action: "Request a custom website quote",
     icon: MonitorSmartphone,
-    description: "If the customizable Studio website isn't what you're looking for, we can create a breeder website specifically around your program's specifications for a one-time $299 design fee.",
-    details: ["Specify layout, branding, colors, and pages", "Use your photography, content, and program presentation", "Custom functionality outside supported MyDogPortal components may be quoted separately"],
+    description: "For breeder brands that need a website beyond the supported template system, with scope planned around the program before work begins.",
+    details: ["Custom layout and page planning", "Brand, photography, and content implementation", "Connected MyDogPortal information where supported", "Final scope and price confirmed before work begins"],
   },
   {
     id: "business-voice",
@@ -60,16 +77,6 @@ const setupServices = [
     icon: PhoneCall,
     description: "A professionally configured local business line with your custom greeting and breeder information.",
     details: ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Includes IVR/menu, business hours, voicemail, and call routing"],
-  },
-  {
-    id: "business-sms",
-    name: "Business SMS",
-    price: "$59 activation/setup",
-    action: "Request SMS activation",
-    icon: MessageSquareText,
-    description: "Optional registered business messaging, separate from Business Voice and the core software subscription.",
-    details: ["$14.99/month per active registered campaign", "$25 activation for each additional campaign", "Incoming: $0.02 per SMS segment", "Outgoing: $0.03 per SMS segment"],
-    disclosure: "Approval and registration are required, and activation is not guaranteed. Please allow up to 30 days for business messaging approval and activation.",
   },
 ] as const;
 
@@ -181,13 +188,16 @@ export default function SignupPage() {
               {subscriptions.map((plan) => (
                 <article className={plan.featured ? "featured" : ""} key={plan.name}>
                   {plan.featured && <em>MOST POPULAR</em>}
+                  <small className="subscription-position">{plan.position}</small>
                   <h3>{plan.name}</h3>
                   <p><b>${plan.price}</b><span>/month</span></p>
+                  <div className="subscription-annual"><b>${plan.annual}/year</b><span>Two months free</span></div>
                   <small>{plan.description}</small>
-                  <a href={`https://www.paypal.com/ncp/payment/${plan.buttonId}`} target="_blank" rel="noreferrer" data-paypal-hosted-button-id={plan.buttonId} aria-label={`Continue to PayPal for the ${plan.name} subscription`}>Continue to PayPal <ExternalLink size={14} /></a>
+                  <a href={`https://www.paypal.com/ncp/payment/${plan.buttonId}`} target="_blank" rel="noreferrer" data-paypal-hosted-button-id={plan.buttonId} aria-label={`Monthly PayPal checkout for the ${plan.name} subscription`}>Monthly checkout with PayPal <ExternalLink size={14} /></a>
                 </article>
               ))}
             </div>
+            <aside className="subscription-billing-note">Prefer annual billing? The annual price is confirmed at setup so the correct annual subscription can be issued through PayPal. The hosted buttons above are monthly checkout only.</aside>
           </section>
 
           <section className="setup-services" aria-labelledby="setup-services-heading">
@@ -201,7 +211,6 @@ export default function SignupPage() {
                     <header><span><Icon size={19} /></span><div><h3>{service.name}</h3><strong>{service.price}</strong></div></header>
                     <p>{service.description}</p>
                     <ul>{service.details.map((detail) => <li key={detail}>{detail}</li>)}</ul>
-                    {"disclosure" in service && <aside>{service.disclosure}</aside>}
                     <button type="button" className={selected ? "selected" : ""} aria-pressed={selected} data-setup-request={service.id} onClick={() => toggleSetupRequest(service.id)}>{selected ? "Added to signup request" : service.action}</button>
                   </article>
                 );
