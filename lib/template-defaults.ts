@@ -91,7 +91,7 @@ export const defaultTemplatesConfig: TemplatesConfig = {
       name: "Application received",
       trigger: "Sent when a new family/application record is submitted or added.",
       subject: "We received your puppy application",
-      body: "Hi {{first_name}},\n\nThank you for submitting your puppy application to {{business_name}}. We have received it and will review your information. We will contact you if we need anything else.\n\nCreate your private Buyer Puppy Portal password with this secure link:\n{{portal_url}}\n\nQuestions? Reply to this email or call {{support_phone}}.\n\n{{business_name}}",
+      body: "Hi {{first_name}},\n\nThank you for submitting your puppy application to {{business_name}}. We have received it for breeder review. Submission does not guarantee approval, reserve a puppy, or create a purchase agreement. We will contact you if we need anything else or when a review decision is ready.\n\nQuestions? Reply to this email or call {{support_phone}}.\n\n{{business_name}}",
       enabled: true,
     },
     application_approved: {
