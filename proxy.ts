@@ -30,7 +30,7 @@ export function proxy(request: NextRequest) {
   const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
   const expectedSubdomain = `${session.kennelSlug}.${platformDomain}`;
   const localOrPreview = host === "localhost" || host === "127.0.0.1" || host.endsWith(".vercel.app");
-  const expectedHost = session.plan === "custom_domain" && session.customDomain ? session.customDomain : expectedSubdomain;
+  const expectedHost = session.customDomain || expectedSubdomain;
   if (!localOrPreview && host !== expectedHost && host !== `www.${expectedHost}`) {
     return NextResponse.redirect(tenantUrl(session, `${pathname}${request.nextUrl.search}`));
   }
