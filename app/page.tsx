@@ -20,6 +20,7 @@ import {
   ListTree,
   ListOrdered,
   Mail,
+  Menu,
   MessagesSquare,
   MonitorSmartphone,
   PackageSearch,
@@ -54,6 +55,7 @@ import { BreedingProgramWorkspace } from "../components/breeding-program-workspa
 import { WhelpingWorkspace } from "../components/whelping-workspace";
 import { WaitlistWorkspace } from "../components/waitlist-workspace";
 import { BreedingCalendarWorkspace } from "../components/breeding-calendar-workspace";
+import { BreederCommandCenter } from "../components/breeder-command-center";
 import { publicTenant } from "../lib/public-tenant";
 import { useTenant } from "../components/tenant-runtime";
 
@@ -243,69 +245,6 @@ function useAnalytics(data: DataSet) {
   }, [data]);
 }
 
-function CommandView({ data, openCreate, setView }: { data: DataSet; openCreate: (resource: Resource, preset?: Record<string, unknown>) => void; setView: (view: View) => void }) {
-  const a = useAnalytics(data);
-  const dogName = (dogId: number | null) => data.dogs.find((dog) => dog.id === dogId)?.name ?? "Pairing not complete";
-  const paidBuyers = new Set(data.transactions.filter((item) => paymentTypes.has(item.type) && paidStatuses.has(item.status) && item.buyer_id).map((item) => item.buyer_id));
-  const contractedBuyers = new Set(data.buyer_documents.filter((item) => /bill of sale|health guarantee|agreement/i.test(item.document_type)).map((item) => item.buyer_id));
-  const deliveryEvents = data.events.filter((item) => /pickup|delivery|transport/i.test(`${item.event_type} ${item.title}`) && item.status !== "Completed");
-  const lifecycle = [
-    { label: "Applications", count: a.pendingBuyers.length, view: "Applications" as View, note: "waiting for review" },
-    { label: "Approved", count: a.approvedBuyers.length, view: "Families" as View, note: "ready to match" },
-    { label: "Matched", count: a.placed.length, view: "Placement" as View, note: "puppies assigned" },
-    { label: "Paid", count: paidBuyers.size, view: "Finance" as View, note: "buyer accounts credited" },
-    { label: "Contracted", count: contractedBuyers.size, view: "Templates" as View, note: "documents prepared" },
-    { label: "Go-home", count: deliveryEvents.length, view: "Delivery" as View, note: "handoffs scheduled" },
-  ];
-  const attention = [
-    ...a.overdue.map((item) => ({ area: "MONEY", title: item.description, detail: `${money(item.amount_cents)} overdue`, view: "Finance" as View, urgency: "urgent" })),
-    ...a.dueHealth.map((item) => ({ area: "CARE", title: item.title, detail: `${item.record_type} due for ${dogName(item.dog_id)}`, view: "Care" as View, urgency: "urgent" })),
-    ...a.unmatched.map((item) => ({ area: "PLACEMENT", title: `${item.name} needs a family`, detail: "Available puppy is not matched to an approved buyer", view: "Placement" as View, urgency: "next" })),
-    ...a.pendingBuyers.map((item) => ({ area: "APPLICATION", title: `${fullName(item)} needs review`, detail: "Screening decision has not been recorded", view: "Applications" as View, urgency: "review" })),
-  ].slice(0, 10);
-  const upcoming = a.upcoming.slice(0, 7);
-
-  return <div className="bos-today">
-    <section className="bos-run-header">
-      <div><span>DAILY RUN SHEET</span><h1>Run the breeding program.</h1><p>One working surface for the dogs, litters, puppies, families, money, and handoffs that need movement today.</p></div>
-      <div className="bos-run-actions"><button onClick={() => openCreate("events", { event_type: "Task", status: "Scheduled" })}><CalendarDays size={17} /> Add work</button><button onClick={() => openCreate("buyers", { application_status: "New" })}><ClipboardCheck size={17} /> Application</button><button onClick={() => openCreate("puppies")}><PawPrint size={17} /> Puppy</button><button className="primary-action" onClick={() => openCreate("transactions", { type: "Payment" })}><ReceiptText size={17} /> Payment</button></div>
-    </section>
-
-    <section className="bos-priority">
-      <header><div><span>01 / PRIORITY QUEUE</span><h2>Work that is waiting on you</h2></div><strong>{attention.length}</strong></header>
-      {attention.length ? <div className="bos-priority-list">{attention.map((item, index) => <button key={`${item.area}-${item.title}-${index}`} onClick={() => setView(item.view)}><i>{String(index + 1).padStart(2, "0")}</i><em className={item.urgency}>{item.area}</em><span><b>{item.title}</b><small>{item.detail}</small></span><ChevronRight size={16} /></button>)}</div> : <div className="bos-clear-state"><ShieldCheck size={24} /><span><b>No records are blocked.</b><small>There are no overdue balances, care deadlines, unmatched puppies, or unreviewed applications.</small></span></div>}
-    </section>
-
-    <div className="bos-day-grid">
-      <section className="bos-program-board">
-        <header><div><span>02 / BREEDING PROGRAM</span><h2>Litters moving through the program</h2></div><button onClick={() => setView("Litters")}>Open litter workspace <ChevronRight size={15} /></button></header>
-        {a.activeLitters.length ? <div className="bos-program-list">{a.activeLitters.slice(0, 6).map((litter) => {
-          const puppies = data.puppies.filter((puppy) => puppy.litter_id === litter.id);
-          const assigned = puppies.filter((puppy) => puppy.buyer_id).length;
-          const phase = litter.birth_date ? "RAISING" : litter.breeding_date ? "EXPECTING" : "PLANNING";
-          return <button key={litter.id} onClick={() => setView("Litters")}><span><em>{phase}</em><b>{litter.name}</b><small>{dogName(litter.dam_id)} × {dogName(litter.sire_id)}</small></span><span><small>{litter.birth_date ? "Whelped" : "Due"}</small><b>{shortDate(litter.birth_date || litter.due_date)}</b></span><span><small>Puppies</small><b>{puppies.length || litter.expected_count || 0}</b></span><span><small>Matched</small><b>{assigned}/{puppies.length || litter.expected_count || 0}</b></span><ChevronRight size={15} /></button>;
-        })}</div> : <Empty title="No active litter work" text="Create a litter plan to begin the breeding, whelping, puppy, and placement record." action="Create litter" onAction={() => openCreate("litters")} />}
-      </section>
-
-      <section className="bos-daybook">
-        <header><div><span>03 / DAYBOOK</span><h2>What is scheduled next</h2></div><button onClick={() => setView("Calendar")}>Calendar</button></header>
-        {upcoming.length ? <div>{upcoming.map((event) => <button key={event.id} onClick={() => setView(/pickup|delivery|transport/i.test(`${event.event_type} ${event.title}`) ? "Delivery" : "Calendar")}><time><b>{new Date(`${event.event_date}T12:00:00`).getDate()}</b><small>{new Date(`${event.event_date}T12:00:00`).toLocaleString("en-US", { month: "short" })}</small></time><span><b>{event.title}</b><small>{[event.event_time, event.location, event.event_type].filter(Boolean).join(" · ")}</small></span><em>{event.status}</em></button>)}</div> : <Empty title="The daybook is clear" text="Add vet care, whelping prep, family calls, pickups, deliveries, and follow-ups." action="Schedule work" onAction={() => openCreate("events")} />}
-      </section>
-    </div>
-
-    <section className="bos-family-journey">
-      <header><div><span>04 / FAMILY JOURNEY</span><h2>Application to go-home</h2></div><button onClick={() => setView("Placement")}>Work placements <ChevronRight size={15} /></button></header>
-      <div>{lifecycle.map((stage, index) => <button key={stage.label} onClick={() => setView(stage.view)}><i>{index + 1}</i><span><b>{stage.label}</b><small>{stage.note}</small></span><strong>{stage.count}</strong>{index < lifecycle.length - 1 && <ChevronRight size={15} />}</button>)}</div>
-    </section>
-
-    <section className="bos-business-line">
-      <button onClick={() => setView("Finance")}><span>SALES RECEIVED</span><b>{money(a.paid)}</b><small>{money(a.outstanding)} outstanding</small></button>
-      <button onClick={() => setView("Inventory")}><span>PROGRAM COSTS</span><b>{money(a.costs)}</b><small>{money(a.paid - a.costs)} recorded net</small></button>
-      <button onClick={() => setView("Comms")}><span>FAMILY UPDATES</span><b>{a.draftUpdates.length}</b><small>{a.publishedUpdates.length} published</small></button>
-      <button onClick={() => setView("Templates")}><span>COMMUNICATION JOURNEYS</span><b>{data.buyers.length}</b><small>family records connected</small></button>
-    </section>
-  </div>;
-}
 function BreedingView({ data, openCreate, openEdit, openDocumentUpload, remove }: ViewProps) {
   const [selectedDogId, setSelectedDogId] = useState<number | null>(data.dogs[0]?.id ?? null);
   const selectedDog = data.dogs.find((dog) => dog.id === selectedDogId) ?? data.dogs[0] ?? null;
@@ -712,13 +651,13 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
         window.location.assign(`/login?next=${encodeURIComponent("/")}`);
         return;
       }
-      if (!response.ok && response.status !== 207) throw new Error(result.error || "Unable to sync the Twilio lines.");
+      if (!response.ok && response.status !== 207) throw new Error(result.error || "Unable to sync the Business Voice lines.");
       const configuredCount = result.lines?.filter((line) => line.configured).length ?? 0;
-      if (!result.configured) throw new Error(`${configuredCount} of 2 phone lines were configured. Confirm both numbers belong to this Twilio account.`);
+      if (!result.configured) throw new Error(`${configuredCount} of 2 phone lines were configured. Confirm both numbers are available in the configured voice account.`);
       setRoutingReady(true);
-      setLineMessage({ tone: "good", text: "Both Twilio numbers now route into their correct Breeder Portal call flows." });
+      setLineMessage({ tone: "good", text: "Both Business Voice numbers now route into their correct Breeder Portal call flows." });
     } catch (error) {
-      setLineMessage({ tone: "bad", text: error instanceof Error ? error.message : "Unable to sync the Twilio lines." });
+      setLineMessage({ tone: "bad", text: error instanceof Error ? error.message : "Unable to sync the Business Voice lines." });
     } finally {
       setSyncingLines(false);
     }
@@ -751,7 +690,7 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
     <section className="crm-routing panel-wide"><div className={routingReady ? "online" : routingReady === false ? "attention" : "checking"}><PhoneIncoming size={19} /><span><b>{routingReady ? "Phone routing online" : routingReady === false ? "Phone routing needs setup" : "Checking phone routing"}</b><small>{routingReady ? "Caller recognition, account menus, and message recording are ready." : "The CRM remains available while phone routing is checked."}</small></span></div><div><span className={`crm-live-sync ${activityError ? "error" : ""}`}><i /><span><b>{activityError ? "Sync interrupted" : "Live call feed"}</b><small>{activityError || (activitySyncedAt ? `Updated ${activitySyncedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })}` : "Connecting...")}</small></span></span><button type="button" onClick={() => void refreshActivity()} disabled={activityRefreshing}><RefreshCw className={activityRefreshing ? "spinning" : ""} size={15} /> {activityRefreshing ? "Refreshing" : "Refresh calls"}</button><button onClick={() => openCreate("events", callPreset)}><PhoneOutgoing size={15} /> Log call</button><button onClick={() => openCreate("events", callbackPreset)}><ClipboardCheck size={15} /> Schedule callback</button></div></section>
 
     <section className="crm-lines panel-wide">
-      <header><div><span>VOICE LINE DIRECTORY</span><h2>Two numbers, two call experiences</h2><p>Each Twilio number enters the Voice CRM but receives its own greeting, keypad menu, and activity label.</p></div><button type="button" onClick={syncVoiceLines} disabled={syncingLines}><ShieldCheck size={16} /> {syncingLines ? "Syncing..." : "Sync Twilio lines"}</button></header>
+      <header><div><span>VOICE LINE DIRECTORY</span><h2>Two numbers, two call experiences</h2><p>Each Business Voice number enters the Voice CRM with its own greeting, keypad menu, and activity label.</p></div><button type="button" onClick={syncVoiceLines} disabled={syncingLines}><ShieldCheck size={16} /> {syncingLines ? "Syncing..." : "Sync voice lines"}</button></header>
       <div className="crm-line-cards">
         <article><span className="crm-line-icon"><PhoneIncoming size={20} /></span><div><small>Breeder Portal MAIN LINE</small><h3>+1 (855) 506-5425</h3><p>Families, applications, puppies, pickup, delivery, balances, messages, and staff transfer.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Receiving" : "Check route"}</Status></article>
         <article className="pup-lift"><span className="crm-line-icon"><HeartPulse size={20} /></span><div><small>PUP-LIFT SUPPORT</small><h3>+1 (715) 888-9526</h3><p>Dedicated hypoglycemia support guidance, urgent warning signs, voicemail, and staff transfer.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Receiving" : "Check route"}</Status></article>
@@ -760,7 +699,7 @@ function CallerCrmView({ data, openCreate, openEdit, openContracts, refreshActiv
     </section>
 
     <section className="crm-dialer panel-wide">
-      <header><div><span>OUTBOUND PHONE</span><h2>Dial a customer or call request</h2><p>Enter any number or load a family. Twilio rings the selected operator first, then connects the destination through the Breeder Portal line.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Ready" : "Check setup"}</Status></header>
+      <header><div><span>OUTBOUND PHONE</span><h2>Dial a customer or call request</h2><p>Enter any number or load a family. Business Voice rings the selected operator first, then connects the destination through the Breeder Portal line.</p></div><Status tone={routingReady ? "good" : "warn"}>{routingReady ? "Ready" : "Check setup"}</Status></header>
       <div className="crm-dialer-body">
         <div className="crm-dial-screen">
           <label htmlFor="crm-dial-number">Number to call</label>
@@ -1157,6 +1096,7 @@ export default function Home() {
   const [activityError, setActivityError] = useState("");
   const [newCallId, setNewCallId] = useState<number | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const dataRef = useRef<DataSet>(emptyData);
   const activityRequestInFlight = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1165,6 +1105,7 @@ export default function Home() {
   const navigateTo = useCallback((nextView: View) => {
     setView(nextView);
     setCommandOpen(false);
+    setSidebarOpen(false);
     setSearch("");
   }, []);
 
@@ -1408,7 +1349,6 @@ export default function Home() {
     Templates: { title: "Automations & templates", text: "Control the saved business language and automatic emails used across each family journey." },
     Reports: { title: "Reports and intelligence", text: "Review performance, compliance, profitability, and export an operating snapshot." },
   };
-  const ActiveViewIcon = views.find((item) => item.id === view)?.icon ?? LayoutDashboard;
   const activeViewDefinition = views.find((item) => item.id === view) ?? views[0];
   const coreRecordCount = data.dogs.length + data.litters.length + data.buyers.length + data.puppies.length;
   const viewBadges: Partial<Record<View, number>> = {
@@ -1430,35 +1370,28 @@ export default function Home() {
   };
   const activeGroup = activeViewDefinition.group;
   const groupLabels: Record<ViewGroup, string> = { "Daily work": "Kennel day", "Breeding program": "Breeding", "Placement journey": "Puppy families", Business: "Business", Tools: "Operations" };
-  const groupDescriptions: Record<ViewGroup, string> = {
-    "Daily work": "Daily priorities and calendar",
-    "Breeding program": "Dogs, litters, puppies, and health",
-    "Placement journey": "Application to puppy go-home",
-    Business: "Sales, expenses, and insights",
-    Tools: "Messages, portals, and documents",
-  };
-
   return <div className="bos-shell">
-    <header className="bos-command-bar">
-      <button className="bos-brand" onClick={() => navigateTo("Command")}><span><PawPrint size={21}/></span><b>{tenant.name}</b><small>{tenant.primaryBreed} · BREEDER PORTAL</small></button>
-      <nav className="bos-workspaces" aria-label="Kennel workspaces">{viewGroups.map((group) => { const GroupIcon = viewGroupIcons[group]; return <button key={group} className={activeGroup === group ? "active" : ""} onClick={() => navigateTo(views.find((item) => item.group === group)?.id ?? "Command")}><GroupIcon size={17}/><span><b>{groupLabels[group]}</b><small>{groupDescriptions[group]}</small></span><ChevronRight size={14}/></button>; })}</nav>
-      <div className="bos-search"><SearchIcon size={17} /><input ref={searchInputRef} aria-label="Search Breeder Portal" value={search} onFocus={() => setCommandOpen(true)} onChange={(event) => { setSearch(event.target.value); setCommandOpen(true); }} placeholder="Find any dog, puppy, family, payment…" /><kbd><CommandIcon size={11} />K</kbd>{commandOpen && <div className="bos-search-menu"><header><span>Find or create</span><button onClick={() => { setCommandOpen(false); setSearch(""); }} aria-label="Close search"><X size={15} /></button></header>{search.trim() ? searchResults.length ? <div className="command-results">{searchResults.map((item) => <button key={`${item.view}-${item.label}`} onClick={() => navigateTo(item.view)}><span><b>{item.label}</b><small>{item.detail}</small></span><ChevronRight size={15} /></button>)}</div> : <div className="command-empty"><SearchIcon size={19} /><b>No matching records</b><small>Try a family name, puppy, transaction, or event.</small></div> : <div className="bos-create-menu"><button onClick={() => { setCommandOpen(false); openCreate("buyers", { application_status: "New" }); }}><ClipboardCheck size={17} /><span><b>New application</b><small>Start family screening</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("transactions", { type: "Payment" }); }}><ReceiptText size={17} /><span><b>Record payment</b><small>Credit a buyer account</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("events", { event_type: "Pickup", status: "Scheduled" }); }}><Route size={17} /><span><b>Schedule go-home</b><small>Pickup or delivery</small></span></button></div>}</div>}</div>
-      <a className="bos-domain-settings" href="/settings/branding"><Palette size={16}/><span>Brand</span></a>
-      <a className="bos-domain-settings" href="/settings/domain"><Globe2 size={16}/><span>Domain</span></a>
-      <button className="bos-global-add" onClick={() => openCreate(quickResource)}><Plus size={17} /><span>Add record</span></button>
-    </header>
-
-    <section className="bos-context-bar">
-      <div><span><ActiveViewIcon size={18} /></span><p><b>{groupLabels[activeGroup]}</b><small>{groupDescriptions[activeGroup]}</small></p></div>
-      <nav aria-label={`${activeGroup} tools`}>{views.filter((item) => item.group === activeGroup).map((item) => { const Icon = item.icon; const badge = viewBadges[item.id]; return <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => navigateTo(item.id)}><Icon size={15} /><b>{item.label}</b>{Boolean(badge) && <em>{Number(badge) > 99 ? "99+" : badge}</em>}</button>; })}</nav>
-      <aside><i className={error ? "offline" : ""} /><span><b>{error ? "Attention" : "Connected"}</b><small>{coreRecordCount} core records · {analytics.docs} files</small></span></aside>
-    </section>
+    <aside className={`bos-command-bar${sidebarOpen ? " mobile-open" : ""}`}>
+      <div className="bos-sidebar-top">
+        <button className="bos-brand" onClick={() => navigateTo("Command")}><span><PawPrint size={20}/></span><b>{tenant.name}</b><small>{tenant.primaryBreed} · BREEDER OS</small></button>
+        <button className="bos-nav-toggle" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen((value) => !value)}>{sidebarOpen ? <X size={20}/> : <Menu size={20}/>}</button>
+      </div>
+      <div className="bos-search"><SearchIcon size={16} /><input ref={searchInputRef} aria-label="Search MyDogPortal" value={search} onFocus={() => setCommandOpen(true)} onChange={(event) => { setSearch(event.target.value); setCommandOpen(true); }} placeholder="Find dogs, puppies, families…" /><kbd><CommandIcon size={11} />K</kbd>{commandOpen && <div className="bos-search-menu"><header><span>Find or create</span><button onClick={() => { setCommandOpen(false); setSearch(""); }} aria-label="Close search"><X size={15} /></button></header>{search.trim() ? searchResults.length ? <div className="command-results">{searchResults.map((item) => <button key={`${item.view}-${item.label}`} onClick={() => navigateTo(item.view)}><span><b>{item.label}</b><small>{item.detail}</small></span><ChevronRight size={15} /></button>)}</div> : <div className="command-empty"><SearchIcon size={19} /><b>No matching records</b><small>Try a family name, puppy, transaction, or event.</small></div> : <div className="bos-create-menu"><button onClick={() => { setCommandOpen(false); openCreate("buyers", { application_status: "New" }); }}><ClipboardCheck size={17} /><span><b>New application</b><small>Start family screening</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("transactions", { type: "Payment" }); }}><ReceiptText size={17} /><span><b>Record payment</b><small>Credit a buyer account</small></span></button><button onClick={() => { setCommandOpen(false); openCreate("events", { event_type: "Pickup", status: "Scheduled" }); }}><Route size={17} /><span><b>Schedule go-home</b><small>Pickup or delivery</small></span></button></div>}</div>}</div>
+      <button className="bos-global-add" onClick={() => openCreate(quickResource)}><Plus size={17} /><span>Quick add</span></button>
+      <div className="bos-sidebar-scroll">
+        <nav className="bos-sidebar-nav" aria-label="MyDogPortal navigation">{viewGroups.map((group) => { const GroupIcon = viewGroupIcons[group]; return <section key={group}><h2><GroupIcon size={14}/><span>{groupLabels[group]}</span></h2><div>{views.filter((item) => item.group === group).map((item) => { const Icon = item.icon; const badge = viewBadges[item.id]; return <button key={item.id} className={view === item.id ? "active" : ""} aria-current={view === item.id ? "page" : undefined} onClick={() => navigateTo(item.id)}><Icon size={16}/><span>{item.label}</span>{Boolean(badge) && <em>{Number(badge) > 99 ? "99+" : badge}</em>}</button>; })}</div></section>; })}</nav>
+        <footer className="bos-sidebar-footer">
+          <div><a href="/settings/branding"><Palette size={15}/><span>Brand</span></a><a href="/settings/domain"><Globe2 size={15}/><span>Domain</span></a></div>
+          <p><i className={error ? "offline" : ""}/><span><b>{error ? "Needs attention" : "Kennel connected"}</b><small>{coreRecordCount} records · {analytics.docs} files</small></span></p>
+        </footer>
+      </div>
+    </aside>
 
     <main className="bos-main">
       {view !== "Command" && <header className="bos-view-head"><div><small>{groupLabels[activeGroup]} / {activeViewDefinition.label}</small><h1>{viewCopy[view].title}</h1><p>{viewCopy[view].text}</p></div><div><button onClick={() => openCreate("transactions", { type: "Payment" })}><ReceiptText size={15} /> Payment</button><button className="primary-action" onClick={() => openCreate(quickResource)}><Plus size={15} /> Add to {activeViewDefinition.label}</button></div></header>}
       {error && <div className="error-banner"><b>Something needs attention</b><span>{error}</span><button onClick={() => void loadData()}>Retry</button></div>}
       {loading ? <div className="loading"><span />Loading records...</div> : <>
-        {view === "Command" && <CommandView data={data} openCreate={openCreate} setView={navigateTo} />}
+        {view === "Command" && <BreederCommandCenter data={data} kennelName={tenant.name} onCreate={openCreate} onNavigate={navigateTo} />}
         {view === "Breeding" && <BreedingView {...activeViewProps} />}
         {view === "Breedings" && <BreedingProgramWorkspace />}
         {view === "Litters" && <LittersView {...activeViewProps} />}

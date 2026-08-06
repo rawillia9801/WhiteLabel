@@ -326,7 +326,7 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
   const activeKennelId = kennelId || text(buyer, "kennel_id");
   const scoped = activeKennelId ? `&kennel_id=eq.${encodeURIComponent(activeKennelId)}` : "";
   const [kennel, puppies, transactions, documents] = await Promise.all([
-    activeKennelId ? first<Row>("kennels", `select=name,contact_email,contact_phone&id=eq.${encodeURIComponent(activeKennelId)}`) : Promise.resolve(null),
+    activeKennelId ? first<Row>("kennels", `select=name,contact_email,contact_phone,primary_color,accent_color&id=eq.${encodeURIComponent(activeKennelId)}`) : Promise.resolve(null),
     select<Row>("puppies", `select=*&buyer_id=eq.${buyerId}${scoped}&order=created_at.desc`),
     select<Row>("transactions", `select=*&buyer_id=eq.${buyerId}${scoped}&order=created_at.desc`),
     select<DocumentRow>("buyer_documents", `select=*&buyer_id=eq.${buyerId}${scoped}&order=created_at.desc`),
@@ -369,6 +369,11 @@ export async function getPuppyPortalForBuyer(buyerIdValue: number, kennelId?: st
     .filter((event) => ["Portal Request", "Transportation"].includes(text(event, "event_type")) && text(event, "notes").startsWith("[Family request]"))
     .slice(0, 12);
   return {
+    kennel: {
+      name: text(kennel, "name") || "Breeder Portal",
+      primaryColor: text(kennel, "primary_color") || "#087f8c",
+      accentColor: text(kennel, "accent_color") || "#c68b24",
+    },
     buyer: {
       id: Number(buyer.id),
       name: fullName(buyer),

@@ -1,0 +1,167 @@
+.breeder-auth-page,
+.signup-page,
+.breeder-auth-page *,
+.signup-page *,
+.breeder-auth-page *::before,
+.signup-page *::before,
+.breeder-auth-page *::after,
+.signup-page *::after { box-sizing: border-box; }
+
+.breeder-auth-page,
+.signup-page { min-height: 100vh; background: #f5f4ef; color: #18322f; font-family: var(--tenant-font, var(--font-geist-sans), Arial, sans-serif); }
+.breeder-auth-page { display: grid; grid-template-columns: minmax(390px, .9fr) minmax(440px, 1.1fr); }
+.signup-page { display: grid; grid-template-columns: minmax(350px, .7fr) minmax(640px, 1.3fr); }
+
+.breeder-auth-story,
+.signup-intro { position: sticky; top: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-self: start; padding: clamp(42px, 6.2vw, 86px); overflow: hidden; background: linear-gradient(155deg, #102f2d, #0a2422); color: #fff; }
+.breeder-auth-story::after,
+.signup-intro::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 20% 14%, color-mix(in srgb, var(--tenant-primary) 30%, transparent), transparent 32%), radial-gradient(circle at 86% 78%, color-mix(in srgb, var(--tenant-accent) 15%, transparent), transparent 29%); }
+.breeder-auth-story > *,
+.signup-intro > * { position: relative; z-index: 1; }
+.breeder-auth-logo,
+.signup-logo { width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--tenant-accent) 45%, rgba(255,255,255,.2)); border-radius: 14px; background: var(--tenant-primary); color: #fff; box-shadow: 0 14px 34px rgba(0,0,0,.16); }
+.breeder-auth-story > small,
+.signup-intro > small { margin-top: 28px; color: #a9c6bf; font-size: 10px; font-weight: 850; letter-spacing: .17em; }
+.breeder-auth-story h1,
+.signup-intro h1 { max-width: 660px; margin: 13px 0 17px; color: #fff; font-size: clamp(42px, 5.2vw, 70px); font-weight: 650; line-height: 1.01; letter-spacing: -.058em; }
+.breeder-auth-story > p,
+.signup-intro > p { max-width: 590px; margin: 0; color: #c2d5d0; font-size: 15px; line-height: 1.65; }
+.breeder-auth-domain { max-width: 560px; display: flex; align-items: flex-start; gap: 12px; margin-top: 30px; padding: 15px; border: 1px solid rgba(255,255,255,.15); border-radius: 12px; background: rgba(255,255,255,.055); }
+.breeder-auth-domain b,
+.breeder-auth-domain small { display: block; }
+.breeder-auth-domain b { color: #f5fbf9; font-size: 11px; }
+.breeder-auth-domain small { margin-top: 4px; color: #9fbab4; font-size: 10px; line-height: 1.5; }
+.signup-points { display: grid; gap: 10px; margin-top: 27px; }
+.signup-points span { display: flex; align-items: center; gap: 9px; color: #dce9e5; font-size: 12px; font-weight: 690; }
+.signup-points svg { color: color-mix(in srgb, var(--tenant-accent) 64%, #d7eee7); }
+
+.breeder-auth-panel,
+.signup-panel { display: grid; place-items: center; padding: clamp(24px, 4vw, 52px); }
+.signup-panel { align-items: start; }
+.signup-stack { width: min(840px, 100%); display: grid; gap: 20px; }
+.breeder-auth-card,
+.signup-card,
+.subscription-section,
+.setup-services,
+.studio-website-note { width: min(540px, 100%); padding: 34px; border: 1px solid #d4ddd7; border-radius: 16px; background: #fffefb; box-shadow: 0 18px 52px rgba(25, 58, 52, .08); }
+.signup-card,
+.subscription-section,
+.setup-services,
+.studio-website-note { width: 100%; }
+.breeder-auth-card > span,
+.signup-card > span,
+.subscription-section > header small { color: color-mix(in srgb, var(--tenant-primary) 76%, #254c45); font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.breeder-auth-card h2,
+.signup-card h2 { margin: 8px 0 6px; color: #18322f; font-size: 34px; font-weight: 680; letter-spacing: -.045em; }
+.breeder-auth-card > p,
+.signup-card > p { margin: 0 0 22px; color: #637872; font-size: 12px; line-height: 1.55; }
+.breeder-auth-card form,
+.signup-card { display: grid; gap: 16px; }
+.breeder-auth-card label > span,
+.signup-card label > span { display: block; margin-bottom: 6px; color: #304d48; font-size: 11px; font-weight: 790; }
+.breeder-auth-input,
+.signup-input { min-height: 49px; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 0 13px; border: 1px solid #bdcbc5; border-radius: 9px; background: #fff; color: #56736d; }
+.breeder-auth-input:focus-within,
+.signup-input:focus-within { border-color: var(--tenant-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tenant-primary) 13%, transparent); }
+.breeder-auth-input input,
+.signup-input input { min-width: 0; border: 0; outline: 0; background: transparent; color: #17342f; font: inherit; }
+.breeder-auth-input button,
+.signup-input button { display: grid; place-items: center; padding: 5px; border: 0; background: transparent; color: #4c6b65; cursor: pointer; }
+.signup-input b { color: #4c6b65; font-size: 12px; white-space: nowrap; }
+.signup-card label > small { display: block; margin-top: 6px; color: #647a74; font-size: 9px; }
+.signup-card label > small.available { color: #227257; }
+.signup-card label > small.unavailable { color: #9d433b; }
+.breeder-auth-submit,
+.signup-submit { min-height: 49px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 9px; background: var(--tenant-primary); color: #fff; font: inherit; font-size: 11px; font-weight: 820; cursor: pointer; box-shadow: 0 10px 24px color-mix(in srgb, var(--tenant-primary) 20%, transparent); }
+.breeder-auth-submit:disabled,
+.signup-submit:disabled { opacity: .58; cursor: wait; }
+.breeder-auth-error,
+.signup-error { padding: 11px 13px; border: 1px solid #e3b2ac; border-radius: 9px; background: #fff1ef; color: #8d3832; font-size: 10px; }
+.breeder-auth-switch { display: grid; gap: 4px; margin-top: 23px; padding-top: 20px; border-top: 1px solid #dce3de; color: #647a74; font-size: 11px; }
+.breeder-auth-switch b { color: #294641; }
+.breeder-auth-switch a,
+.signup-card footer a { width: max-content; margin-top: 5px; color: var(--tenant-primary-dark); font-weight: 820; text-decoration: none; }
+.breeder-auth-switch a:hover,
+.signup-card footer a:hover { text-decoration: underline; }
+.signup-card footer { color: #647a74; font-size: 11px; text-align: center; }
+.signup-request-summary { display: grid; gap: 4px; padding: 11px 13px; border: 1px solid #b9d9d1; border-radius: 9px; background: #edf8f4; color: #235f50; }
+.signup-request-summary b { font-size: 10px; }
+.signup-request-summary small { color: #52776d; font-size: 9px; line-height: 1.45; }
+
+.subscription-section { display: grid; gap: 17px; }
+.subscription-section > header { display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: start; gap: 11px; }
+.subscription-section > header > span { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: color-mix(in srgb, var(--tenant-primary) 9%, #fff); color: var(--tenant-primary); }
+.subscription-section h2 { margin: 4px 0; color: #18322f; font-size: 21px; letter-spacing: -.025em; }
+.subscription-section > header p { margin: 0; color: #647a74; font-size: 10px; line-height: 1.5; }
+.subscription-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.subscription-grid article { position: relative; min-width: 0; min-height: 212px; display: flex; flex-direction: column; padding: 16px; border: 1px solid #d6dfda; border-radius: 12px; background: #fafbf8; }
+.subscription-grid article.featured { border-color: color-mix(in srgb, var(--tenant-primary) 48%, #d6dfda); background: color-mix(in srgb, var(--tenant-primary) 4%, #fff); }
+.subscription-grid article > em { position: absolute; top: -8px; right: 10px; padding: 4px 7px; border-radius: 999px; background: var(--tenant-primary); color: #fff; font-size: 6px; font-style: normal; font-weight: 850; letter-spacing: .07em; }
+.subscription-grid h3 { margin: 0; color: #27443f; font-size: 13px; }
+.subscription-grid p { display: flex; align-items: baseline; gap: 3px; margin: 10px 0 8px; }
+.subscription-grid p b { color: #18322f; font-size: 27px; letter-spacing: -.04em; }
+.subscription-grid p span { color: #71827e; font-size: 9px; }
+.subscription-grid > article > small { color: #647a74; font-size: 9px; line-height: 1.45; }
+.subscription-grid a { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: auto; padding: 0 9px; border: 1px solid #bdcbc5; border-radius: 8px; background: #fff; color: #234c47; font-size: 9px; font-weight: 800; text-decoration: none; }
+.subscription-grid article.featured a { border-color: var(--tenant-primary); background: var(--tenant-primary); color: #fff; }
+.signup-addons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 14px; border-top: 1px solid #dce3de; }
+.signup-addons article { min-width: 0; display: grid; grid-template-columns: 24px minmax(0,1fr); align-items: center; gap: 8px; padding: 11px; border: 1px solid #dbe2de; border-radius: 10px; background: #fafbf8; color: #55716b; }
+.signup-addons span b,
+.signup-addons span small { display: block; }
+.signup-addons span b { color: #294641; font-size: 10px; }
+.signup-addons span small { margin-top: 3px; color: #6b7f7a; font-size: 8px; }
+.signup-addons em { grid-column: 2; color: #86691f; font-size: 8px; font-style: normal; font-weight: 760; }
+
+.setup-services { display: grid; gap: 18px; }
+.setup-services > header small,
+.studio-website-note > div > small { color: color-mix(in srgb, var(--tenant-primary) 76%, #254c45); font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.setup-services > header h2,
+.studio-website-note h2 { margin: 5px 0; color: #18322f; font-size: 24px; letter-spacing: -.035em; }
+.setup-services > header p,
+.studio-website-note p { margin: 0; color: #647a74; font-size: 10px; line-height: 1.55; }
+.setup-service-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.setup-service-grid > article { min-width: 0; display: flex; flex-direction: column; padding: 17px; border: 1px solid #d6dfda; border-radius: 12px; background: #fafbf8; }
+.setup-service-grid article > header { display: grid; grid-template-columns: 38px minmax(0,1fr); gap: 10px; align-items: center; }
+.setup-service-grid article > header > span { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: color-mix(in srgb, var(--tenant-primary) 9%, #fff); color: var(--tenant-primary); }
+.setup-service-grid h3 { margin: 0; color: #27443f; font-size: 13px; }
+.setup-service-grid strong { display: block; margin-top: 3px; color: #8a671f; font-size: 9px; }
+.setup-service-grid article > p { margin: 13px 0 9px; color: #586f69; font-size: 9px; line-height: 1.55; }
+.setup-service-grid ul { display: grid; gap: 5px; margin: 0 0 14px; padding-left: 16px; color: #526a65; font-size: 8px; line-height: 1.45; }
+.setup-service-grid aside { margin: -2px 0 13px; padding: 9px; border-left: 3px solid #c68b24; background: #fff8e9; color: #6e5727; font-size: 8px; line-height: 1.5; }
+.setup-service-grid article > button { min-height: 40px; margin-top: auto; padding: 8px 10px; border: 1px solid #b9cac4; border-radius: 8px; background: #fff; color: #254d46; font: inherit; font-size: 9px; font-weight: 820; cursor: pointer; }
+.setup-service-grid article > button.selected { border-color: var(--tenant-primary); background: var(--tenant-primary); color: #fff; }
+.studio-website-note { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(220px,.7fr); gap: 22px; align-items: center; }
+.studio-website-note > a { display: grid; gap: 4px; padding: 17px; border: 1px solid #c7d8d2; border-radius: 12px; background: linear-gradient(145deg,#edf8f5,#fffaf0); color: #234d46; text-decoration: none; }
+.studio-website-note > a span { color: #7e671f; font-size: 8px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.studio-website-note > a b { font-size: 13px; }
+.studio-website-note > a small { display: flex; align-items: center; gap: 5px; color: #55736d; font-size: 9px; }
+
+@media (max-width: 1080px) {
+  .signup-page { grid-template-columns: 330px minmax(0,1fr); }
+  .subscription-grid { grid-template-columns: 1fr; }
+  .subscription-grid article { min-height: 174px; }
+  .studio-website-note { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 850px) {
+  .breeder-auth-page,
+  .signup-page { grid-template-columns: 1fr; }
+  .breeder-auth-story,
+  .signup-intro { position: relative; min-height: 370px; padding: 38px 26px; }
+  .breeder-auth-story h1,
+  .signup-intro h1 { font-size: clamp(38px,8vw,56px); }
+  .breeder-auth-panel,
+  .signup-panel { padding: 18px; }
+}
+
+@media (max-width: 560px) {
+  .breeder-auth-card,
+  .signup-card,
+  .subscription-section,
+  .setup-services,
+  .studio-website-note { padding: 24px 20px; }
+  .signup-input.slug { grid-template-columns: auto minmax(0,1fr); }
+  .signup-input.slug b { grid-column: 2; padding-bottom: 8px; font-size: 10px; }
+  .signup-addons { grid-template-columns: 1fr; }
+  .setup-service-grid { grid-template-columns: 1fr; }
+}

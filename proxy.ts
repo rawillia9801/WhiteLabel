@@ -11,8 +11,24 @@ const publicPath = (pathname: string) =>
   || (process.env.NEXT_PUBLIC_FEATURE_PHONE_CENTER === "true" && pathname.startsWith("/api/voice/"))
   || (process.env.NEXT_PUBLIC_FEATURE_PHONE_CENTER === "true" && pathname === "/api/caller-crm/lookup");
 
+export function isReservedMarketingHost(hostValue: string, platformValue = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.site") {
+  const host = hostValue.trim().toLowerCase().split(":")[0];
+  const platformDomain = platformValue.trim().toLowerCase();
+  return host === platformDomain || host === `www.${platformDomain}`;
+}
+
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").split(":")[0].toLowerCase();
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
+
+  if (isReservedMarketingHost(host, platformDomain)) {
+    return new NextResponse("This host is reserved for the MyDogPortal marketing website.", {
+      status: 421,
+      headers: { "cache-control": "private, no-store" },
+    });
+  }
+
   if (publicPath(pathname)) {
     const headers = new Headers(request.headers);
     headers.set("x-public-surface", "1");
@@ -26,8 +42,6 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").split(":")[0].toLowerCase();
-  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
   const expectedSubdomain = `${session.kennelSlug}.${platformDomain}`;
   const localOrPreview = host === "localhost" || host === "127.0.0.1" || host.endsWith(".vercel.app");
   const expectedHost = session.plan === "custom_domain" && session.customDomain ? session.customDomain : expectedSubdomain;

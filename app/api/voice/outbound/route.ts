@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL?.trim().replace(/\/$/, "");
     const teamNumbers = (process.env.SWVAOS_CALL_TEAM_NUMBERS ?? "").split(",").map(normalizePhone).filter(Boolean);
     if (!accountSid || !authToken || !callerId || !webhookBase || !teamNumbers.length) {
-      return Response.json({ error: "Twilio outbound calling is not fully configured." }, { status: 503 });
+      return Response.json({ error: "Business Voice outbound calling is not fully configured." }, { status: 503 });
     }
 
     const operatorIndex = String(body.operator ?? "cristy").toLowerCase() === "robert" ? 1 : 0;

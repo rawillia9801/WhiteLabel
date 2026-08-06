@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const configuredBase = process.env.TWILIO_WEBHOOK_BASE_URL?.trim().replace(/\/$/, "");
   const webhookBase = configuredBase;
   if (!accountSid || !authToken || !webhookBase) {
-    return Response.json({ error: "Twilio credentials and TWILIO_WEBHOOK_BASE_URL must be configured before syncing phone lines." }, { status: 503 });
+    return Response.json({ error: "The voice service must be configured before syncing phone lines." }, { status: 503 });
   }
 
   const managedLines = [
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const voiceUrl = `${webhookBase}/api/voice/incoming`;
     const results = await Promise.all(managedLines.map(async (line) => {
       const [record] = await client.incomingPhoneNumbers.list({ phoneNumber: line.phone, limit: 1 });
-      if (!record) return { ...line, configured: false, error: "This number was not found in the configured Twilio account." };
+      if (!record) return { ...line, configured: false, error: "This number was not found in the configured voice account." };
       const updated = await client.incomingPhoneNumbers(record.sid).update({
         friendlyName: line.friendlyName,
         voiceUrl,
@@ -46,6 +46,6 @@ export async function POST(request: Request) {
     const configured = results.every((line) => line.configured);
     return Response.json({ configured, voiceUrl, lines: results, messagingChanged: false }, { status: configured ? 200 : 207, headers: { "cache-control": "no-store" } });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Unable to configure the Twilio phone lines." }, { status: 500, headers: { "cache-control": "no-store" } });
+    return Response.json({ error: error instanceof Error ? error.message : "Unable to configure the Business Voice lines." }, { status: 500, headers: { "cache-control": "no-store" } });
   }
 }

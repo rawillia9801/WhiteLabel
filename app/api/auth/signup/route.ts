@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { BREEDER_SESSION_COOKIE, createBreederSessionToken, tenantUrl, type BreederSession } from "../../../../lib/breeder-session";
 import { breederSessionClaims, createBreederAccount } from "../../../../lib/supabase-auth";
+import { createSupabaseResource } from "../../../../db/supabase-kennel";
 
 export const runtime = "nodejs";
+
+const setupRequestDetails: Record<string, { name: string; notes: string }> = {
+  "brand-launch": { name: "Brand Launch", notes: "$149 one-time. Includes first-year registration of an available standard .com, domain and SSL configuration, qualifying-service hosting, and two branded business email addresses. Standard .com renewal is $29/year; premium domains are priced separately." },
+  "custom-website": { name: "Custom Breeder Website Design", notes: "$299 one-time design fee. The breeder may specify layout, branding, colors, pages, photography, content, and program presentation. Unsupported custom functionality may be quoted separately." },
+  "business-voice": { name: "Business Voice", notes: "$69 one-time setup. Local number is $8.99/month or $99/year. Incoming calls are $0.03/minute and outgoing calls are $0.04/minute." },
+  "business-sms": { name: "Business SMS", notes: "$59 activation/setup, $14.99/month per active registered campaign, and $25 activation for each additional campaign. Incoming is $0.02 per segment and outgoing is $0.03 per segment. Registration and approval are required, activation is not guaranteed, and approval may take up to 30 days." },
+};
 
 function cookieDomain(request: Request) {
   if (process.env.NODE_ENV !== "production") return undefined;
@@ -20,6 +28,22 @@ export async function POST(request: Request) {
       email: String(body.email ?? ""), password: String(body.password ?? ""),
       kennelName: String(body.kennel_name ?? ""), kennelSlug: String(body.kennel_slug ?? ""), plan,
     });
+    const requestedSetupIds = Array.isArray(body.setup_requests)
+      ? [...new Set(body.setup_requests.map((item) => String(item)).filter((item) => setupRequestDetails[item]))]
+      : [];
+    if (requestedSetupIds.length) {
+      const eventDate = new Date().toISOString().slice(0, 10);
+      await Promise.all(requestedSetupIds.map((id) => {
+        const service = setupRequestDetails[id];
+        return createSupabaseResource("events", {
+          title: `Setup request: ${service.name}`,
+          event_type: "Setup Request",
+          event_date: eventDate,
+          status: "Requested",
+          notes: service.notes,
+        }, account.kennel.id);
+      }));
+    }
     const claims = breederSessionClaims(account);
     const token = createBreederSessionToken(claims);
     if (!token) return Response.json({ error: "Set BREEDER_SESSION_SECRET to a random value of at least 32 characters." }, { status: 503 });

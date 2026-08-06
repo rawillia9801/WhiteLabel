@@ -5,12 +5,18 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 
 test("ships the white-label Breeder Portal command surface", async () => {
-  const page = await readFile(new URL("app/page.tsx", root), "utf8");
+  const [page, dashboard] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("components/breeder-command-center.tsx", root), "utf8"),
+  ]);
 
   assert.match(page, /Breeder Portal/);
   assert.match(page, /useTenant/);
-  assert.match(page, /PRIORITY QUEUE/);
-  assert.match(page, /Work that is waiting on you/);
+  assert.match(page, /MyDogPortal navigation/);
+  assert.match(dashboard, /NEEDS ATTENTION/);
+  assert.match(dashboard, /What should move next/);
+  assert.match(dashboard, /Breeding calendar/);
+  assert.match(dashboard, /Application to go-home/);
   assert.match(page, /Documents/);
   assert.match(page, /Health & care/);
   assert.match(page, /Costs & expenses/);
@@ -128,8 +134,9 @@ test("credits every received payment to a visible buyer account", async () => {
 });
 
 test("ships a breeder workflow operating system rather than decorative desktop chrome", async () => {
-  const [page, layout, css, breederOsCss] = await Promise.all([
+  const [page, dashboard, layout, css, breederOsCss] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("components/breeder-command-center.tsx", root), "utf8"),
     readFile(new URL("app/layout.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("app/breeder-os.css", root), "utf8"),
@@ -137,20 +144,56 @@ test("ships a breeder workflow operating system rather than decorative desktop c
 
   assert.match(page, /bos-shell/);
   assert.match(page, /bos-command-bar/);
-  assert.match(page, /bos-workspaces/);
-  assert.match(page, /Run the breeding program/);
-  assert.match(page, /DAILY RUN SHEET/);
-  assert.match(page, /PRIORITY QUEUE/);
-  assert.match(page, /Application to go-home/);
-  assert.match(page, /Find any dog, puppy, family, payment/);
+  assert.match(page, /bos-sidebar-nav/);
+  assert.match(page, /Find dogs, puppies, families/);
+  assert.match(page, /groupLabels/);
+  assert.match(dashboard, /KENNEL DAY/);
+  assert.match(dashboard, /NEEDS ATTENTION/);
+  assert.match(dashboard, /Application to go-home/);
   assert.doesNotMatch(page, /breeder-sidebar|breeder-nav-groups|workspace-window|os-taskbar|app-launcher|control-center|windowMinimized|focusMode/);
   assert.match(layout, /import "\.\/breeder-os\.css"/);
-  assert.match(breederOsCss, /structure, not a theme layer/);
+  assert.match(breederOsCss, /canonical breeder workspace design system/);
   assert.match(breederOsCss, /\.bos-command-bar/);
-  assert.match(breederOsCss, /\.bos-priority-list/);
+  assert.match(breederOsCss, /\.dashboard-attention-list/);
   assert.match(css, /\.breeder-lifecycle/);
   assert.match(css, /\.pipeline-board/);
   assert.match(css, /\.delivery-board/);
+});
+
+test("uses only the supplied PayPal-hosted subscriptions and keeps add-ons separate", async () => {
+  const [signup, signupRoute, domain, proxy, portal] = await Promise.all([
+    readFile(new URL("app/signup/page.tsx", root), "utf8"),
+    readFile(new URL("app/api/auth/signup/route.ts", root), "utf8"),
+    readFile(new URL("app/settings/domain/page.tsx", root), "utf8"),
+    readFile(new URL("proxy.ts", root), "utf8"),
+    readFile(new URL("components/family-portal-experience.tsx", root), "utf8"),
+  ]);
+
+  assert.match(signup, /W8DM75982MX26/);
+  assert.match(signup, /J7HBTK2F9AMDN/);
+  assert.match(signup, /C5G2BVYNMMUPN/);
+  assert.match(signup, /https:\/\/www\.paypal\.com\/ncp\/payment\/\$\{plan\.buttonId\}/);
+  assert.match(signup, /14-DAY PLATFORM FREE TRIAL/);
+  assert.match(signup, /\$149 one-time/);
+  assert.match(signup, /\$299 one-time/);
+  assert.match(signup, /\$69 one-time setup/);
+  assert.match(signup, /\$8\.99\/month or \$99\/year/);
+  assert.match(signup, /\$59 activation\/setup/);
+  assert.match(signup, /\$14\.99\/month per active registered campaign/);
+  assert.match(signup, /Please allow up to 30 days for business messaging approval and activation/);
+  assert.match(signup, /data-setup-request/);
+  assert.match(signupRoute, /createSupabaseResource\("events"/);
+  assert.match(signupRoute, /setup_requests/);
+  assert.match(signup, /Demonstration breeder website/);
+  assert.doesNotMatch(signup, /\$89|Contact us \/ add later/);
+  assert.doesNotMatch(signup, /card_number|bank_account|custom-domain-checkout|phone-checkout/i);
+  assert.match(domain, /Add Brand Launch to my setup/);
+  assert.match(domain, /Standard \.com renewal after the first year: \$29\/year/);
+  assert.match(proxy, /isReservedMarketingHost/);
+  assert.match(proxy, /status: 421/);
+  assert.match(portal, /Health & Growth/);
+  assert.match(portal, /Health and growth records/);
+  assert.match(portal, /FAMILY RESOURCES/);
 });
 
 test("deploys the app directly without redirects", async () => {
@@ -213,6 +256,7 @@ test("ships the caller CRM and complete line-aware voice menus", async () => {
   assert.match(page, /setInterval\(\(\) => void refreshActivity\(\), 5000\)/);
   assert.match(page, /New incoming call received/);
   assert.match(page, /nonActivityEvents/);
+  assert.doesNotMatch(page, /Twilio/);
   assert.doesNotMatch(page, /localStorage|sessionStorage/);
   assert.match(callerCrm, /toStudioCallerLookup/);
   assert.match(callerCrm, /assigned_puppy_information/);
