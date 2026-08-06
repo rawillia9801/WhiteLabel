@@ -89,6 +89,22 @@
 .signup-request-summary small { color: #52776d; font-size: 9px; line-height: 1.45; }
 
 .subscription-section { display: grid; gap: 17px; }
+.website-template-picker { display: grid; gap: 17px; }
+.website-template-picker > header small { color: color-mix(in srgb, var(--tenant-primary) 76%, #254c45); font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.website-template-picker > header h2 { margin: 5px 0; color: #18322f; font-size: 24px; letter-spacing: -.035em; }
+.website-template-picker > header p { margin: 0; color: #647a74; font-size: 10px; line-height: 1.55; }
+.website-template-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.website-template-grid article { min-width: 0; display: flex; flex-direction: column; padding: 18px; border: 1px solid #d6dfda; border-radius: 12px; background: #fafbf8; transition: border-color .16s ease, box-shadow .16s ease; }
+.website-template-grid article.selected { border-color: var(--tenant-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tenant-primary) 13%, transparent); }
+.website-template-grid article > small { color: #8a671f; font-size: 8px; font-weight: 850; letter-spacing: .1em; }
+.website-template-grid h3 { margin: 7px 0 2px; color: #18322f; font-size: 17px; }
+.website-template-grid article > b { color: #56716b; font-size: 9px; }
+.website-template-grid article > p { flex: 1; margin: 11px 0 16px; color: #647a74; font-size: 9px; line-height: 1.55; }
+.website-template-grid article > div { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.website-template-grid a,
+.website-template-grid button { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 9px; border-radius: 8px; font: inherit; font-size: 8px; font-weight: 820; text-decoration: none; cursor: pointer; }
+.website-template-grid a { border: 1px solid #cbd8d3; background: #fff; color: #315b54; }
+.website-template-grid button { border: 1px solid var(--tenant-primary); background: var(--tenant-primary); color: #fff; }
 .subscription-section > header { display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: start; gap: 11px; }
 .subscription-section > header > span { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: color-mix(in srgb, var(--tenant-primary) 9%, #fff); color: var(--tenant-primary); }
 .subscription-section h2 { margin: 4px 0; color: #18322f; font-size: 21px; letter-spacing: -.025em; }
@@ -158,10 +174,12 @@
   .breeder-auth-card,
   .signup-card,
   .subscription-section,
+  .website-template-picker,
   .setup-services,
   .studio-website-note { padding: 24px 20px; }
   .signup-input.slug { grid-template-columns: auto minmax(0,1fr); }
   .signup-input.slug b { grid-column: 2; padding-bottom: 8px; font-size: 10px; }
   .signup-addons { grid-template-columns: 1fr; }
+  .website-template-grid { grid-template-columns: 1fr; }
   .setup-service-grid { grid-template-columns: 1fr; }
 }
