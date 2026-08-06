@@ -204,7 +204,7 @@ export async function signInBreederPassword(emailValue: string, password: string
 }
 
 export function breederSessionClaims(account: { user: AuthUser; kennel: KennelRow; role: BreederSession["role"] }): Omit<BreederSession, "version" | "expiresAt"> {
-  const customDomain = account.kennel.plan === "custom_domain" && account.kennel.domain_status === "verified"
+  const customDomain = account.kennel.domain_status === "verified"
     ? account.kennel.custom_domain || undefined
     : undefined;
   return {
