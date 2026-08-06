@@ -414,9 +414,10 @@ test("connects applications, placement, delivery, payments, and automated emails
 });
 
 test("serves the public marketing homepage on the platform apex", async () => {
-  const [proxy, marketing] = await Promise.all([
+  const [proxy, marketing, secondTemplate] = await Promise.all([
     readFile(new URL("proxy.ts", root), "utf8"),
     readFile(new URL("app/marketing/page.tsx", root), "utf8"),
+    readFile(new URL("app/templates/cedar-creek/page.tsx", root), "utf8"),
   ]);
 
   assert.match(proxy, /marketingUrl\.pathname = "\/marketing"/);
@@ -434,5 +435,13 @@ test("serves the public marketing homepage on the platform apex", async () => {
   assert.match(marketing, /Willow Creek Chihuahuas/);
   assert.match(marketing, /\(276\) 276-1669/);
   assert.match(marketing, /tel:\+12762761669/);
+  assert.match(marketing, /Cedar & Creek Goldens/);
+  assert.match(marketing, /\/templates\/cedar-creek/);
+  assert.match(proxy, /pathname\.startsWith\("\/templates\/"\)/);
+  assert.match(secondTemplate, /Golden hearts/);
+  assert.match(secondTemplate, /Golden Retriever/);
+  assert.match(secondTemplate, /OFA health tested/);
+  assert.match(secondTemplate, /Puppy Portal/);
+  assert.match(secondTemplate, /MYDOGPORTAL WEBSITE TEMPLATE 02/);
   assert.doesNotMatch(proxy, /reserved for the MyDogPortal marketing website/);
 });
