@@ -117,9 +117,14 @@
 .subscription-grid p { display: flex; align-items: baseline; gap: 3px; margin: 10px 0 8px; }
 .subscription-grid p b { color: #18322f; font-size: 27px; letter-spacing: -.04em; }
 .subscription-grid p span { color: #71827e; font-size: 9px; }
+.subscription-grid .subscription-position { margin-bottom: 6px; color: #8a671f; font-size: 7px; font-weight: 900; letter-spacing: .09em; }
+.subscription-grid .subscription-annual { display: flex; align-items: center; gap: 6px; margin: -2px 0 9px; }
+.subscription-grid .subscription-annual b { color: #315b54; font-size: 10px; }
+.subscription-grid .subscription-annual span { padding: 3px 5px; border-radius: 999px; background: #edf4ef; color: #55716b; font-size: 7px; font-weight: 800; }
 .subscription-grid > article > small { color: #647a74; font-size: 9px; line-height: 1.45; }
 .subscription-grid a { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: auto; padding: 0 9px; border: 1px solid #bdcbc5; border-radius: 8px; background: #fff; color: #234c47; font-size: 9px; font-weight: 800; text-decoration: none; }
 .subscription-grid article.featured a { border-color: var(--tenant-primary); background: var(--tenant-primary); color: #fff; }
+.subscription-billing-note { padding: 11px 13px; border: 1px solid #d6dfda; border-radius: 9px; background: #f7f9f5; color: #61756f; font-size: 9px; line-height: 1.5; }
 .signup-addons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 14px; border-top: 1px solid #dce3de; }
 .signup-addons article { min-width: 0; display: grid; grid-template-columns: 24px minmax(0,1fr); align-items: center; gap: 8px; padding: 11px; border: 1px solid #dbe2de; border-radius: 10px; background: #fafbf8; color: #55716b; }
 .signup-addons span b,
