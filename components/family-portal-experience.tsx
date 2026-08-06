@@ -19,6 +19,7 @@ import {
   FileText,
   HelpCircle,
   Home,
+  HeartPulse,
   LogOut,
   Mail,
   Menu,
@@ -36,8 +37,9 @@ import {
 } from "lucide-react";
 import { useTenant } from "./tenant-runtime";
 
-type Puppy = { id: number; name: string; sex: string; color: string; birthDate: string; birthWeight: number; currentWeight: number; status: string; priceCents: number; litterName: string; damName: string; sireName: string };
+type Puppy = { id: number; name: string; sex: string; color: string; birthDate: string; birthWeight: number; birthWeightUnit: string; currentWeight: number; status: string; priceCents: number; litterName: string; damName: string; sireName: string };
 type Update = { id: number; puppyId: number; title: string; body: string; weekNumber: number | null; weight: number | null; createdAt: string };
+type HealthRecord = { id: number; puppyId: number; careType: string; title: string; careDate: string; product: string; lotNumber: string; provider: string; nextDueDate: string; notes: string };
 type Contract = { id: number; title: string; documentType: string; status: "pending" | "signed"; kind: string; puppyId: number; puppyName: string; createdAt: string; signedAt: string | null; signerName: string | null };
 type Payment = { id: number; description: string; category: string; method: string; amountCents: number; status: string; dueDate: string; paidDate: string };
 type PortalDocument = { id: number; title: string; documentType: string; fileName: string; createdAt: string; isContract: boolean; puppyIds: number[] };
@@ -47,6 +49,7 @@ type PortalData = {
   buyer: { id: number; name: string; email: string; phone: string; location: string; applicationStatus: string; preferredSex: string; preferredColor: string };
   puppies: Puppy[];
   updates: Update[];
+  healthRecords: HealthRecord[];
   contracts: Contract[];
   documents: PortalDocument[];
   upcomingEvents: PortalEvent[];
@@ -55,7 +58,7 @@ type PortalData = {
   payments: { saleTotalCents: number; paidCents: number; outstandingCents: number; items: Payment[] };
 };
 
-type Tab = "overview" | "puppy" | "updates" | "documents" | "payments" | "schedule" | "transportation" | "messages" | "account";
+type Tab = "overview" | "puppy" | "health" | "updates" | "documents" | "payments" | "schedule" | "transportation" | "messages" | "account";
 
 const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format((cents || 0) / 100);
 const shortDate = (value: string | null | undefined) => value ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value.includes("T") ? value : `${value}T12:00:00`)) : "Not set";
@@ -65,6 +68,7 @@ const statusClass = (status: string) => settled(status) || /signed|approved|read
 const navigation: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "overview", label: "Overview", icon: Home },
   { id: "puppy", label: "My Puppy", icon: Dog },
+  { id: "health", label: "Health & Care", icon: HeartPulse },
   { id: "updates", label: "Updates", icon: Sparkles },
   { id: "documents", label: "Documents", icon: FileCheck2 },
   { id: "payments", label: "Payments", icon: WalletCards },
@@ -218,7 +222,7 @@ export function FamilyPortalExperience({ token, accountMode = false }: { token: 
       <div className="family-brand"><span><Dog size={24}/></span><div><b>{tenant.name}</b><small>PRIVATE PUPPY PORTAL</small></div></div>
       <div className="family-profile"><span className="family-avatar">{firstName.slice(0,1).toUpperCase()}</span><div><b>{data.buyer.name}</b><small>{primaryPuppy ? `${primaryPuppy.name} · ${primaryPuppy.status}` : data.buyer.applicationStatus}</small></div></div>
       <nav className="family-nav" aria-label="Puppy Portal sections">
-        {navigation.map((item) => { const Icon = item.icon; const count = item.id === "updates" ? data.updates.length : item.id === "documents" ? data.contracts.length + view.additionalDocuments.length : item.id === "messages" ? data.requests.length : 0; return <button type="button" key={item.id} className={activeTab === item.id ? "active" : ""} onClick={() => chooseTab(item.id)}><Icon size={17}/><span>{item.label}</span>{count > 0 ? <em className="nav-count">{count}</em> : <ChevronRight size={14}/>}</button>; })}
+        {navigation.map((item) => { const Icon = item.icon; const count = item.id === "health" ? data.healthRecords.length : item.id === "updates" ? data.updates.length : item.id === "documents" ? data.contracts.length + view.additionalDocuments.length : item.id === "messages" ? data.requests.length : 0; return <button type="button" key={item.id} className={activeTab === item.id ? "active" : ""} onClick={() => chooseTab(item.id)}><Icon size={17}/><span>{item.label}</span>{count > 0 ? <em className="nav-count">{count}</em> : <ChevronRight size={14}/>}</button>; })}
       </nav>
       <div className="family-sidebar-footer">
         {(data.support.email || tenant.contactEmail) && <a href={`mailto:${data.support.email || tenant.contactEmail}`}><Mail size={15}/>Email support</a>}
@@ -247,7 +251,9 @@ export function FamilyPortalExperience({ token, accountMode = false }: { token: 
         </div>
       </>}
 
-      {activeTab === "puppy" && <section className="portal-panel">{data.puppies.length ? data.puppies.map((puppy) => <div key={puppy.id} style={{marginBottom:18}}><div className="puppy-hero"><span className="puppy-avatar">{puppy.name.slice(0,1).toUpperCase()}</span><div><h2>{puppy.name}</h2><p>{[puppy.sex,puppy.color,puppy.litterName].filter(Boolean).join(" · ")}</p></div><span>{puppy.status}</span></div><div className="facts-grid"><div className="fact"><small>Birthday</small><b>{shortDate(puppy.birthDate)}</b></div><div className="fact"><small>Birth weight</small><b>{puppy.birthWeight ? `${puppy.birthWeight} lb` : "Not recorded"}</b></div><div className="fact"><small>Latest weight</small><b>{puppy.currentWeight ? `${puppy.currentWeight} lb` : "Not recorded"}</b></div><div className="fact"><small>Dam</small><b>{puppy.damName || "Not recorded"}</b></div><div className="fact"><small>Sire</small><b>{puppy.sireName || "Not recorded"}</b></div><div className="fact"><small>Recorded price</small><b>{money(puppy.priceCents)}</b></div></div></div>) : <div className="empty-state"><Dog size={30}/><h3>No puppy assigned yet</h3><p>Your assigned puppy will appear here when placement is confirmed.</p></div>}</section>}
+      {activeTab === "puppy" && <section className="portal-panel">{data.puppies.length ? data.puppies.map((puppy) => <div key={puppy.id} style={{marginBottom:18}}><div className="puppy-hero"><span className="puppy-avatar">{puppy.name.slice(0,1).toUpperCase()}</span><div><h2>{puppy.name}</h2><p>{[puppy.sex,puppy.color,puppy.litterName].filter(Boolean).join(" · ")}</p></div><span>{puppy.status}</span></div><div className="facts-grid"><div className="fact"><small>Birthday</small><b>{shortDate(puppy.birthDate)}</b></div><div className="fact"><small>Birth weight</small><b>{puppy.birthWeight ? `${puppy.birthWeight} ${puppy.birthWeightUnit || "lb"}` : "Not recorded"}</b></div><div className="fact"><small>Latest weight</small><b>{puppy.currentWeight ? `${puppy.currentWeight} lb` : "Not recorded"}</b></div><div className="fact"><small>Dam</small><b>{puppy.damName || "Not recorded"}</b></div><div className="fact"><small>Sire</small><b>{puppy.sireName || "Not recorded"}</b></div><div className="fact"><small>Recorded price</small><b>{money(puppy.priceCents)}</b></div></div></div>) : <div className="empty-state"><Dog size={30}/><h3>No puppy assigned yet</h3><p>Your assigned puppy will appear here when placement is confirmed.</p></div>}</section>}
+
+      {activeTab === "health" && <section className="portal-panel"><div className="portal-panel-head"><div><span>HEALTH & CARE</span><h2>Your puppy&apos;s care record</h2><p>Breeder-recorded vaccines, deworming, medications, veterinary care, and upcoming due dates.</p></div></div><div className="content-list">{data.healthRecords.map((record) => { const puppy = data.puppies.find((item) => item.id === record.puppyId); return <div className="content-row" key={record.id}><span className="row-icon"><HeartPulse size={18}/></span><div><b>{record.title}</b><small>{[puppy?.name,record.careType,shortDate(record.careDate),record.product,record.lotNumber ? `Lot ${record.lotNumber}` : "",record.provider].filter(Boolean).join(" · ")}{record.notes ? ` — ${record.notes}` : ""}</small></div>{record.nextDueDate ? <span className="status-pill neutral">Next {shortDate(record.nextDueDate)}</span> : <span className="status-pill good">Recorded</span>}</div>; })}{!data.healthRecords.length && <div className="empty-state"><HeartPulse size={30}/><h3>No shared care records yet</h3><p>Care items your breeder shares with you will appear here.</p></div>}</div></section>}
 
       {activeTab === "updates" && <section className="portal-panel"><div className="portal-panel-head"><div><span>PUPPY UPDATES</span><h2>Milestones and family notes</h2><p>Updates published by your breeder for your assigned puppy.</p></div></div><div className="updates-grid">{data.updates.map((update) => <article className="update-card" key={update.id}><header><span><Sparkles size={16}/><b>{update.weekNumber ? `Week ${update.weekNumber}` : "Puppy update"}</b></span><small>{shortDate(update.createdAt)}</small></header><h3>{update.title}</h3><p>{update.body}</p><footer>{update.weight ? `Recorded weight: ${update.weight} lb` : ""}</footer></article>)}{!data.updates.length && <div className="empty-state"><BellRing size={30}/><h3>No published updates yet</h3><p>New puppy updates will appear here when they are released.</p></div>}</div></section>}
 

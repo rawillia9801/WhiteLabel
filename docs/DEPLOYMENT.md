@@ -4,9 +4,9 @@ WhiteLabel is a standard Next.js application hosted on Vercel with Supabase prov
 
 ## 1. Create the platform Supabase project
 
-Create the Supabase project for Breeder Portal. In its SQL editor, run `supabase/schema.sql` for a fresh database. If this repository is already connected to an older database, run `supabase/multi-tenant-migration.sql` instead. Create or confirm the `documents` Storage bucket and policies created by the schema. Record the project URL, anonymous key, and service-role key.
+Create the Supabase project for Breeder Portal. In its SQL editor, run `supabase/schema.sql` for a fresh database. If this repository is already connected to an older database, run `supabase/multi-tenant-migration.sql` instead. After the base or tenant migration, run `supabase/migrations/20260805230000_breeding_program_modules.sql`. Create or confirm the `documents` Storage bucket and policies created by the schema. Record the project URL, anonymous key, and service-role key.
 
-The schema creates kennels, kennel memberships, tenant columns, and breeder records. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
+The base schema creates kennels, kennel memberships, tenant columns, and breeder records. The breeding-program migration extends those same records and adds tenant-scoped breeding histories, COI/pedigree support, whelping/care records, calendar synchronization, and the operational waitlist. The service-role key is server-only and must never use a `NEXT_PUBLIC_` prefix.
 
 ## 2. Create the Vercel project
 
