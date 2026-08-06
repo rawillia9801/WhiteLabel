@@ -422,5 +422,13 @@ test("serves the public marketing homepage on the platform apex", async () => {
   assert.match(proxy, /marketingUrl\.pathname = "\/marketing"/);
   assert.match(marketing, /Your breeding program/);
   assert.match(marketing, /Start your 14-day free trial/);
+  assert.match(marketing, /Brand Launch/);
+  assert.match(marketing, /\$149 one-time/);
+  assert.match(marketing, /Standard \.com renewal: \$29\/year/);
+  assert.match(marketing, /Business Voice/);
+  assert.match(marketing, /\$8\.99\/month or \$99\/year/);
+  assert.match(marketing, /Business SMS/);
+  assert.match(marketing, /\$14\.99\/month per active registered campaign/);
+  assert.match(marketing, /allow up to 30 days/);
   assert.doesNotMatch(proxy, /reserved for the MyDogPortal marketing website/);
 });
