@@ -190,7 +190,7 @@ test("uses only the supplied PayPal-hosted subscriptions and keeps add-ons separ
   assert.match(domain, /Add Brand Launch to my setup/);
   assert.match(domain, /Standard \.com renewal after the first year: \$29\/year/);
   assert.match(proxy, /isReservedMarketingHost/);
-  assert.match(proxy, /status: 421/);
+  assert.match(proxy, /NextResponse\.rewrite\(marketingUrl\)/);
   assert.match(portal, /Health & Growth/);
   assert.match(portal, /Health and growth records/);
   assert.match(portal, /FAMILY RESOURCES/);
@@ -411,4 +411,16 @@ test("connects applications, placement, delivery, payments, and automated emails
   assert.match(templatesCenter, /Automatic email templates/);
   assert.match(templatesCenter, /Discard edits/);
   assert.doesNotMatch(templatesCenter, /Restore defaults/);
+});
+
+test("serves the public marketing homepage on the platform apex", async () => {
+  const [proxy, marketing] = await Promise.all([
+    readFile(new URL("proxy.ts", root), "utf8"),
+    readFile(new URL("app/marketing/page.tsx", root), "utf8"),
+  ]);
+
+  assert.match(proxy, /marketingUrl\.pathname = "\/marketing"/);
+  assert.match(marketing, /Your breeding program/);
+  assert.match(marketing, /Start your 14-day free trial/);
+  assert.doesNotMatch(proxy, /reserved for the MyDogPortal marketing website/);
 });

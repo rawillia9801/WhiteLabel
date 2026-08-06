@@ -23,10 +23,12 @@ export function proxy(request: NextRequest) {
   const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
 
   if (isReservedMarketingHost(host, platformDomain)) {
-    return new NextResponse("This host is reserved for the MyDogPortal marketing website.", {
-      status: 421,
-      headers: { "cache-control": "private, no-store" },
-    });
+    if (pathname === "/") {
+      const marketingUrl = request.nextUrl.clone();
+      marketingUrl.pathname = "/marketing";
+      return NextResponse.rewrite(marketingUrl);
+    }
+    if (pathname === "/marketing") return NextResponse.next();
   }
 
   if (publicPath(pathname)) {
