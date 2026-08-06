@@ -430,6 +430,36 @@ test("connects applications, placement, delivery, payments, and automated emails
   assert.doesNotMatch(templatesCenter, /Restore defaults/);
 });
 
+test("ships the tenant application builder, public embed form, answer filters, and document mappings", async () => {
+  const [applications, builder, publicForm, intake, configRoute, model, agreement, proxy] = await Promise.all([
+    readFile(new URL("app/applications/page.tsx", root), "utf8"),
+    readFile(new URL("components/application-builder.tsx", root), "utf8"),
+    readFile(new URL("app/apply/page.tsx", root), "utf8"),
+    readFile(new URL("app/api/website/applications/route.ts", root), "utf8"),
+    readFile(new URL("app/api/website/application-config/route.ts", root), "utf8"),
+    readFile(new URL("lib/application-form.ts", root), "utf8"),
+    readFile(new URL("app/forms/bill-of-sale-health-guarantee/page.tsx", root), "utf8"),
+    readFile(new URL("proxy.ts", root), "utf8"),
+  ]);
+
+  assert.match(applications, /Builder \+ website embed/);
+  assert.match(applications, /Filter by answer/);
+  assert.match(applications, /Prepare Bill of Sale \+ Health Guarantee/);
+  assert.match(builder, /Copy embed code/);
+  assert.match(builder, /answers are stored with each applicant/);
+  assert.match(publicForm, /config\.form\.submitLabel/);
+  assert.match(publicForm, /does not guarantee approval/);
+  assert.match(intake, /getApplicationFormConfig/);
+  assert.match(intake, /Approval, reservation, contracts, and buyer-portal access remain breeder-controlled/);
+  assert.match(configRoute, /getApplicationFormConfig/);
+  assert.match(model, /MYDOGPORTAL_APPLICATION_DATA/);
+  assert.match(model, /Submit puppy application/);
+  assert.match(model, /applicationAnswerByMapping/);
+  assert.match(agreement, /applicationCoBuyer/);
+  assert.match(agreement, /applicationVetClinic/);
+  assert.match(proxy, /pathname === "\/apply"/);
+});
+
 test("serves the public marketing homepage on the platform apex", async () => {
   const [proxy, marketing, secondTemplate] = await Promise.all([
     readFile(new URL("proxy.ts", root), "utf8"),
