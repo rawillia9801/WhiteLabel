@@ -1,6 +1,6 @@
 import twilio from "twilio";
 import { requireAdminSession } from "../../../../lib/admin-session";
-import { DEFAULT_MAIN_NUMBER, DEFAULT_PUP_LIFT_NUMBER } from "../../../../lib/caller-voice";
+import { DEFAULT_GOLDEN_NUMBER, DEFAULT_MAIN_NUMBER, DEFAULT_PUP_LIFT_NUMBER } from "../../../../lib/caller-voice";
 
 export const runtime = "nodejs";
 
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
 
   const managedLines = [
     { id: "main", phone: normalizePhone(process.env.SWVAOS_MAIN_NUMBER || DEFAULT_MAIN_NUMBER), friendlyName: process.env.VOICE_BUSINESS_NAME?.trim() || "Breeder Portal" },
+    { id: "golden-retriever", phone: normalizePhone(process.env.SWVAOS_GOLDEN_NUMBER || DEFAULT_GOLDEN_NUMBER), friendlyName: process.env.GOLDEN_VOICE_BUSINESS_NAME?.trim() || "Cedar & Creek Goldens" },
     { id: "pup-lift", phone: normalizePhone(process.env.SWVAOS_PUP_LIFT_NUMBER || DEFAULT_PUP_LIFT_NUMBER), friendlyName: "Pup-Lift Support" },
   ];
 
