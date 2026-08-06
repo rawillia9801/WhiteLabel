@@ -40,7 +40,7 @@ const process = [
 
 export default function CedarCreekTemplatePage() {
   return <main className="cc-site">
-    <div className="cc-demo-bar"><span>MYDOGPORTAL WEBSITE TEMPLATE 02</span><p>This is a demonstration website. Your kennel name, dogs, photos, colors, policies, and content replace the sample information.</p><Link href="/signup">Choose this style <ArrowRight size={14}/></Link></div>
+    <div className="cc-demo-bar"><span>MYDOGPORTAL WEBSITE TEMPLATE 02</span><p>This is a demonstration website. Your kennel name, dogs, photos, colors, policies, and content replace the sample information.</p><Link href="/signup?website_template=cedar-creek">Choose this style <ArrowRight size={14}/></Link></div>
 
     <nav className="cc-nav" aria-label="Cedar & Creek navigation">
       <a className="cc-brand" href="#home" aria-label="Cedar and Creek Goldens home"><span><Trees size={25}/></span><div><b>Cedar & Creek</b><small>GOLDEN RETRIEVERS</small></div></a>
