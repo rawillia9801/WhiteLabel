@@ -1,0 +1,44 @@
+.page { min-height: 100vh; padding: clamp(24px, 5vw, 64px); background: radial-gradient(circle at 85% 8%, color-mix(in srgb, var(--tenant-primary) 12%, transparent), transparent 28%), #f5f2e9; color: #18342f; font-family: var(--tenant-font, var(--font-geist-sans), Arial, sans-serif); }
+.shell { width: min(900px, 100%); margin: auto; }
+.hero { margin-bottom: 24px; padding: clamp(25px, 5vw, 48px); border-radius: 22px; background: linear-gradient(135deg, #0d332e, #194b42); color: #fff; box-shadow: 0 24px 55px rgba(20, 54, 48, .15); }
+.hero small { color: #d8bd7b; font-size: 10px; font-weight: 900; letter-spacing: .14em; }
+.hero h1 { margin: 10px 0; font-size: clamp(34px, 5vw, 56px); letter-spacing: -.055em; line-height: 1; }
+.hero p { max-width: 700px; margin: 0; color: #bed1cc; font-size: 14px; line-height: 1.65; }
+.form { overflow: hidden; border: 1px solid #d4ddd7; border-radius: 20px; background: #fffefb; box-shadow: 0 18px 45px rgba(28, 58, 52, .08); }
+.section { padding: 26px clamp(20px, 4vw, 36px); border-bottom: 1px solid #e1e6e2; }
+.section:last-of-type { border-bottom: 0; }
+.section h2 { margin: 0 0 18px; font-size: 19px; letter-spacing: -.025em; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.field { display: grid; gap: 7px; }
+.wide { grid-column: 1 / -1; }
+.field > span { color: #385950; font-size: 11px; font-weight: 800; }
+.field input:not([type="checkbox"]), .field select, .field textarea { width: 100%; min-height: 45px; padding: 10px 12px; border: 1px solid #c6d4ce; border-radius: 9px; outline: 0; background: #fbfcf9; color: #17342f; font: inherit; font-size: 13px; }
+.field textarea { min-height: 105px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--tenant-primary, #087f8c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tenant-primary, #087f8c) 10%, transparent); }
+.field small { color: #74857f; font-size: 10px; line-height: 1.45; }
+.choiceGrid { display: grid; gap: 7px; }
+.choice { min-height: 42px; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid #d6dfda; border-radius: 9px; background: #fafbf8; color: #395b52; font-size: 12px; }
+.checkbox { grid-column: 1 / -1; display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 9px; align-items: start; padding: 13px; border: 1px solid #d3ddd7; border-radius: 10px; background: #f8faf7; color: #375850; font-size: 12px; line-height: 1.5; }
+.checkbox input { width: 17px; height: 17px; margin: 1px 0 0; }
+.required { color: #9b4f40; }
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px clamp(20px, 4vw, 36px); background: #f7f8f4; }
+.footer p { max-width: 570px; margin: 0; color: #71817c; font-size: 10px; line-height: 1.55; }
+.footer button { min-height: 46px; padding: 0 18px; border: 0; border-radius: 9px; background: var(--tenant-primary, #087f8c); color: #fff; font-weight: 850; cursor: pointer; }
+.footer button:disabled { opacity: .6; cursor: wait; }
+.error, .success { margin-bottom: 18px; padding: 15px 17px; border-radius: 11px; font-size: 12px; line-height: 1.5; }
+.error { border: 1px solid #e0aaa3; background: #fff0ee; color: #8d332c; }
+.success { border: 1px solid #acd3c1; background: #edf8f3; color: #24624e; }
+.state { min-height: 100vh; display: grid; place-content: center; gap: 8px; padding: 30px; background: #f5f2e9; color: #254b43; text-align: center; font-family: var(--tenant-font, var(--font-geist-sans), Arial, sans-serif); }
+.state h1 { margin: 0; font-size: 26px; }
+.state p { margin: 0; color: #6d817a; }
+.honeypot { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; }
+
+@media (max-width: 650px) {
+  .page { padding: 14px; }
+  .hero { border-radius: 16px; }
+  .form { border-radius: 15px; }
+  .grid { grid-template-columns: 1fr; }
+  .wide, .checkbox { grid-column: auto; }
+  .footer { align-items: stretch; flex-direction: column; }
+  .footer button { width: 100%; }
+}
