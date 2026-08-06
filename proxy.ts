@@ -4,6 +4,7 @@ import { BREEDER_SESSION_COOKIE, readBreederSessionToken, tenantUrl } from "./li
 const publicPath = (pathname: string) =>
   pathname === "/login"
   || pathname === "/signup"
+  || pathname.startsWith("/templates/")
   || pathname.startsWith("/api/auth/")
   || pathname.startsWith("/portal/")
   || pathname.startsWith("/api/portal/")
