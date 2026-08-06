@@ -50,14 +50,21 @@ export default function MarketingPage() {
     <section className="marketing-section marketing-pricing" id="pricing"><header><span className="marketing-kicker">SIMPLE MONTHLY PRICING</span><h2>Choose the workspace that fits your program.</h2><p>Every plan starts with a 14-day platform trial. Optional domains, websites, voice, and messaging remain separate.</p></header><div className="marketing-plans">{plans.map(([name,price,note,items])=><article className={name === "Professional" ? "featured" : ""} key={name}>{name === "Professional" && <em>MOST POPULAR</em>}<h3>{name}</h3><p><b>{price}</b><span>/month</span></p><small>{note}</small><ul>{items.map(item=><li key={item}><Check size={14}/>{item}</li>)}</ul><Link href="/signup">Start free trial <ArrowRight size={15}/></Link></article>)}</div></section>
     <section className="marketing-section marketing-services" id="services"><header><span className="marketing-kicker">OPTIONAL LAUNCH & COMMUNICATION SERVICES</span><h2>Add the business infrastructure your kennel needs.</h2><p>These services are separate from your MyDogPortal subscription. Request them during signup—no add-on payment is taken until the service is confirmed.</p></header><div className="marketing-service-grid">{services.map(([Icon,name,price,text,items])=><article key={name}><header><span><Icon size={21}/></span><div><h3>{name}</h3><strong>{price}</strong></div></header><p>{text}</p><ul>{items.map(item=><li key={item}><Check size={13}/>{item}</li>)}</ul><Link href="/signup">Add to my setup <ArrowRight size={15}/></Link></article>)}</div><aside><ShieldCheck size={18}/><p><b>Clear, separate billing.</b> Voice and SMS usage charges are billed separately from your software plan. SMS registration and carrier approval are required and activation is not guaranteed.</p></aside></section>
     <section className="marketing-section marketing-examples" id="examples">
-      <header><span className="marketing-kicker">SEE THE CONNECTED EXPERIENCE</span><h2>See the website. Call the phone system.</h2><p>These working examples show how MyDogPortal can extend beyond the breeder workspace into a branded public website and professional business phone experience.</p></header>
+      <header><span className="marketing-kicker">WEBSITE TEMPLATE GALLERY</span><h2>Choose a website style that feels like your kennel.</h2><p>Start with a professionally designed breeder website and make it yours. Your breed, dogs, litters, colors, photography, policies, applications, and Puppy Portal replace the demonstration content.</p></header>
       <div className="marketing-example-grid">
         <article>
           <span><MonitorSmartphone size={23}/></span>
-          <small>BREEDER WEBSITE EXAMPLE</small>
+          <small>WEBSITE TEMPLATE 01 · CHIHUAHUA</small>
           <h3>Willow Creek Chihuahuas</h3>
           <p>See a breeder-facing website example with its own brand and public customer experience.</p>
           <a href="https://willowcreekchihuahuas.com" target="_blank" rel="noreferrer">Visit Willow Creek Chihuahuas <ExternalLink size={15}/></a>
+        </article>
+        <article>
+          <span><Dog size={23}/></span>
+          <small>WEBSITE TEMPLATE 02 · GOLDEN RETRIEVER</small>
+          <h3>Cedar & Creek Goldens</h3>
+          <p>A completely different warm, editorial breeder website built around outdoor photography, family connection, health testing, and Golden Retriever storytelling.</p>
+          <Link href="/templates/cedar-creek">View Golden Retriever template <ArrowRight size={15}/></Link>
         </article>
         <article>
           <span><PhoneCall size={23}/></span>
