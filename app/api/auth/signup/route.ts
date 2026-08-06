@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as Record<string, unknown>;
     const requestedPlan = String(body.plan ?? "starter") as BreederSession["plan"];
-    const plan = (["starter", "professional", "custom_domain"] as const).includes(requestedPlan) ? requestedPlan : "starter";
+    const plan = (["starter", "professional", "studio"] as const).includes(requestedPlan) ? requestedPlan : "starter";
     const account = await createBreederAccount({
       email: String(body.email ?? ""), password: String(body.password ?? ""),
       kennelName: String(body.kennel_name ?? ""), kennelSlug: String(body.kennel_slug ?? ""), plan,
