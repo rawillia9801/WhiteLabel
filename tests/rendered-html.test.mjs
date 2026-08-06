@@ -184,7 +184,12 @@ test("uses only the supplied PayPal-hosted subscriptions and keeps add-ons separ
   assert.match(signup, /data-setup-request/);
   assert.match(signupRoute, /createSupabaseResource\("events"/);
   assert.match(signupRoute, /setup_requests/);
-  assert.match(signup, /Demonstration breeder website/);
+  assert.match(signup, /Choose the look you want to start with/);
+  assert.match(signup, /willow-creek/);
+  assert.match(signup, /cedar-creek/);
+  assert.match(signup, /website_template/);
+  assert.match(signupRoute, /Website template:/);
+  assert.match(signupRoute, /website_template/);
   assert.doesNotMatch(signup, /\$89|Contact us \/ add later/);
   assert.doesNotMatch(signup, /card_number|bank_account|custom-domain-checkout|phone-checkout/i);
   assert.match(domain, /Add Brand Launch to my setup/);
@@ -433,8 +438,10 @@ test("serves the public marketing homepage on the platform apex", async () => {
   assert.match(marketing, /allow up to 30 days/);
   assert.match(marketing, /https:\/\/willowcreekchihuahuas\.com/);
   assert.match(marketing, /Willow Creek Chihuahuas/);
-  assert.match(marketing, /\(276\) 276-1669/);
-  assert.match(marketing, /tel:\+12762761669/);
+  assert.match(marketing, /\(276\) 250-9512/);
+  assert.match(marketing, /tel:\+12762509512/);
+  assert.match(marketing, /\(276\) 276-2757/);
+  assert.match(marketing, /tel:\+12762762757/);
   assert.match(marketing, /Cedar & Creek Goldens/);
   assert.match(marketing, /\/templates\/cedar-creek/);
   assert.match(proxy, /pathname\.startsWith\("\/templates\/"\)/);
