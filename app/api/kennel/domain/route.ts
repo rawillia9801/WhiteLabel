@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const unauthorized = requireAdminSession(request); if (unauthorized) return unauthorized;
   const session = breederSessionFromRequest(request)!;
   if (session.role !== "owner") return Response.json({ error: "Only the kennel owner can connect a custom domain." }, { status: 403 });
-  if (session.plan !== "custom_domain") return Response.json({ error: "Activate the $149 Brand Launch add-on before connecting a domain." }, { status: 402 });
+  if (session.plan !== "custom_domain") return Response.json({ error: "Custom-domain access is included with Studio. Starter and Professional require the $149 Brand Launch add-on before connecting a domain." }, { status: 402 });
   try {
     const domain = cleanDomain(String((await request.json() as { domain?: unknown }).domain ?? ""));
     if (!validDomain(domain)) return Response.json({ error: "Enter a valid domain such as portal.yourkennel.com." }, { status: 400 });

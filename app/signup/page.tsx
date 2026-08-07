@@ -24,7 +24,7 @@ const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-
 const subscriptions = [
   { name: "Starter", price: 29, annual: 290, position: "GET ORGANIZED", buttonId: "W8DM75982MX26", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
   { name: "Professional", price: 59, annual: 590, position: "RUN YOUR BREEDING BUSINESS", buttonId: "J7HBTK2F9AMDN", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
-  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Expanded operating capacity plus a professional customizable breeder website connected to MyDogPortal.", featured: false },
+  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Everything in Professional plus your breeder website, Brand Launch, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $20/month in included voice usage.", featured: false },
 ] as const;
 
 const websiteTemplates = [
@@ -36,29 +36,29 @@ const setupServices = [
   {
     id: "hosting-email",
     name: "Website Hosting + Business Email",
-    price: "$17.95/month",
+    price: "$17.95/month · Included with Studio",
     action: "Add hosting + email to my setup",
     icon: Mail,
-    description: "Standalone managed hosting for your breeder website, including SSL and two branded business email addresses. No MyDogPortal software features are included.",
-    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support"],
+    description: "Standalone managed hosting for Starter or Professional, including SSL and two branded business email addresses. Included with an active Studio subscription.",
+    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support", "Included with Studio"],
   },
   {
     id: "brand-launch",
     name: "Brand Launch",
-    price: "$149 one-time",
+    price: "$149 one-time · Included with Studio",
     action: "Add Brand Launch to my setup",
     icon: Globe2,
-    description: "Launch an available standard .com with registration, DNS, and SSL configuration. Hosting and business email remain a separate $17.95/month service.",
-    details: ["First-year available standard .com registration", "Domain, DNS, and SSL configuration", "Managed domain renewal: $29/year", "Premium domains priced separately"],
+    description: "Launch an available standard .com with registration, DNS, and SSL configuration. Included with Studio; available à la carte for Starter and Professional.",
+    details: ["Available standard .com registration", "Domain, DNS, and SSL configuration", "Annual standard .com renewal included while Studio is active; otherwise $29/year", "Website hosting + two business emails included with Studio", "Premium domains priced separately"],
   },
   {
     id: "website-personalization",
     name: "Breeder Website Personalization",
-    price: "$299 one-time",
+    price: "$299 one-time · Included with Studio",
     action: "Request website personalization",
     icon: MonitorSmartphone,
-    description: "Personalize a supported MyDogPortal website style around your kennel so the demonstration content becomes your brand and breeding program.",
-    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported"],
+    description: "Personalize a supported MyDogPortal website style around your kennel so the demonstration content becomes your brand and breeding program. Included with Studio.",
+    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported", "Included with Studio; available à la carte for Starter and Professional"],
   },
   {
     id: "custom-website",
@@ -72,11 +72,11 @@ const setupServices = [
   {
     id: "business-voice",
     name: "Business Voice",
-    price: "$69 one-time setup",
+    price: "$69 setup · Included with Studio",
     action: "Add Business Voice to my setup",
     icon: PhoneCall,
-    description: "A professionally configured local business line with your custom greeting and breeder information.",
-    details: ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Includes IVR/menu, business hours, voicemail, and call routing"],
+    description: "A professionally configured local business voice line with your custom greeting and breeder information. Setup and the local number are included with Studio.",
+    details: ["Local number: $8.99/month or $99/year outside Studio", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "Studio includes up to $20/month in voice usage"],
   },
 ] as const;
 
@@ -201,7 +201,7 @@ export default function SignupPage() {
           </section>
 
           <section className="setup-services" aria-labelledby="setup-services-heading">
-            <header><small>OPTIONAL SERVICES</small><h2 id="setup-services-heading">Build your launch package</h2><p>These services are separate from the $29, $59, and $99 subscriptions. Select a request for your setup—no payment is taken from these buttons.</p></header>
+            <header><small>STARTER + PROFESSIONAL ADD-ONS · STUDIO INCLUSIONS</small><h2 id="setup-services-heading">Build your launch package</h2><p>Starter and Professional can request these services individually. Studio includes hosting, two business emails, Brand Launch, supported website personalization, and Business Voice. No add-on payment is taken from these buttons.</p></header>
             <div className="setup-service-grid">
               {setupServices.map((service) => {
                 const Icon = service.icon;
@@ -219,7 +219,7 @@ export default function SignupPage() {
           </section>
 
           <section className="studio-website-note">
-            <div><small>STUDIO WEBSITE</small><h2>Your public breeder website, connected</h2><p>Studio includes a professional customizable breeder website that can use breeder-maintained MyDogPortal information for available puppies, litters, dams, sires, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
+            <div><small>STUDIO · COMPLETE BRAND PACKAGE</small><h2>Your public breeder website, domain, email, and voice line—connected</h2><p>Studio includes a supported personalized breeder website, hosting, two branded business emails, Brand Launch with an available standard .com and annual renewal while Studio remains active, plus a local Business Voice number with custom IVR and up to $20/month in voice usage. The website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
             <Link href="/#examples"><span>CONNECTED TEMPLATE GALLERY</span><b>Compare the website styles</b><small>View all live examples <ArrowRight size={13} /></small></Link>
           </section>
         </div>

@@ -32,7 +32,7 @@ export default function DomainSettingsPage() {
             event_type: "Setup Request",
             event_date: new Date().toISOString().slice(0, 10),
             status: "Requested",
-            notes: "$149 one-time. First-year registration of an available standard .com plus domain, DNS, and SSL configuration. Managed domain renewal is $29/year. Hosting and two branded business email addresses are separate at $17.95/month; premium domains are priced separately.",
+            notes: "Included with an active Studio subscription. Otherwise $149 one-time for Starter or Professional. Includes registration of an available standard .com plus domain, DNS, and SSL configuration. Annual standard .com renewal is included while Studio remains active; otherwise $29/year. Premium domains are priced separately.",
           },
         }),
       });
@@ -106,12 +106,12 @@ export default function DomainSettingsPage() {
         <section className="domain-card">
           <span className="domain-icon"><Globe2 /></span>
           <h1>Brand Launch & custom domain</h1>
-          <p>Your included kennel address remains active at yourname.mydogportal.site. Brand Launch provides a professionally configured standard .com. Website hosting and business email are available separately.</p>
+          <p>Your included kennel address remains active at yourname.mydogportal.site. Studio includes Brand Launch, a supported personalized breeder website, hosting, two branded business emails, and annual standard .com renewal while Studio remains active. Starter and Professional can add Brand Launch separately.</p>
           <section className="brand-launch">
-            <header><h2>Brand Launch</h2><strong>$149 one-time</strong></header>
+            <header><h2>Brand Launch</h2><strong>$149 · Included with Studio</strong></header>
             <p>Launch an available standard .com with registration, DNS, and SSL configuration handled for you.</p>
-            <ul><li>First-year registration of an available standard .com</li><li>Domain, DNS, and SSL configuration</li><li>Managed domain renewal after the first year: $29/year</li><li>Hosting + two business email addresses available separately for $17.95/month</li><li>Premium domains priced separately</li></ul>
-            <button type="button" onClick={() => void requestBrandLaunch()} disabled={requestBusy}>{requestBusy ? "Adding request…" : "Add Brand Launch to my setup"}</button>
+            <ul><li>Registration of an available standard .com</li><li>Domain, DNS, and SSL configuration</li><li>Annual standard .com renewal included while Studio remains active; otherwise $29/year</li><li>Website hosting + two business email addresses included with Studio</li><li>Premium domains priced separately</li></ul>
+            <button type="button" onClick={() => void requestBrandLaunch()} disabled={requestBusy}>{requestBusy ? "Adding request…" : "Request Brand Launch setup"}</button>
             {requestStatus && <small role="status">{requestStatus}</small>}
           </section>
           <p>Already activated? Connect the domain below after registration or purchase is complete.</p>

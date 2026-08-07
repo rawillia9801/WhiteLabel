@@ -6,11 +6,11 @@ import { createSupabaseResource } from "../../../../db/supabase-kennel";
 export const runtime = "nodejs";
 
 const setupRequestDetails: Record<string, { name: string; notes: string }> = {
-  "hosting-email": { name: "Website Hosting + Business Email", notes: "$17.95/month standalone managed website hosting. Includes SSL, two branded business email addresses, existing-domain connection, and basic hosting/email support. Does not include MyDogPortal software features." },
-  "brand-launch": { name: "Brand Launch", notes: "$149 one-time. Includes first-year registration of an available standard .com plus domain, DNS, and SSL configuration. Managed domain renewal is $29/year. Hosting and two branded business email addresses are separate at $17.95/month; premium domains are priced separately." },
-  "website-personalization": { name: "Breeder Website Personalization", notes: "$299 one-time. Personalizes a supported MyDogPortal website style with the kennel identity, colors, photography, content, and supported pages/layout, with connected MyDogPortal information where supported." },
+  "hosting-email": { name: "Website Hosting + Business Email", notes: "Included with an active Studio subscription. Otherwise $17.95/month standalone managed website hosting for Starter or Professional, including SSL, two branded business email addresses, existing-domain connection, and basic hosting/email support." },
+  "brand-launch": { name: "Brand Launch", notes: "Included with an active Studio subscription. Otherwise $149 one-time for Starter or Professional. Includes registration of an available standard .com plus domain, DNS, and SSL configuration. Annual standard .com renewal is included while Studio remains active; otherwise $29/year. Premium domains are priced separately." },
+  "website-personalization": { name: "Breeder Website Personalization", notes: "Included with an active Studio subscription. Otherwise $299 one-time for Starter or Professional. Personalizes a supported MyDogPortal website style with the kennel identity, colors, photography, content, and connected MyDogPortal information where supported." },
   "custom-website": { name: "Custom Breeder Website", notes: "From $749. Custom layout and page planning, brand/photography/content implementation, and connected MyDogPortal information where supported. Final scope and price are confirmed before work begins." },
-  "business-voice": { name: "Business Voice", notes: "$69 one-time setup. Local number is $8.99/month or $99/year. Incoming calls are $0.03/minute and outgoing calls are $0.04/minute." },
+  "business-voice": { name: "Business Voice", notes: "Included with an active Studio subscription: setup, local business number, custom IVR/menu, voicemail/routing, and up to $20/month in voice usage. Otherwise $69 one-time setup, local number $8.99/month or $99/year, incoming calls $0.03/minute, and outgoing calls $0.04/minute." },
 };
 
 const websiteTemplateDetails: Record<string, { name: string; notes: string }> = {

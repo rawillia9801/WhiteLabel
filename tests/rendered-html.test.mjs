@@ -161,7 +161,7 @@ test("ships a breeder workflow operating system rather than decorative desktop c
   assert.match(css, /\.delivery-board/);
 });
 
-test("uses only the supplied PayPal-hosted subscriptions and keeps add-ons separate", async () => {
+test("uses the supplied PayPal subscriptions and keeps Studio inclusions aligned", async () => {
   const [signup, signupRoute, domain, proxy, portal] = await Promise.all([
     readFile(new URL("app/signup/page.tsx", root), "utf8"),
     readFile(new URL("app/api/auth/signup/route.ts", root), "utf8"),
@@ -185,8 +185,10 @@ test("uses only the supplied PayPal-hosted subscriptions and keeps add-ons separ
   assert.match(signup, /\$299 one-time/);
   assert.match(signup, /Breeder Website Personalization/);
   assert.match(signup, /From \$749/);
-  assert.match(signup, /\$69 one-time setup/);
-  assert.match(signup, /\$8\.99\/month or \$99\/year/);
+  assert.match(signup, /\$69 setup · Included with Studio/);
+  assert.match(signup, /\$8\.99\/month or \$99\/year outside Studio/);
+  assert.match(signup, /\$20\/month in voice usage/);
+  assert.match(signup, /Annual standard \.com renewal included while Studio is active/);
   assert.doesNotMatch(signup, /Business SMS|business-sms|registered campaign/);
   assert.match(signupRoute, /Website Hosting \+ Business Email/);
   assert.match(signupRoute, /website-personalization/);
@@ -203,9 +205,9 @@ test("uses only the supplied PayPal-hosted subscriptions and keeps add-ons separ
   assert.match(signupRoute, /website_template/);
   assert.doesNotMatch(signup, /\$89|Contact us \/ add later/);
   assert.doesNotMatch(signup, /card_number|bank_account|custom-domain-checkout|phone-checkout/i);
-  assert.match(domain, /Add Brand Launch to my setup/);
-  assert.match(domain, /Managed domain renewal after the first year: \$29\/year/);
-  assert.match(domain, /Hosting \+ two business email addresses available separately for \$17\.95\/month/);
+  assert.match(domain, /Request Brand Launch setup/);
+  assert.match(domain, /Annual standard \.com renewal included while Studio remains active; otherwise \$29\/year/);
+  assert.match(domain, /Website hosting \+ two business email addresses included with Studio/);
   assert.match(proxy, /isReservedMarketingHost/);
   assert.match(proxy, /NextResponse\.rewrite\(marketingUrl\)/);
   assert.match(portal, /Health & Growth/);
@@ -485,7 +487,7 @@ test("serves the public marketing homepage on the platform apex", async () => {
   assert.match(marketing, /\$149 one-time/);
   assert.match(marketing, /Website Hosting \+ Business Email/);
   assert.match(marketing, /\$17\.95\/month/);
-  assert.match(marketing, /Managed domain renewal: \$29\/year/);
+  assert.match(marketing, /Annual standard \.com renewal included while Studio is active; otherwise \$29\/year/);
   assert.match(marketing, /Breeder Website Personalization/);
   assert.match(marketing, /From \$749/);
   assert.match(marketing, /"\$290"/);
@@ -493,7 +495,9 @@ test("serves the public marketing homepage on the platform apex", async () => {
   assert.match(marketing, /"\$990"/);
   assert.match(marketing, /One system instead of five disconnected tools/);
   assert.match(marketing, /Business Voice/);
-  assert.match(marketing, /\$8\.99\/month or \$99\/year/);
+  assert.match(marketing, /\$8\.99\/month or \$99\/year outside Studio/);
+  assert.match(marketing, /\$20\/month in voice usage included/);
+  assert.match(marketing, /Brand Launch \+ website personalization included/);
   assert.doesNotMatch(marketing, /Business SMS|registered campaign|allow up to 30 days/);
   assert.match(marketing, /https:\/\/willowcreekchihuahuas\.com/);
   assert.match(marketing, /Willow Creek Chihuahuas/);
