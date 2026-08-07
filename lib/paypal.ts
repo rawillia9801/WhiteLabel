@@ -236,6 +236,14 @@ export async function getPayPalSubscription(subscriptionId: string) {
   return paypalRequest<PayPalSubscription>(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
 }
 
+export async function cancelPayPalSubscription(subscriptionId: string, reason: string) {
+  if (!/^I-[A-Z0-9]+$/i.test(subscriptionId)) throw new Error("Invalid PayPal subscription ID.");
+  await paypalRequest<never>(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}/cancel`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
 export async function createPayPalOrder(input: { offering: OneTimeOffering; kennelId: string; returnUrl: string; cancelUrl: string }) {
   const customId = `kennel:${input.kennelId};offering:${input.offering.key}`;
   const order = await paypalRequest<PayPalOrder>("/v2/checkout/orders", {
