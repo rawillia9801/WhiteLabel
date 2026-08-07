@@ -30,6 +30,9 @@ const subscriptions = [
 const websiteTemplates = [
   { id: "willow-creek", name: "Willow Creek", breed: "Chihuahua", description: "Bright, polished and boutique—with a clean presentation for a small companion-breed program.", preview: "https://willowcreekchihuahuas.com" },
   { id: "cedar-creek", name: "Cedar & Creek", breed: "Golden Retriever", description: "Warm, editorial and outdoors-inspired—with a story-first presentation for a family sporting-breed program.", preview: "/templates/cedar-creek" },
+  { id: "northstar-poodles", name: "Northstar", breed: "Standard Poodle", description: "Luxury, minimal and editorial—with a high-end presentation centered on health, pedigree, structure, and refinement.", preview: "/templates/northstar-poodles" },
+  { id: "bluebird-aussies", name: "Bluebird", breed: "Australian Shepherd", description: "Bright, colorful and family-forward—with a modern ranch feel built for active, personality-driven programs.", preview: "/templates/bluebird-aussies" },
+  { id: "ironwood-shepherds", name: "Ironwood", breed: "German Shepherd", description: "Structured, bold and performance-led—with a serious presentation for working, sport, and purpose-bred programs.", preview: "/templates/ironwood-shepherds" },
 ] as const;
 
 const setupServices = [
@@ -150,7 +153,7 @@ export default function SignupPage() {
         <small>MYDOGPORTAL</small>
         <h1>Your breeding program. Your brand. Your families. One connected system.</h1>
         <p>The complete business operating system for dog breeders, with a private workspace and connected family experience.</p>
-        <div className="signup-points"><span><Check size={16} />Secure individual owner login</span><span><Check size={16} />Private tenant-isolated records</span><span><Check size={16} />Family Puppy Portals you control</span></div>
+        <div className="signup-points"><span><Check size={16} />Secure individual owner login</span><span><Check size={16} />Private tenant-isolated records</span><span><Check size={16} />Family Puppy Portals you control</span><span><Check size={16} />Automation that follows your workflow</span><span><Check size={16} />Website and portal customization</span></div>
       </section>
 
       <section className="signup-panel">
@@ -170,7 +173,7 @@ export default function SignupPage() {
           </form>
 
           <section className="website-template-picker" aria-labelledby="website-template-heading">
-            <header><small>WEBSITE TEMPLATE GALLERY</small><h2 id="website-template-heading">Choose the look you want to start with</h2><p>Pick a starting style now or leave it open. Your kennel name, breed, dogs, photography, colors, policies, and content replace everything shown in the demonstrations.</p></header>
+            <header><small>WEBSITE TEMPLATE GALLERY</small><h2 id="website-template-heading">Choose the look you want to start with</h2><p>Choose from five genuinely different starting styles or leave the choice open. Every supported template can be customized with your kennel name, breed, dogs, photography, colors, policies, content, applications, and connected MyDogPortal information.</p></header>
             <div className="website-template-grid">
               {websiteTemplates.map((template, index) => {
                 const selected = websiteTemplate === template.id;
