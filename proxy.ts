@@ -26,7 +26,9 @@ export async function proxy(request: NextRequest) {
   const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").split(":")[0].toLowerCase();
   const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
 
-  if (isReservedMarketingHost(host, platformDomain)) {
+  const canonicalMarketingHost = host === "mydogportal.site" || host === "www.mydogportal.site";
+
+  if (canonicalMarketingHost || isReservedMarketingHost(host, platformDomain)) {
     if (pathname === "/") {
       const marketingUrl = request.nextUrl.clone();
       marketingUrl.pathname = "/marketing";
