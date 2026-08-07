@@ -1388,7 +1388,7 @@ export default function Home() {
     </aside>
 
     <main className="bos-main">
-      {view !== "Command" && <header className="bos-view-head"><div><small>{groupLabels[activeGroup]} / {activeViewDefinition.label}</small><h1>{viewCopy[view].title}</h1><p>{viewCopy[view].text}</p></div><div><button onClick={() => openCreate("transactions", { type: "Payment" })}><ReceiptText size={15} /> Payment</button><button className="primary-action" onClick={() => openCreate(quickResource)}><Plus size={15} /> Add to {activeViewDefinition.label}</button></div></header>}
+      {view !== "Command" && <header className="bos-view-head"><div><small>{groupLabels[activeGroup]} / {activeViewDefinition.label}</small><h1>{viewCopy[view].title}</h1><p>{viewCopy[view].text}</p></div><div>{view === "Applications" ? <><button onClick={() => { window.location.href = "/applications"; }}><ClipboardCheck size={15} /> Application builder + website</button><button className="primary-action" onClick={() => openCreate("buyers", { application_status: "New" })}><Plus size={15} /> New application</button></> : <><button onClick={() => openCreate("transactions", { type: "Payment" })}><ReceiptText size={15} /> Payment</button><button className="primary-action" onClick={() => openCreate(quickResource)}><Plus size={15} /> Add to {activeViewDefinition.label}</button></>}</div></header>}
       {error && <div className="error-banner"><b>Something needs attention</b><span>{error}</span><button onClick={() => void loadData()}>Retry</button></div>}
       {loading ? <div className="loading"><span />Loading records...</div> : <>
         {view === "Command" && <BreederCommandCenter data={data} kennelName={tenant.name} onCreate={openCreate} onNavigate={navigateTo} />}
