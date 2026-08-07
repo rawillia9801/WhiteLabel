@@ -24,7 +24,7 @@ const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-
 const subscriptions = [
   { name: "Starter", price: 29, annual: 290, position: "GET ORGANIZED", buttonId: "W8DM75982MX26", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
   { name: "Professional", price: 59, annual: 590, position: "RUN YOUR BREEDING BUSINESS", buttonId: "J7HBTK2F9AMDN", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
-  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Over $1,100 in first-year included services: Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
+  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Over $1,100.00 Added Value · Prices Locked In. Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
 ] as const;
 
 const websiteTemplates = [
@@ -76,7 +76,7 @@ const setupServices = [
     action: "Add Business Voice to my setup",
     icon: PhoneCall,
     description: "A professionally configured local business voice line with your custom greeting and breeder information. Setup and the local number are included with Studio.",
-    details: ["Local number: $8.99/month or $99/year outside Studio", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "Studio first-year phone system + number value: $176.88", "Phone System Credits: $240/year value with Studio"],
+    details: ["Local number: $8.99/month or $99/year outside Studio", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "Studio phone system + number value: $176.88", "Phone System Credits: $240/year value with Studio"],
   },
 ] as const;
 
@@ -219,7 +219,7 @@ export default function SignupPage() {
           </section>
 
           <section className="studio-website-note">
-            <div><small>STUDIO · COMPLETE BRAND PACKAGE</small><h2>Over $1,100 in first-year included services</h2><p>Studio includes $869.28 in Brand Launch, breeder website personalization, standard .com registration and renewal, hosting with two branded business emails, and Business Voice system value, plus $240/year in Phone System Credits. That is $1,109.28 in first-year included services before counting the MyDogPortal software itself. Your connected website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
+            <div><small>STUDIO · COMPLETE BRAND PACKAGE · PRICES LOCKED IN</small><h2>Over $1,100.00 Added Value</h2><p>Studio includes $869.28 in Brand Launch, breeder website personalization, standard .com registration and renewal, hosting with two branded business emails, and Business Voice system value, plus $240/year in Phone System Credits. That is $1,109.28 in added service value before counting the MyDogPortal software itself. Your Studio subscription rate stays locked in while your Studio subscription remains continuously active. Your connected website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
             <Link href="/#examples"><span>CONNECTED TEMPLATE GALLERY</span><b>Compare the website styles</b><small>View all live examples <ArrowRight size={13} /></small></Link>
           </section>
         </div>
