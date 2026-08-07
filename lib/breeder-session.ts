@@ -11,6 +11,7 @@ export type BreederSession = {
   role: "owner" | "admin" | "staff";
   plan: "starter" | "professional" | "custom_domain";
   customDomain?: string;
+  billingStatus?: "pending" | "active";
   expiresAt: number;
 };
 

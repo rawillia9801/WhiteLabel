@@ -70,6 +70,7 @@ export async function POST(request: Request) {
         role: session.role,
         plan: offering.entitlementPlan,
         customDomain: session.customDomain,
+        billingStatus: "active",
       });
       if (token) {
         response.cookies.set({

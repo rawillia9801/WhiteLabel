@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { BREEDER_SESSION_COOKIE, createBreederSessionToken, tenantUrl } from "../../../../lib/breeder-session";
 import { breederSessionClaims, signInBreederPassword } from "../../../../lib/supabase-auth";
+import { breederCheckoutRequired } from "../../../../lib/breeder-account";
 
 export const runtime = "nodejs";
 
@@ -11,10 +12,11 @@ function cookieDomain(request: Request) {
   return host === platform || host.endsWith(`.${platform}`) ? `.${platform}` : undefined;
 }
 
-function redirectFor(request: Request, claims: ReturnType<typeof breederSessionClaims>) {
+function redirectFor(request: Request, claims: ReturnType<typeof breederSessionClaims>, billingStatus: "pending" | "active") {
   const url = new URL(request.url);
-  if (["localhost", "127.0.0.1"].includes(url.hostname) || url.hostname.endsWith(".vercel.app")) return `${url.origin}/`;
-  return tenantUrl(claims, "/");
+  const path = billingStatus === "pending" ? "/billing?required=1" : "/";
+  if (["localhost", "127.0.0.1"].includes(url.hostname) || url.hostname.endsWith(".vercel.app")) return `${url.origin}${path}`;
+  return tenantUrl(claims, path);
 }
 
 export async function POST(request: Request) {
@@ -22,9 +24,10 @@ export async function POST(request: Request) {
     const body = await request.json() as { email?: unknown; password?: unknown };
     const account = await signInBreederPassword(String(body.email ?? ""), String(body.password ?? ""));
     const claims = breederSessionClaims(account);
-    const token = createBreederSessionToken(claims);
+    const billingStatus = await breederCheckoutRequired(account.kennel.id) ? "pending" as const : "active" as const;
+    const token = createBreederSessionToken({ ...claims, billingStatus });
     if (!token) return Response.json({ error: "Session security is not configured." }, { status: 503 });
-    const response = NextResponse.json({ authenticated: true, kennel: account.kennel, redirect: redirectFor(request, claims) });
+    const response = NextResponse.json({ authenticated: true, kennel: account.kennel, redirect: redirectFor(request, claims, billingStatus) });
     response.cookies.set({
       name: BREEDER_SESSION_COOKIE, value: token, httpOnly: true,
       secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 30 * 86400,

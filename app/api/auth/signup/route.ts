@@ -70,13 +70,14 @@ export async function POST(request: Request) {
     }, account.kennel.id));
     await Promise.all(platformEvents);
     const claims = breederSessionClaims(account);
-    const token = createBreederSessionToken(claims);
+    const pendingClaims = { ...claims, billingStatus: "pending" as const };
+    const token = createBreederSessionToken(pendingClaims);
     if (!token) return Response.json({ error: "Set BREEDER_SESSION_SECRET to a random value of at least 32 characters." }, { status: 503 });
     const requestUrl = new URL(request.url);
     const billingPath = "/billing?welcome=1&plan=" + encodeURIComponent(checkoutPlan);
     const redirect = ["localhost", "127.0.0.1"].includes(requestUrl.hostname) || requestUrl.hostname.endsWith(".vercel.app")
       ? requestUrl.origin + billingPath
-      : tenantUrl(claims, billingPath);
+      : tenantUrl(pendingClaims, billingPath);
     const response = NextResponse.json({ created: true, kennel: account.kennel, redirect }, { status: 201 });
     response.cookies.set({
       name: BREEDER_SESSION_COOKIE, value: token, httpOnly: true,

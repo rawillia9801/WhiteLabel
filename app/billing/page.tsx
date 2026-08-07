@@ -87,6 +87,8 @@ export default function BillingPage() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [welcome, setWelcome] = useState(false);
+  const [required, setRequired] = useState(false);
   const showError = useCallback((message: string) => setError(message), []);
 
   useEffect(() => {
@@ -127,6 +129,8 @@ export default function BillingPage() {
 
   useEffect(() => {
     const search = new URLSearchParams(window.location.search);
+    setWelcome(search.get("welcome") === "1");
+    setRequired(search.get("required") === "1");
     if (search.get("paypal_cancelled") === "1") {
       setNotice("PayPal checkout was cancelled. Nothing was charged.");
       window.history.replaceState({}, "", "/billing");
@@ -172,6 +176,9 @@ export default function BillingPage() {
     const payload = await response.json() as { error?: string };
     if (!response.ok) throw new Error(payload.error || "Unable to confirm the PayPal subscription.");
     setNotice("Subscription confirmed. Your MyDogPortal billing is now connected to this kennel.");
+    if (/^(starter|professional|studio)-(monthly|annual)$/.test(offeringKey)) {
+      window.setTimeout(() => window.location.assign("/"), 900);
+    }
   }, []);
 
   const startOrder = useCallback(async (offeringKey: string) => {
@@ -189,7 +196,6 @@ export default function BillingPage() {
     }
   }, []);
 
-  const welcome = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("welcome") === "1";
   const voiceMonthly = serviceOffering("business-voice-monthly");
   const voiceAnnual = serviceOffering("business-voice-annual");
 
@@ -198,8 +204,8 @@ export default function BillingPage() {
       <header className="billing-hero">
         <Link href="/"><ArrowLeft size={16} /> Back to MyDogPortal</Link>
         <span className="billing-kicker"><ShieldCheck size={15} /> SECURE PAYPAL BILLING</span>
-        <h1>{welcome ? "Your kennel is ready. Choose your plan." : "Plans & breeder services"}</h1>
-        <p>Subscriptions and add-ons are connected directly to your kennel. MyDogPortal never receives your PayPal password or card details.</p>
+        <h1>{required ? "Complete PayPal approval to open your kennel." : welcome ? "Your kennel is ready. Choose your plan." : "Plans & breeder services"}</h1>
+        <p>{required ? "Approve your MyDogPortal subscription below. That approval starts the 14-day free trial; your breeder workspace unlocks immediately after PayPal confirms it." : "Subscriptions and add-ons are connected directly to your kennel. MyDogPortal never receives your PayPal password or card details."}</p>
         <div className="trial-promise"><Sparkles size={18} /><div><b>Every MyDogPortal software plan starts with 14 days free.</b><span>The $0 trial is built into the PayPal billing plan. Your recurring charge starts after the trial unless you cancel first.</span></div></div>
       </header>
 
@@ -233,7 +239,7 @@ export default function BillingPage() {
             </div>
           </section>
 
-          <section className="addon-section" aria-labelledby="addons-heading">
+          <section className="addon-section" id="addons" aria-labelledby="addons-heading">
             <div className="section-heading"><div><small>À-LA-CARTE BREEDER SERVICES</small><h2 id="addons-heading">Add only what your kennel needs</h2><p>These are standalone services. The prices below are the actual add-on prices—not “value” figures.</p></div></div>
             <div className="addon-grid">
               {serviceOffering("hosting-monthly") && <article><span><Mail size={20} /></span><h3>Website Hosting + Business Email</h3><strong>$17.95/month</strong><p>Dog-breeder website hosting, SSL, two branded business email addresses, and basic hosting/email support. No MyDogPortal software subscription included.</p><PayPalSubscriptionButton offering={serviceOffering("hosting-monthly")!} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} /></article>}

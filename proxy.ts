@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BREEDER_SESSION_COOKIE, readBreederSessionToken, tenantUrl } from "./lib/breeder-session";
+import { breederCheckoutRequired } from "./lib/breeder-account";
 
 const publicPath = (pathname: string) =>
   pathname === "/login"
@@ -20,7 +21,7 @@ export function isReservedMarketingHost(hostValue: string, platformValue = proce
   return host === platformDomain || host === `www.${platformDomain}`;
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").split(":")[0].toLowerCase();
   const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
@@ -45,6 +46,11 @@ export function proxy(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
+  }
+
+  const billingAllowed = pathname === "/billing" || pathname.startsWith("/api/paypal/");
+  if (!billingAllowed && session.billingStatus !== "active" && await breederCheckoutRequired(session.kennelId)) {
+    return NextResponse.redirect(tenantUrl(session, "/billing?required=1"));
   }
 
   const expectedSubdomain = `${session.kennelSlug}.${platformDomain}`;
