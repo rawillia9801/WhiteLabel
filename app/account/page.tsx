@@ -5,6 +5,7 @@ import { BadgeDollarSign, ChevronLeft, CircleUserRound, CreditCard, FileText, Gl
 import { BREEDER_SESSION_COOKIE, readBreederSessionToken } from "../../lib/breeder-session";
 import { loadBreederAccount } from "../../lib/breeder-account";
 import { AccountSignOut } from "../../components/account-sign-out";
+import { SubscriptionCancelButton } from "../../components/subscription-cancel-button";
 import "./account.css";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +58,7 @@ export default async function BreederAccountPage() {
             <div><small>NEXT BILLING</small><b>{date(account.subscription?.nextBillingAt || null)}</b><p>{account.subscription ? `${money(account.subscription.amount)} scheduled by PayPal` : "No PayPal subscription recorded"}</p></div>
             <div><small>TRIAL</small><b>{trialActive ? "14 days free" : "—"}</b><p>{trialActive ? `Ends ${date(account.subscription?.trialEndsAt || null)}` : "Trial period complete or not applicable"}</p></div>
           </div>
-          <footer><div><b>Upgrade or downgrade</b><span>Review Starter, Professional, and Studio. PayPal approval is required for subscription changes.</span></div><Link href="/billing">Review plan options</Link></footer>
+          <footer className="subscription-footer"><div><b>Change or cancel anytime</b><span>Review plan options or cancel future recurring subscription billing here—no support ticket required.</span></div><div className="subscription-footer-actions"><Link href="/billing">Review plan options</Link>{account.subscription?.paypalId && <SubscriptionCancelButton/>}</div></footer>
         </section>
 
         <div className="account-two-column">
