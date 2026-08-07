@@ -177,7 +177,7 @@ function billingCycles(offering: RecurringOffering) {
 }
 
 async function ensurePlansForProduct(productId: string, offerings: readonly RecurringOffering[]) {
-  const listed = await paypalRequest<{ plans?: PayPalPlan[] }>(`/v1/billing/plans?product_id=${encodeURIComponent(productId)}&page_size=100&total_required=true`);
+  const listed = await paypalRequest<{ plans?: PayPalPlan[] }>(`/v1/billing/plans?product_id=${encodeURIComponent(productId)}`);
   const plans = listed.plans || [];
   const result: Record<string, string> = {};
   for (const offering of offerings) {
