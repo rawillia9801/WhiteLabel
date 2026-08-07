@@ -13,7 +13,7 @@ type BillingEventRow = {
 
 export type PayPalBillingNotes = {
   provider: "paypal";
-  kind: "subscription" | "order";
+  kind: "subscription" | "order" | "payment";
   offering_key: string;
   paypal_id: string;
   paypal_plan_id?: string;

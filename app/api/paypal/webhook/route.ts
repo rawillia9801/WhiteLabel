@@ -1,11 +1,18 @@
 import { ensurePayPalWebhook, verifyPayPalWebhook } from "../../../../lib/paypal";
-import { findPayPalBillingEvent, setKennelPlan, updatePayPalBillingEventByProviderId } from "../../../../lib/paypal-billing";
+import { findPayPalBillingEvent, recordPayPalBillingEvent, setKennelPlan, updatePayPalBillingEventByProviderId } from "../../../../lib/paypal-billing";
 
 export const runtime = "nodejs";
 
 type PayPalWebhookEvent = {
   event_type?: string;
-  resource?: { id?: string; status?: string; billing_info?: { next_billing_time?: string } };
+  resource?: {
+    id?: string;
+    status?: string;
+    state?: string;
+    billing_agreement_id?: string;
+    amount?: { total?: string; currency?: string };
+    billing_info?: { next_billing_time?: string };
+  };
 };
 
 function webhookUrl(request: Request) {
@@ -46,6 +53,29 @@ export async function POST(request: Request) {
         }
       }
     }
+
+    if (eventType.startsWith("PAYMENT.SALE.") && event.resource?.id && event.resource.billing_agreement_id) {
+      const subscription = await findPayPalBillingEvent(event.resource.billing_agreement_id);
+      if (subscription?.parsed?.kind === "subscription") {
+        const status = eventType.endsWith(".COMPLETED") ? "COMPLETED" : eventType.endsWith(".DENIED") ? "DENIED" : String(event.resource.state || "UPDATED").toUpperCase();
+        await recordPayPalBillingEvent({
+          kennelId: subscription.kennel_id,
+          title: "PayPal payment: " + subscription.parsed.offering_key,
+          status,
+          notes: {
+            provider: "paypal",
+            kind: "payment",
+            offering_key: subscription.parsed.offering_key,
+            paypal_id: event.resource.id,
+            paypal_plan_id: subscription.parsed.paypal_plan_id,
+            entitlement_plan: subscription.parsed.entitlement_plan,
+            amount: event.resource.amount?.total || subscription.parsed.amount,
+            currency: event.resource.amount?.currency || subscription.parsed.currency || "USD",
+          },
+        });
+      }
+    }
+
     return Response.json({ received: true }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to process PayPal webhook.";

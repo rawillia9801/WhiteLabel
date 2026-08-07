@@ -41,27 +41,34 @@ export async function POST(request: Request) {
       ? [...new Set(body.setup_requests.map((item) => String(item)).filter((item) => setupRequestDetails[item]))]
       : [];
     const requestedWebsiteTemplate = websiteTemplateDetails[String(body.website_template ?? "")];
-    if (requestedSetupIds.length || requestedWebsiteTemplate) {
-      const eventDate = new Date().toISOString().slice(0, 10);
-      const setupEvents = requestedSetupIds.map((id) => {
-        const service = setupRequestDetails[id];
-        return createSupabaseResource("events", {
-          title: `Setup request: ${service.name}`,
-          event_type: "Setup Request",
-          event_date: eventDate,
-          status: "Requested",
-          notes: service.notes,
-        }, account.kennel.id);
-      });
-      if (requestedWebsiteTemplate) setupEvents.push(createSupabaseResource("events", {
-        title: `Website template: ${requestedWebsiteTemplate.name}`,
+    const eventDate = new Date().toISOString().slice(0, 10);
+    const platformEvents: Array<Promise<unknown>> = [
+      createSupabaseResource("events", {
+        title: "MyDogPortal trial signup",
+        event_type: "Trial Signup",
+        event_date: eventDate,
+        status: "Checkout Pending",
+        notes: JSON.stringify({ requested_plan: checkoutPlan, trial_days: 14 }),
+      }, account.kennel.id),
+    ];
+    for (const id of requestedSetupIds) {
+      const service = setupRequestDetails[id];
+      platformEvents.push(createSupabaseResource("events", {
+        title: `Setup request: ${service.name}`,
         event_type: "Setup Request",
         event_date: eventDate,
         status: "Requested",
-        notes: requestedWebsiteTemplate.notes,
+        notes: service.notes,
       }, account.kennel.id));
-      await Promise.all(setupEvents);
     }
+    if (requestedWebsiteTemplate) platformEvents.push(createSupabaseResource("events", {
+      title: `Website template: ${requestedWebsiteTemplate.name}`,
+      event_type: "Setup Request",
+      event_date: eventDate,
+      status: "Requested",
+      notes: requestedWebsiteTemplate.notes,
+    }, account.kennel.id));
+    await Promise.all(platformEvents);
     const claims = breederSessionClaims(account);
     const token = createBreederSessionToken(claims);
     if (!token) return Response.json({ error: "Set BREEDER_SESSION_SECRET to a random value of at least 32 characters." }, { status: 503 });

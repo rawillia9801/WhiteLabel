@@ -239,6 +239,47 @@ test("connects PayPal subscriptions, 14-day trials, add-ons, and verified billin
   assert.doesNotMatch(env, /NEXT_PUBLIC_PAYPAL_CLIENT_SECRET/);
 });
 
+test("ships a protected MyDogPortal platform-owner console for trials, payments, and service requests", async () => {
+  const [page, dashboard, adminData, signupRoute, billingStore, webhook, css, env] = await Promise.all([
+    readFile(new URL("app/platform-admin/page.tsx", root), "utf8"),
+    readFile(new URL("components/platform-admin-dashboard.tsx", root), "utf8"),
+    readFile(new URL("lib/platform-admin.ts", root), "utf8"),
+    readFile(new URL("app/api/auth/signup/route.ts", root), "utf8"),
+    readFile(new URL("lib/paypal-billing.ts", root), "utf8"),
+    readFile(new URL("app/api/paypal/webhook/route.ts", root), "utf8"),
+    readFile(new URL("app/platform-admin/platform-admin.css", root), "utf8"),
+    readFile(new URL(".env.example", root), "utf8"),
+  ]);
+
+  assert.match(page, /authorizePlatformAdmin/);
+  assert.match(page, /loadPlatformAdminDashboard/);
+  assert.match(page, /BREEDER_SESSION_COOKIE/);
+  assert.match(adminData, /PLATFORM_ADMIN_EMAILS/);
+  assert.match(adminData, /PLATFORM_ADMIN_USER_IDS/);
+  assert.match(adminData, /PLATFORM_ADMIN_KENNEL_SLUG/);
+  assert.match(adminData, /session\.role !== "owner"/);
+  assert.match(adminData, /event_type=in/);
+  assert.match(adminData, /activeTrials/);
+  assert.match(adminData, /checkoutIncomplete/);
+  assert.match(adminData, /recurringRunRate/);
+  assert.match(signupRoute, /event_type: "Trial Signup"/);
+  assert.match(signupRoute, /status: "Checkout Pending"/);
+  assert.match(signupRoute, /trial_days: 14/);
+  assert.match(billingStore, /"subscription" \| "order" \| "payment"/);
+  assert.match(webhook, /PAYMENT\.SALE\./);
+  assert.match(webhook, /kind: "payment"/);
+  assert.match(dashboard, /Business command center/);
+  assert.match(dashboard, /Customers & trials/);
+  assert.match(dashboard, /Payments and add-on purchases/);
+  assert.match(dashboard, /Setup and add-on request queue/);
+  assert.match(dashboard, /14-day PayPal trials/);
+  assert.match(dashboard, /Checkout incomplete/);
+  assert.match(css, /\.platform-sidebar/);
+  assert.match(css, /\.admin-metrics/);
+  assert.match(env, /PLATFORM_ADMIN_KENNEL_SLUG=cray-cray/);
+  assert.doesNotMatch(dashboard, /PAYPAL_CLIENT_SECRET|SUPABASE_SERVICE_ROLE_KEY/);
+});
+
 test("deploys the app directly without redirects", async () => {
   const [configuration, packageManifest, supabaseSchema, dataRoute] = await Promise.all([
     readFile(new URL("vercel.json", root), "utf8"),
