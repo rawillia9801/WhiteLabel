@@ -16,6 +16,9 @@ const setupRequestDetails: Record<string, { name: string; notes: string }> = {
 const websiteTemplateDetails: Record<string, { name: string; notes: string }> = {
   "willow-creek": { name: "Willow Creek", notes: "Website Template 01 — boutique Chihuahua demonstration style. Replace demonstration kennel identity, breed, dogs, photography, colors, policies, and content with the customer's program." },
   "cedar-creek": { name: "Cedar & Creek", notes: "Website Template 02 — warm editorial Golden Retriever demonstration style. Replace demonstration kennel identity, breed, dogs, photography, colors, policies, and content with the customer's program." },
+  "northstar-poodles": { name: "Northstar", notes: "Website Template 03 — luxury editorial Standard Poodle demonstration style. Replace demonstration kennel identity, breed, dogs, photography, colors, policies, and content with the customer's program." },
+  "bluebird-aussies": { name: "Bluebird", notes: "Website Template 04 — bright modern-ranch Australian Shepherd demonstration style. Replace demonstration kennel identity, breed, dogs, photography, colors, policies, and content with the customer's program." },
+  "ironwood-shepherds": { name: "Ironwood", notes: "Website Template 05 — structured performance German Shepherd demonstration style. Replace demonstration kennel identity, breed, dogs, photography, colors, policies, and content with the customer's program." },
 };
 
 function cookieDomain(request: Request) {
