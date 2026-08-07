@@ -92,29 +92,40 @@ function cleanBoolean(value: unknown) {
   return value === true || value === "true" || value === "on" || value === "yes";
 }
 
-export function isAllowedWebsiteOrigin(origin: string | null, requestHost?: string | null) {
+export function isAllowedWebsiteOrigin(origin: string | null, requestHost?: string | null, allowedOrigins: string[] = []) {
   if (!origin) return false;
   try {
-    const hostname = new URL(origin).hostname.toLowerCase();
+    const parsedOrigin = new URL(origin);
+    const hostname = parsedOrigin.hostname.toLowerCase();
+    const comparableHost = hostname.replace(/^www\./, "");
     const platform = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim().toLowerCase() || "mydogportal.site";
-    const sameHost = requestHost?.split(":")[0].toLowerCase();
-    return configuredOrigins().has(origin)
+    const sameHost = requestHost?.split(":")[0].toLowerCase().replace(/^www\./, "");
+    const tenantWebsiteAllowed = allowedOrigins.some((value) => {
+      try {
+        const candidate = new URL(value.includes("://") ? value : `https://${value}`);
+        return candidate.hostname.toLowerCase().replace(/^www\./, "") === comparableHost;
+      } catch {
+        return false;
+      }
+    });
+    return configuredOrigins().has(parsedOrigin.origin)
+      || tenantWebsiteAllowed
       || hostname === platform
       || hostname.endsWith(`.${platform}`)
-      || Boolean(sameHost && hostname === sameHost);
+      || Boolean(sameHost && comparableHost === sameHost);
   } catch {
     return false;
   }
 }
 
-export function websiteCorsHeaders(origin: string | null, requestHost?: string | null) {
+export function websiteCorsHeaders(origin: string | null, requestHost?: string | null, allowedOrigins: string[] = []) {
   const headers = new Headers({
     "access-control-allow-methods": "GET, POST, OPTIONS",
     "access-control-allow-headers": "content-type",
     "access-control-max-age": "86400",
     "vary": "Origin",
   });
-  if (isAllowedWebsiteOrigin(origin, requestHost)) headers.set("access-control-allow-origin", origin!);
+  if (isAllowedWebsiteOrigin(origin, requestHost, allowedOrigins)) headers.set("access-control-allow-origin", origin!);
   return headers;
 }
 

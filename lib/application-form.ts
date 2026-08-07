@@ -33,6 +33,7 @@ export type ApplicationFormConfig = {
   introduction: string;
   submitLabel: string;
   successMessage: string;
+  allowedOrigins?: string[];
   fields: ApplicationField[];
   updatedAt: string;
 };
@@ -90,6 +91,7 @@ export const defaultApplicationFormConfig: ApplicationFormConfig = {
   introduction: "Tell us about your household, puppy preferences, and care plans. Submission does not guarantee approval, reserve a puppy, or create a sales agreement.",
   submitLabel: "Submit puppy application",
   successMessage: "Thank you. Your application has been received for breeder review.",
+  allowedOrigins: [],
   updatedAt: "",
   fields: [
     field("full_name", "Full legal name", "text", "Applicant", true, "full_name"),
@@ -140,6 +142,18 @@ const keyFor = (value: unknown) => clean(value, 60).toLowerCase().replace(/[^a-z
 export function normalizeApplicationFormConfig(value: unknown): ApplicationFormConfig {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
   const rows = Array.isArray(source.fields) ? source.fields : defaultApplicationFormConfig.fields;
+  const allowedOrigins = [...new Set((Array.isArray(source.allowedOrigins) ? source.allowedOrigins : []).flatMap((value) => {
+    const raw = clean(value, 500);
+    if (!raw) return [];
+    try {
+      const url = new URL(raw);
+      const localhost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+      if (url.protocol !== "https:" && !(localhost && url.protocol === "http:")) return [];
+      return [url.origin];
+    } catch {
+      return [];
+    }
+  }))].slice(0, 20);
   const seen = new Set<string>();
   const fields = rows.flatMap((item, index): ApplicationField[] => {
     if (!item || typeof item !== "object" || Array.isArray(item)) return [];
@@ -182,6 +196,7 @@ export function normalizeApplicationFormConfig(value: unknown): ApplicationFormC
     introduction: clean(source.introduction, 1_500) || defaultApplicationFormConfig.introduction,
     submitLabel: clean(source.submitLabel, 80) || defaultApplicationFormConfig.submitLabel,
     successMessage: clean(source.successMessage, 500) || defaultApplicationFormConfig.successMessage,
+    allowedOrigins,
     fields,
     updatedAt: clean(source.updatedAt, 80),
   };

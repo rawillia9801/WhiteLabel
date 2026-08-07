@@ -51,6 +51,11 @@ export function ApplicationBuilder({ config, onSaved }: { config: ApplicationFor
   const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.site";
   const applicationUrl = tenant.slug ? `https://${tenant.slug}.${platformDomain}/apply` : "/apply";
   const embedCode = `<iframe src="${applicationUrl}" title="Puppy application" loading="lazy" style="width:100%;min-height:1100px;border:0;border-radius:16px" allow="clipboard-write"></iframe>`;
+  const applicationOrigin = tenant.slug ? `https://${tenant.slug}.${platformDomain}` : "";
+  const configUrl = `${applicationOrigin}/api/website/application-config`;
+  const submissionUrl = `${applicationOrigin}/api/website/applications`;
+  const nativeEmbedCode = `<div id="mydogportal-application"></div>\n<script src="${applicationOrigin}/api/website/application-embed" data-target="mydogportal-application"></script>`;
+  const headlessEndpoints = `GET  ${configUrl}\nPOST ${submissionUrl}`;
   const copy = async (value: string) => { await navigator.clipboard.writeText(value); setMessage("Copied to clipboard."); };
 
   return <div className="application-builder-layout">
@@ -61,6 +66,7 @@ export function ApplicationBuilder({ config, onSaved }: { config: ApplicationFor
         <label className="wide"><span>Introduction</span><textarea rows={3} value={draft.introduction} onChange={(event) => setDraft((current) => ({ ...current, introduction: event.target.value }))} /></label>
         <label><span>Submit button</span><input value={draft.submitLabel} onChange={(event) => setDraft((current) => ({ ...current, submitLabel: event.target.value }))} /></label>
         <label><span>Success message</span><input value={draft.successMessage} onChange={(event) => setDraft((current) => ({ ...current, successMessage: event.target.value }))} /></label>
+        <label className="wide"><span>Authorized breeder website origins</span><textarea rows={3} placeholder="https://puppybreeder.com" value={(draft.allowedOrigins ?? []).join("\n")} onChange={(event) => setDraft((current) => ({ ...current, allowedOrigins: event.target.value.split(/\r?\n|,/).map((value) => value.trim()).filter(Boolean) }))} /><small>Add every website allowed to load and submit this application. Use the full https:// origin. The kennel website configured in MyDogPortal is also accepted automatically.</small></label>
       </div>
       <div className="builder-fields">
         {draft.fields.map((field, index) => {
@@ -89,6 +95,8 @@ export function ApplicationBuilder({ config, onSaved }: { config: ApplicationFor
       <div className="install-body">
         <div className="install-card"><small>DIRECT APPLICATION LINK</small><a href={applicationUrl} target="_blank" rel="noreferrer">{applicationUrl} <ExternalLink size={13} /></a><button type="button" onClick={() => void copy(applicationUrl)}><Copy size={14} /> Copy link</button></div>
         <div className="install-card"><small>EMBED ON AN EXISTING WEBSITE</small><p>Paste this iframe into an HTML/embed block on the breeder&apos;s website. The form stays managed by MyDogPortal.</p><textarea readOnly rows={7} value={embedCode} /><button type="button" onClick={() => void copy(embedCode)}><Copy size={14} /> Copy embed code</button></div>
+        <div className="install-card"><small>NATIVE WEBSITE INSTALL · FULLY CUSTOMIZABLE</small><p>Use this on WordPress, Wix custom code, Hostinger, Squarespace code blocks, or a custom website. The form renders into the website DOM so the breeder&apos;s CSS can restyle every .mdp-* element while MyDogPortal still owns the questions, intake, automations, and document mappings.</p><textarea readOnly rows={7} value={nativeEmbedCode} /><button type="button" onClick={() => void copy(nativeEmbedCode)}><Copy size={14} /> Copy native install code</button></div>
+        <div className="install-card"><small>HEADLESS / DEVELOPER INTEGRATION</small><p>For a completely custom form layout, build any HTML/UI you want, load the published field schema from the GET endpoint, and POST the answers to the submission endpoint. No Supabase key or private credential belongs on the breeder website.</p><textarea readOnly rows={4} value={headlessEndpoints} /><button type="button" onClick={() => void copy(headlessEndpoints)}><Copy size={14} /> Copy API endpoints</button></div>
         <div className="install-card install-flow"><small>CONNECTED WORKFLOW</small><ol><li>Family submits the hosted form.</li><li>Answers land in the application queue.</li><li>Breeder filters and reviews the answers.</li><li>Approval unlocks document preparation.</li><li>Mapped answers prefill agreements.</li></ol></div>
       </div>
     </aside>

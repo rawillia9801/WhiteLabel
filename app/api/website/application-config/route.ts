@@ -1,6 +1,6 @@
 import { getApplicationFormConfig } from "../../../../lib/application-form-store";
 import { findKennelByHost } from "../../../../lib/supabase-auth";
-import { websiteCorsHeaders } from "../../../../lib/website-integration";
+import { isAllowedWebsiteOrigin, websiteCorsHeaders } from "../../../../lib/website-integration";
 
 export async function GET(request: Request) {
   const origin = request.headers.get("origin");
@@ -9,7 +9,15 @@ export async function GET(request: Request) {
     const kennel = await findKennelByHost(host || "");
     if (!kennel) return Response.json({ error: "This application is not connected to a kennel." }, { status: 404, headers: websiteCorsHeaders(origin, host) });
     const config = await getApplicationFormConfig(kennel.id);
-    const headers = websiteCorsHeaders(origin, host);
+    const allowedOrigins = [
+      ...(config.allowedOrigins ?? []),
+      kennel.website_url ?? "",
+      kennel.custom_domain ?? "",
+    ].filter(Boolean);
+    const headers = websiteCorsHeaders(origin, host, allowedOrigins);
+    if (origin && !isAllowedWebsiteOrigin(origin, host, allowedOrigins)) {
+      return Response.json({ error: "This website is not authorized to load the application." }, { status: 403, headers });
+    }
     headers.set("cache-control", "public, max-age=60");
     return Response.json({ kennel: { name: kennel.name }, form: config }, { headers });
   } catch (error) {

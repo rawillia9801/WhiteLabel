@@ -13,8 +13,8 @@ import {
 
 type BuyerRow = Record<string, unknown> & { id: number; first_name?: string; email?: string; application_status?: string; notes?: string };
 
-function response(origin: string | null, host: string | null, payload: Record<string, unknown>, status = 200) {
-  return Response.json(payload, { status, headers: websiteCorsHeaders(origin, host) });
+function response(origin: string | null, host: string | null, payload: Record<string, unknown>, status = 200, allowedOrigins: string[] = []) {
+  return Response.json(payload, { status, headers: websiteCorsHeaders(origin, host, allowedOrigins) });
 }
 
 function retainAdvancedStatus(status: unknown) {
@@ -32,20 +32,31 @@ async function existingBuyer(email: string, kennelId: string) {
 export async function OPTIONS(request: Request) {
   const origin = request.headers.get("origin");
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-  return new Response(null, {
-    status: isAllowedWebsiteOrigin(origin, host) ? 204 : 403,
-    headers: websiteCorsHeaders(origin, host),
-  });
+  try {
+    const kennel = await findKennelByHost(host || "");
+    if (!kennel) return new Response(null, { status: 404 });
+    const formConfig = await getApplicationFormConfig(kennel.id);
+    const allowedOrigins = [
+      ...(formConfig.allowedOrigins ?? []),
+      kennel.website_url ?? "",
+      kennel.custom_domain ?? "",
+    ].filter(Boolean);
+    return new Response(null, {
+      status: isAllowedWebsiteOrigin(origin, host, allowedOrigins) ? 204 : 403,
+      headers: websiteCorsHeaders(origin, host, allowedOrigins),
+    });
+  } catch {
+    return new Response(null, { status: 403 });
+  }
 }
 
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-  if (!isAllowedWebsiteOrigin(origin, host)) return response(origin, host, { error: "This submission source is not allowed." }, 403);
-
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > 75_000) return response(origin, host, { error: "The application is too large." }, 413);
 
+  let allowedOrigins: string[] = [];
   try {
     if (!getSupabaseConfig().serviceRoleKey) {
       return response(origin, host, { error: "Application intake is temporarily unavailable." }, 503);
@@ -53,6 +64,14 @@ export async function POST(request: Request) {
     const kennel = await findKennelByHost(host || "");
     if (!kennel) return response(origin, host, { error: "This application form is not connected to a kennel." }, 404);
     const formConfig = await getApplicationFormConfig(kennel.id);
+    allowedOrigins = [
+      ...(formConfig.allowedOrigins ?? []),
+      kennel.website_url ?? "",
+      kennel.custom_domain ?? "",
+    ].filter(Boolean);
+    if (!isAllowedWebsiteOrigin(origin, host, allowedOrigins)) {
+      return response(origin, host, { error: "This submission source is not allowed." }, 403, allowedOrigins);
+    }
     const application = normalizeWebsiteApplication(await request.json(), formConfig);
     const receivedAt = new Date().toISOString();
     const input = applicationBuyerInput(application, receivedAt, formConfig);
@@ -127,10 +146,10 @@ export async function POST(request: Request) {
       confirmation_email_sent: confirmationEmailSent,
       portal_setup_ready: false,
       owner_notification_sent: ownerNotificationSent,
-    }, current ? 200 : 201);
+    }, current ? 200 : 201, allowedOrigins);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to save the application.";
     const status = /valid|must|required|acknowledgement|full name|phone number|accept/i.test(message) ? 400 : 500;
-    return response(origin, host, { error: status === 400 ? message : "Unable to save the application right now." }, status);
+    return response(origin, host, { error: status === 400 ? message : "Unable to save the application right now." }, status, allowedOrigins);
   }
 }

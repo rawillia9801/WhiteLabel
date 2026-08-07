@@ -431,12 +431,13 @@ test("connects applications, placement, delivery, payments, and automated emails
 });
 
 test("ships the tenant application builder, public embed form, answer filters, and document mappings", async () => {
-  const [applications, builder, publicForm, intake, configRoute, model, agreement, proxy] = await Promise.all([
+  const [applications, builder, publicForm, intake, configRoute, nativeEmbed, model, agreement, proxy] = await Promise.all([
     readFile(new URL("app/applications/page.tsx", root), "utf8"),
     readFile(new URL("components/application-builder.tsx", root), "utf8"),
     readFile(new URL("app/apply/page.tsx", root), "utf8"),
     readFile(new URL("app/api/website/applications/route.ts", root), "utf8"),
     readFile(new URL("app/api/website/application-config/route.ts", root), "utf8"),
+    readFile(new URL("app/api/website/application-embed/route.ts", root), "utf8"),
     readFile(new URL("lib/application-form.ts", root), "utf8"),
     readFile(new URL("app/forms/bill-of-sale-health-guarantee/page.tsx", root), "utf8"),
     readFile(new URL("proxy.ts", root), "utf8"),
@@ -446,12 +447,22 @@ test("ships the tenant application builder, public embed form, answer filters, a
   assert.match(applications, /Filter by answer/);
   assert.match(applications, /Prepare Bill of Sale \+ Health Guarantee/);
   assert.match(builder, /Copy embed code/);
+  assert.match(builder, /NATIVE WEBSITE INSTALL/);
+  assert.match(builder, /Authorized breeder website origins/);
+  assert.match(builder, /HEADLESS \/ DEVELOPER INTEGRATION/);
   assert.match(builder, /answers are stored with each applicant/);
   assert.match(publicForm, /config\.form\.submitLabel/);
   assert.match(publicForm, /does not guarantee approval/);
   assert.match(intake, /getApplicationFormConfig/);
   assert.match(intake, /Approval, reservation, contracts, and buyer-portal access remain breeder-controlled/);
   assert.match(configRoute, /getApplicationFormConfig/);
+  assert.match(configRoute, /isAllowedWebsiteOrigin/);
+  assert.match(intake, /allowedOrigins/);
+  assert.match(nativeEmbed, /mydogportal:application-submitted/);
+  assert.match(nativeEmbed, /api\/website\/application-config/);
+  assert.match(nativeEmbed, /api\/website\/applications/);
+  assert.match(nativeEmbed, /data-styles/);
+  assert.match(model, /allowedOrigins/);
   assert.match(model, /MYDOGPORTAL_APPLICATION_DATA/);
   assert.match(model, /Submit puppy application/);
   assert.match(model, /applicationAnswerByMapping/);
