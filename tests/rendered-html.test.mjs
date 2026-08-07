@@ -187,7 +187,8 @@ test("uses the supplied PayPal subscriptions and keeps Studio inclusions aligned
   assert.match(signup, /From \$749/);
   assert.match(signup, /\$69 setup · Included with Studio/);
   assert.match(signup, /\$8\.99\/month or \$99\/year outside Studio/);
-  assert.match(signup, /\$20\/month in voice usage/);
+  assert.match(signup, /Phone System Credits: \$240\/year value with Studio/);
+  assert.match(signup, /\$1,109\.28 in first-year included services/);
   assert.match(signup, /Annual standard \.com renewal included while Studio is active/);
   assert.doesNotMatch(signup, /Business SMS|business-sms|registered campaign/);
   assert.match(signupRoute, /Website Hosting \+ Business Email/);
@@ -496,8 +497,10 @@ test("serves the public marketing homepage on the platform apex", async () => {
   assert.match(marketing, /One system instead of five disconnected tools/);
   assert.match(marketing, /Business Voice/);
   assert.match(marketing, /\$8\.99\/month or \$99\/year outside Studio/);
-  assert.match(marketing, /\$20\/month in voice usage included/);
-  assert.match(marketing, /Brand Launch \+ website personalization included/);
+  assert.match(marketing, /Phone System Credits — \$240\/year value/);
+  assert.match(marketing, /Business Voice number \+ custom IVR — \$176\.88 first-year value/);
+  assert.match(marketing, /Website hosting \+ two business emails — \$215\.40\/year value/);
+  assert.match(marketing, /\$1,109\.28 in first-year included services/);
   assert.doesNotMatch(marketing, /Business SMS|registered campaign|allow up to 30 days/);
   assert.match(marketing, /https:\/\/willowcreekchihuahuas\.com/);
   assert.match(marketing, /Willow Creek Chihuahuas/);

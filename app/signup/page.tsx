@@ -24,7 +24,7 @@ const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-
 const subscriptions = [
   { name: "Starter", price: 29, annual: 290, position: "GET ORGANIZED", buttonId: "W8DM75982MX26", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
   { name: "Professional", price: 59, annual: 590, position: "RUN YOUR BREEDING BUSINESS", buttonId: "J7HBTK2F9AMDN", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
-  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Everything in Professional plus your breeder website, Brand Launch, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $20/month in included voice usage.", featured: false },
+  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Over $1,100 in first-year included services: Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
 ] as const;
 
 const websiteTemplates = [
@@ -40,7 +40,7 @@ const setupServices = [
     action: "Add hosting + email to my setup",
     icon: Mail,
     description: "Standalone managed hosting for Starter or Professional, including SSL and two branded business email addresses. Included with an active Studio subscription.",
-    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support", "Included with Studio"],
+    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support", "Studio value: $215.40/year", "Included with Studio"],
   },
   {
     id: "brand-launch",
@@ -49,7 +49,7 @@ const setupServices = [
     action: "Add Brand Launch to my setup",
     icon: Globe2,
     description: "Launch an available standard .com with registration, DNS, and SSL configuration. Included with Studio; available à la carte for Starter and Professional.",
-    details: ["Available standard .com registration", "Domain, DNS, and SSL configuration", "Annual standard .com renewal included while Studio is active; otherwise $29/year", "Website hosting + two business emails included with Studio", "Premium domains priced separately"],
+    details: ["Available standard .com registration", "Domain, DNS, and SSL configuration", "Standard .com registration + renewal: $29 value", "Annual standard .com renewal included while Studio is active; otherwise $29/year", "Brand Launch setup: $149 value with Studio", "Website hosting + two business emails included with Studio", "Premium domains priced separately"],
   },
   {
     id: "website-personalization",
@@ -58,7 +58,7 @@ const setupServices = [
     action: "Request website personalization",
     icon: MonitorSmartphone,
     description: "Personalize a supported MyDogPortal website style around your kennel so the demonstration content becomes your brand and breeding program. Included with Studio.",
-    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported", "Included with Studio; available à la carte for Starter and Professional"],
+    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported", "Studio value: $299", "Included with Studio; available à la carte for Starter and Professional"],
   },
   {
     id: "custom-website",
@@ -76,7 +76,7 @@ const setupServices = [
     action: "Add Business Voice to my setup",
     icon: PhoneCall,
     description: "A professionally configured local business voice line with your custom greeting and breeder information. Setup and the local number are included with Studio.",
-    details: ["Local number: $8.99/month or $99/year outside Studio", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "Studio includes up to $20/month in voice usage"],
+    details: ["Local number: $8.99/month or $99/year outside Studio", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "Studio first-year phone system + number value: $176.88", "Phone System Credits: $240/year value with Studio"],
   },
 ] as const;
 
@@ -219,7 +219,7 @@ export default function SignupPage() {
           </section>
 
           <section className="studio-website-note">
-            <div><small>STUDIO · COMPLETE BRAND PACKAGE</small><h2>Your public breeder website, domain, email, and voice line—connected</h2><p>Studio includes a supported personalized breeder website, hosting, two branded business emails, Brand Launch with an available standard .com and annual renewal while Studio remains active, plus a local Business Voice number with custom IVR and up to $20/month in voice usage. The website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
+            <div><small>STUDIO · COMPLETE BRAND PACKAGE</small><h2>Over $1,100 in first-year included services</h2><p>Studio includes $869.28 in Brand Launch, breeder website personalization, standard .com registration and renewal, hosting with two branded business emails, and Business Voice system value, plus $240/year in Phone System Credits. That is $1,109.28 in first-year included services before counting the MyDogPortal software itself. Your connected website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
             <Link href="/#examples"><span>CONNECTED TEMPLATE GALLERY</span><b>Compare the website styles</b><small>View all live examples <ArrowRight size={13} /></small></Link>
           </section>
         </div>
