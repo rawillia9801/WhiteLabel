@@ -161,59 +161,82 @@ test("ships a breeder workflow operating system rather than decorative desktop c
   assert.match(css, /\.delivery-board/);
 });
 
-test("uses the supplied PayPal subscriptions and keeps Studio inclusions aligned", async () => {
-  const [signup, signupRoute, domain, proxy, portal] = await Promise.all([
+test("connects PayPal subscriptions, 14-day trials, add-ons, and verified billing state", async () => {
+  const [signup, signupRoute, billing, paypal, billingStore, catalog, confirm, orders, capture, webhook, proxy, env] = await Promise.all([
     readFile(new URL("app/signup/page.tsx", root), "utf8"),
     readFile(new URL("app/api/auth/signup/route.ts", root), "utf8"),
-    readFile(new URL("app/settings/domain/page.tsx", root), "utf8"),
+    readFile(new URL("app/billing/page.tsx", root), "utf8"),
+    readFile(new URL("lib/paypal.ts", root), "utf8"),
+    readFile(new URL("lib/paypal-billing.ts", root), "utf8"),
+    readFile(new URL("app/api/paypal/catalog/route.ts", root), "utf8"),
+    readFile(new URL("app/api/paypal/subscriptions/confirm/route.ts", root), "utf8"),
+    readFile(new URL("app/api/paypal/orders/route.ts", root), "utf8"),
+    readFile(new URL("app/api/paypal/orders/capture/route.ts", root), "utf8"),
+    readFile(new URL("app/api/paypal/webhook/route.ts", root), "utf8"),
     readFile(new URL("proxy.ts", root), "utf8"),
-    readFile(new URL("components/family-portal-experience.tsx", root), "utf8"),
+    readFile(new URL(".env.example", root), "utf8"),
   ]);
 
-  assert.match(signup, /W8DM75982MX26/);
-  assert.match(signup, /J7HBTK2F9AMDN/);
-  assert.match(signup, /C5G2BVYNMMUPN/);
-  assert.match(signup, /https:\/\/www\.paypal\.com\/ncp\/payment\/\$\{plan\.buttonId\}/);
   assert.match(signup, /14-DAY PLATFORM FREE TRIAL/);
-  assert.match(signup, /annual: 290/);
-  assert.match(signup, /annual: 590/);
-  assert.match(signup, /annual: 990/);
-  assert.match(signup, /Monthly checkout with PayPal/);
-  assert.match(signup, /hosted buttons above are monthly checkout only/);
+  assert.match(signup, /requested_plan: selectedPlan/);
+  assert.match(signup, /Selected for checkout/);
+  assert.doesNotMatch(signup, /paypal\.com\/ncp\/payment|W8DM75982MX26|J7HBTK2F9AMDN|C5G2BVYNMMUPN/);
   assert.match(signup, /\$17\.95\/month/);
-  assert.match(signup, /\$149 one-time/);
+  assert.match(signup, /\$149 setup · then \$29\/year renewal/);
   assert.match(signup, /\$299 one-time/);
-  assert.match(signup, /Breeder Website Personalization/);
   assert.match(signup, /From \$749/);
-  assert.match(signup, /\$69 setup · Included with Studio/);
-  assert.match(signup, /\$8\.99\/month or \$99\/year outside Studio/);
-  assert.match(signup, /Phone System Credits: \$240\/year value with Studio/);
+  assert.match(signup, /\$69 setup \+ \$8\.99\/month or \$99\/year/);
+  assert.doesNotMatch(signup, /Studio value:|Included with Studio|outside Studio/);
   assert.match(signup, /\$1,109\.28 in added service value/);
-  assert.match(signup, /Annual standard \.com renewal included while Studio is active/);
-  assert.doesNotMatch(signup, /Business SMS|business-sms|registered campaign/);
-  assert.match(signupRoute, /Website Hosting \+ Business Email/);
-  assert.match(signupRoute, /website-personalization/);
-  assert.match(signupRoute, /From \$749/);
-  assert.doesNotMatch(signupRoute, /Business SMS|business-sms|registered campaign/);
-  assert.match(signup, /data-setup-request/);
-  assert.match(signupRoute, /createSupabaseResource\("events"/);
-  assert.match(signupRoute, /setup_requests/);
-  assert.match(signup, /Choose the look you want to start with/);
-  assert.match(signup, /willow-creek/);
-  assert.match(signup, /cedar-creek/);
-  assert.match(signup, /website_template/);
-  assert.match(signupRoute, /Website template:/);
-  assert.match(signupRoute, /website_template/);
-  assert.doesNotMatch(signup, /\$89|Contact us \/ add later/);
-  assert.doesNotMatch(signup, /card_number|bank_account|custom-domain-checkout|phone-checkout/i);
-  assert.match(domain, /Request Brand Launch setup/);
-  assert.match(domain, /Annual standard \.com renewal included while Studio remains active; otherwise \$29\/year/);
-  assert.match(domain, /Website hosting \+ two business email addresses included with Studio/);
-  assert.match(proxy, /isReservedMarketingHost/);
-  assert.match(proxy, /NextResponse\.rewrite\(marketingUrl\)/);
-  assert.match(portal, /Health & Growth/);
-  assert.match(portal, /Health and growth records/);
-  assert.match(portal, /FAMILY RESOURCES/);
+  assert.match(signupRoute, /const plan: BreederSession\["plan"\] = "starter"/);
+  assert.match(signupRoute, /body\.requested_plan/);
+  assert.match(signupRoute, /\/billing\?welcome=1&plan=/);
+
+  assert.match(paypal, /PAYPAL_CLIENT_ID/);
+  assert.match(paypal, /PAYPAL_CLIENT_SECRET/);
+  assert.match(paypal, /\/v1\/oauth2\/token/);
+  assert.match(paypal, /\/v1\/catalogs\/products/);
+  assert.match(paypal, /\/v1\/billing\/plans/);
+  assert.match(paypal, /intervalCount: 14/);
+  assert.match(paypal, /tenure_type: "TRIAL"/);
+  assert.match(paypal, /fixed_price: \{ value: "0", currency_code: "USD" \}/);
+  assert.match(paypal, /starter-monthly/);
+  assert.match(paypal, /starter-annual/);
+  assert.match(paypal, /professional-monthly/);
+  assert.match(paypal, /professional-annual/);
+  assert.match(paypal, /studio-monthly/);
+  assert.match(paypal, /studio-annual/);
+  assert.match(paypal, /hosting-monthly/);
+  assert.match(paypal, /brand-launch-renewal/);
+  assert.match(paypal, /business-voice-monthly/);
+  assert.match(paypal, /business-voice-annual/);
+  assert.match(paypal, /\/v2\/checkout\/orders/);
+  assert.match(paypal, /\/capture/);
+  assert.match(paypal, /\/v1\/notifications\/verify-webhook-signature/);
+
+  assert.match(billing, /vault=true&intent=subscription/);
+  assert.match(billing, /\/api\/paypal\/catalog/);
+  assert.match(billing, /\/api\/paypal\/subscriptions\/confirm/);
+  assert.match(billing, /\/api\/paypal\/orders/);
+  assert.match(billing, /\/api\/paypal\/orders\/capture/);
+  assert.match(billing, /14 DAYS FREE/);
+  assert.match(billing, /Over \$1,100\.00 Added Value · Prices Locked In/);
+  assert.match(billing, /actual add-on prices—not “value” figures/);
+  assert.match(billing, /SMS is not offered/);
+  assert.match(catalog, /ensurePayPalCatalog/);
+  assert.match(confirm, /getPayPalSubscription/);
+  assert.match(confirm, /setKennelPlan/);
+  assert.match(orders, /createPayPalOrder/);
+  assert.match(capture, /capturePayPalOrder/);
+  assert.match(billingStore, /event_type: "Billing"/);
+  assert.match(webhook, /verifyPayPalWebhook/);
+  assert.match(webhook, /BILLING\.SUBSCRIPTION\.ACTIVATED/);
+  assert.match(proxy, /pathname === "\/api\/paypal\/webhook"/);
+  assert.match(env, /PAYPAL_CLIENT_ID=/);
+  assert.match(env, /PAYPAL_CLIENT_SECRET=/);
+  assert.match(env, /PAYPAL_ENVIRONMENT=live/);
+  assert.match(env, /PAYPAL_WEBHOOK_URL=https:\/\/mydogportal\.site\/api\/paypal\/webhook/);
+  assert.doesNotMatch(env, /NEXT_PUBLIC_PAYPAL_CLIENT_SECRET/);
 });
 
 test("deploys the app directly without redirects", async () => {

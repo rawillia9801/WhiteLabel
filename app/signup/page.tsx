@@ -22,9 +22,9 @@ const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.s
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-").slice(0, 48);
 
 const subscriptions = [
-  { name: "Starter", price: 29, annual: 290, position: "GET ORGANIZED", buttonId: "W8DM75982MX26", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
-  { name: "Professional", price: 59, annual: 590, position: "RUN YOUR BREEDING BUSINESS", buttonId: "J7HBTK2F9AMDN", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
-  { name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", buttonId: "C5G2BVYNMMUPN", description: "Over $1,100.00 Added Value · Prices Locked In. Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
+  { id: "starter", name: "Starter", price: 29, annual: 290, position: "GET ORGANIZED", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
+  { id: "professional", name: "Professional", price: 59, annual: 590, position: "RUN YOUR BREEDING BUSINESS", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
+  { id: "studio", name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", description: "Over $1,100.00 Added Value · Prices Locked In. Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
 ] as const;
 
 const websiteTemplates = [
@@ -36,29 +36,29 @@ const setupServices = [
   {
     id: "hosting-email",
     name: "Website Hosting + Business Email",
-    price: "$17.95/month · Included with Studio",
+    price: "$17.95/month",
     action: "Add hosting + email to my setup",
     icon: Mail,
-    description: "Standalone managed hosting for Starter or Professional, including SSL and two branded business email addresses. Included with an active Studio subscription.",
-    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support", "Studio value: $215.40/year", "Included with Studio"],
+    description: "Standalone managed website hosting and professional email exclusively for dog breeders. No MyDogPortal software subscription is included.",
+    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support"],
   },
   {
     id: "brand-launch",
     name: "Brand Launch",
-    price: "$149 one-time · Included with Studio",
+    price: "$149 setup · then $29/year renewal",
     action: "Add Brand Launch to my setup",
     icon: Globe2,
-    description: "Launch an available standard .com with registration, DNS, and SSL configuration. Included with Studio; available à la carte for Starter and Professional.",
-    details: ["Available standard .com registration", "Domain, DNS, and SSL configuration", "Standard .com registration + renewal: $29 value", "Annual standard .com renewal included while Studio is active; otherwise $29/year", "Brand Launch setup: $149 value with Studio", "Website hosting + two business emails included with Studio", "Premium domains priced separately"],
+    description: "Launch an available standard .com with registration, DNS, and SSL configuration.",
+    details: ["Available standard .com registration", "Domain, DNS, and SSL configuration", "First year registration included with launch", "Managed standard .com renewal: $29/year after year one", "Premium domains priced separately"],
   },
   {
     id: "website-personalization",
     name: "Breeder Website Personalization",
-    price: "$299 one-time · Included with Studio",
+    price: "$299 one-time",
     action: "Request website personalization",
     icon: MonitorSmartphone,
-    description: "Personalize a supported MyDogPortal website style around your kennel so the demonstration content becomes your brand and breeding program. Included with Studio.",
-    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported", "Studio value: $299", "Included with Studio; available à la carte for Starter and Professional"],
+    description: "Personalize a supported MyDogPortal website style around your kennel so the demonstration content becomes your brand and breeding program.",
+    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported"],
   },
   {
     id: "custom-website",
@@ -72,11 +72,11 @@ const setupServices = [
   {
     id: "business-voice",
     name: "Business Voice",
-    price: "$69 setup · Included with Studio",
+    price: "$69 setup + $8.99/month or $99/year",
     action: "Add Business Voice to my setup",
     icon: PhoneCall,
-    description: "A professionally configured local business voice line with your custom greeting and breeder information. Setup and the local number are included with Studio.",
-    details: ["Local number: $8.99/month or $99/year outside Studio", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "Studio phone system + number value: $176.88", "Phone System Credits: $240/year value with Studio"],
+    description: "A professionally configured local business voice line with your custom greeting and breeder information.",
+    details: ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "SMS is not offered"],
   },
 ] as const;
 
@@ -90,11 +90,16 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [setupRequests, setSetupRequests] = useState<string[]>([]);
   const [websiteTemplate, setWebsiteTemplate] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<"starter" | "professional" | "studio">("professional");
 
   useEffect(() => {
-    const requestedTemplate = new URLSearchParams(window.location.search).get("website_template") || "";
-    if (!websiteTemplates.some((template) => template.id === requestedTemplate)) return;
-    const timer = window.setTimeout(() => setWebsiteTemplate(requestedTemplate), 0);
+    const params = new URLSearchParams(window.location.search);
+    const requestedTemplate = params.get("website_template") || "";
+    const requestedPlan = params.get("plan") || "";
+    const timer = window.setTimeout(() => {
+      if (websiteTemplates.some((template) => template.id === requestedTemplate)) setWebsiteTemplate(requestedTemplate);
+      if (["starter", "professional", "studio"].includes(requestedPlan)) setSelectedPlan(requestedPlan as "starter" | "professional" | "studio");
+    }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -127,7 +132,7 @@ export default function SignupPage() {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kennel_name: form.get("kennel_name"), kennel_slug: form.get("kennel_slug"), email: form.get("email"), password: form.get("password"), plan: "starter", setup_requests: setupRequests, website_template: websiteTemplate }),
+        body: JSON.stringify({ kennel_name: form.get("kennel_name"), kennel_slug: form.get("kennel_slug"), email: form.get("email"), password: form.get("password"), plan: "starter", requested_plan: selectedPlan, setup_requests: setupRequests, website_template: websiteTemplate }),
       });
       const result = await response.json() as { error?: string; redirect?: string };
       if (!response.ok) throw new Error(result.error || "Unable to create your kennel account.");
@@ -160,7 +165,7 @@ export default function SignupPage() {
             <label><span>4. Create your password</span><div className="signup-input"><KeyRound size={18} /><input name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={10} required /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div><small>At least 10 characters with uppercase, lowercase, and a number.</small></label>
             {setupRequests.length > 0 && <div className="signup-request-summary"><b>{setupRequests.length} optional setup request{setupRequests.length === 1 ? "" : "s"} selected</b><small>They will be added to your workspace when the account is created. No add-on payment is submitted here.</small></div>}
             {error && <div className="signup-error" role="alert">{error}</div>}
-            <button className="signup-submit" disabled={busy || available === false}>{busy ? "Creating your kennel…" : "Create account and open kennel"}<ArrowRight size={17} /></button>
+            <button className="signup-submit" disabled={busy || available === false}>{busy ? "Creating your kennel…" : "Create account and continue to secure checkout"}<ArrowRight size={17} /></button>
             <footer>Already registered? <Link href="/login">Sign in</Link></footer>
           </form>
 
@@ -183,25 +188,25 @@ export default function SignupPage() {
           </section>
 
           <section className="subscription-section" aria-labelledby="subscription-heading">
-            <header><span><WalletCards size={17} /></span><div><small>14-DAY PLATFORM FREE TRIAL</small><h2 id="subscription-heading">Choose the plan that fits your program</h2><p>Core MyDogPortal subscriptions are handled securely by PayPal. MyDogPortal does not process puppy purchases between breeders and their families.</p></div></header>
+            <header><span><WalletCards size={17} /></span><div><small>14-DAY PLATFORM FREE TRIAL</small><h2 id="subscription-heading">Choose the plan that fits your program</h2><p>Create your kennel first, then complete the connected PayPal checkout. The 14-day $0 trial is built into every MyDogPortal software billing plan.</p></div></header>
             <div className="subscription-grid">
               {subscriptions.map((plan) => (
-                <article className={plan.featured ? "featured" : ""} key={plan.name}>
+                <article className={[plan.featured ? "featured" : "", selectedPlan === plan.id ? "selected" : ""].filter(Boolean).join(" ")} key={plan.name}>
                   {plan.featured && <em>MOST POPULAR</em>}
                   <small className="subscription-position">{plan.position}</small>
                   <h3>{plan.name}</h3>
                   <p><b>${plan.price}</b><span>/month</span></p>
                   <div className="subscription-annual"><b>${plan.annual}/year</b><span>Two months free</span></div>
                   <small>{plan.description}</small>
-                  <a href={`https://www.paypal.com/ncp/payment/${plan.buttonId}`} target="_blank" rel="noreferrer" data-paypal-hosted-button-id={plan.buttonId} aria-label={`Monthly PayPal checkout for the ${plan.name} subscription`}>Monthly checkout with PayPal <ExternalLink size={14} /></a>
+                  <button type="button" aria-pressed={selectedPlan === plan.id} onClick={() => setSelectedPlan(plan.id)}>{selectedPlan === plan.id ? "Selected for checkout" : "Choose " + plan.name}</button>
                 </article>
               ))}
             </div>
-            <aside className="subscription-billing-note">Prefer annual billing? The annual price is confirmed at setup so the correct annual subscription can be issued through PayPal. The hosted buttons above are monthly checkout only.</aside>
+            <aside className="subscription-billing-note">Monthly or annual billing is selected on the secure billing page after your kennel account is created. Annual plans include two months free.</aside>
           </section>
 
           <section className="setup-services" aria-labelledby="setup-services-heading">
-            <header><small>STARTER + PROFESSIONAL ADD-ONS · STUDIO INCLUSIONS</small><h2 id="setup-services-heading">Build your launch package</h2><p>Starter and Professional can request these services individually. Studio includes hosting, two business emails, Brand Launch, supported website personalization, and Business Voice. No add-on payment is taken from these buttons.</p></header>
+            <header><small>À-LA-CARTE BREEDER SERVICES</small><h2 id="setup-services-heading">Build your launch package</h2><p>These five cards are standalone add-ons with their actual prices. Studio bundle value is shown separately below. No add-on payment is taken from these request buttons.</p></header>
             <div className="setup-service-grid">
               {setupServices.map((service) => {
                 const Icon = service.icon;

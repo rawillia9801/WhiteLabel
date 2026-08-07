@@ -6,11 +6,11 @@ import { createSupabaseResource } from "../../../../db/supabase-kennel";
 export const runtime = "nodejs";
 
 const setupRequestDetails: Record<string, { name: string; notes: string }> = {
-  "hosting-email": { name: "Website Hosting + Business Email", notes: "Included with an active Studio subscription. Otherwise $17.95/month standalone managed website hosting for Starter or Professional, including SSL, two branded business email addresses, existing-domain connection, and basic hosting/email support." },
-  "brand-launch": { name: "Brand Launch", notes: "Included with an active Studio subscription. Otherwise $149 one-time for Starter or Professional. Includes registration of an available standard .com plus domain, DNS, and SSL configuration. Annual standard .com renewal is included while Studio remains active; otherwise $29/year. Premium domains are priced separately." },
-  "website-personalization": { name: "Breeder Website Personalization", notes: "Included with an active Studio subscription. Otherwise $299 one-time for Starter or Professional. Personalizes a supported MyDogPortal website style with the kennel identity, colors, photography, content, and connected MyDogPortal information where supported." },
+  "hosting-email": { name: "Website Hosting + Business Email", notes: "$17.95/month standalone managed website hosting exclusively for dog breeders, including SSL, two branded business email addresses, existing-domain connection, and basic hosting/email support. MyDogPortal software is not included." },
+  "brand-launch": { name: "Brand Launch", notes: "$149 setup for an available standard .com, domain/DNS/SSL configuration, and first-year registration. Managed standard .com renewal is $29/year after year one. Premium domains are priced separately." },
+  "website-personalization": { name: "Breeder Website Personalization", notes: "$299 one-time. Personalizes a supported MyDogPortal website style with the kennel identity, colors, photography, content, and connected MyDogPortal information where supported." },
   "custom-website": { name: "Custom Breeder Website", notes: "From $749. Custom layout and page planning, brand/photography/content implementation, and connected MyDogPortal information where supported. Final scope and price are confirmed before work begins." },
-  "business-voice": { name: "Business Voice", notes: "Included with an active Studio subscription: setup, local business number, custom IVR/menu, voicemail/routing, and up to $20/month in voice usage. Otherwise $69 one-time setup, local number $8.99/month or $99/year, incoming calls $0.03/minute, and outgoing calls $0.04/minute." },
+  "business-voice": { name: "Business Voice", notes: "$69 setup plus local number at $8.99/month or $99/year. Includes custom IVR/menu, business hours, voicemail and routing. Incoming calls are $0.03/minute and outgoing calls are $0.04/minute. SMS is not offered." },
 };
 
 const websiteTemplateDetails: Record<string, { name: string; notes: string }> = {
@@ -28,8 +28,11 @@ function cookieDomain(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json() as Record<string, unknown>;
-    const requestedPlan = String(body.plan ?? "starter") as BreederSession["plan"];
-    const plan = (["starter", "professional", "custom_domain"] as const).includes(requestedPlan) ? requestedPlan : "starter";
+    const plan: BreederSession["plan"] = "starter";
+    const requestedPlan = String(body.requested_plan ?? "starter");
+    const checkoutPlan = (["starter", "professional", "studio"] as const).includes(requestedPlan as "starter" | "professional" | "studio")
+      ? requestedPlan
+      : "starter";
     const account = await createBreederAccount({
       email: String(body.email ?? ""), password: String(body.password ?? ""),
       kennelName: String(body.kennel_name ?? ""), kennelSlug: String(body.kennel_slug ?? ""), plan,
@@ -63,9 +66,10 @@ export async function POST(request: Request) {
     const token = createBreederSessionToken(claims);
     if (!token) return Response.json({ error: "Set BREEDER_SESSION_SECRET to a random value of at least 32 characters." }, { status: 503 });
     const requestUrl = new URL(request.url);
+    const billingPath = "/billing?welcome=1&plan=" + encodeURIComponent(checkoutPlan);
     const redirect = ["localhost", "127.0.0.1"].includes(requestUrl.hostname) || requestUrl.hostname.endsWith(".vercel.app")
-      ? `${requestUrl.origin}/`
-      : tenantUrl(claims, "/");
+      ? requestUrl.origin + billingPath
+      : tenantUrl(claims, billingPath);
     const response = NextResponse.json({ created: true, kennel: account.kennel, redirect }, { status: 201 });
     response.cookies.set({
       name: BREEDER_SESSION_COOKIE, value: token, httpOnly: true,
