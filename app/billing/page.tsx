@@ -206,7 +206,7 @@ export default function BillingPage() {
         <span className="billing-kicker"><ShieldCheck size={15} /> SECURE PAYPAL BILLING</span>
         <h1>{required ? "Complete PayPal approval to open your kennel." : welcome ? "Your kennel is ready. Choose your plan." : "Plans & breeder services"}</h1>
         <p>{required ? "Approve your MyDogPortal subscription below. That approval starts the 14-day free trial; your breeder workspace unlocks immediately after PayPal confirms it." : "Subscriptions and add-ons are connected directly to your kennel. MyDogPortal never receives your PayPal password or card details."}</p>
-        <div className="trial-promise"><Sparkles size={18} /><div><b>Every MyDogPortal software plan starts with 14 days free.</b><span>The $0 trial is built into the PayPal billing plan. Your recurring charge starts after the trial unless you cancel first.</span></div></div>
+        <div className="trial-promise"><Sparkles size={18} /><div><b>Every MyDogPortal software plan starts with 14 days free.</b><span>The $0 trial is built into the PayPal billing plan. Cancel anytime from your Account Center—no phone call, email, or support ticket required.</span></div></div>
       </header>
 
       <section className="billing-shell">
