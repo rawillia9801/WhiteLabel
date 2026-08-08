@@ -2,6 +2,7 @@ import "server-only";
 
 import { getSupabaseConfig, supabaseRequest } from "../db/supabase";
 import type { BreederSession } from "./breeder-session";
+import { listAllSupportTickets, type SupportTicket } from "./support-tickets";
 
 type KennelRow = {
   id: string;
@@ -56,6 +57,7 @@ export type PlatformAdminDashboardData = {
     collected: number;
     recurringRunRate: number;
     openRequests: number;
+    openSupportTickets: number;
   };
   planMix: Array<{ plan: string; count: number }>;
   customers: Array<{
@@ -90,6 +92,10 @@ export type PlatformAdminDashboardData = {
     status: string;
     details: string;
     createdAt: string;
+  }>;
+  supportTickets: Array<SupportTicket & {
+    kennelName: string;
+    email: string;
   }>;
   activity: Array<{
     id: number;
@@ -192,9 +198,10 @@ function recurringMonthlyValue(notes: BillingNotes) {
 }
 
 export async function loadPlatformAdminDashboard(adminEmail: string): Promise<PlatformAdminDashboardData> {
-  const [kennels, events] = await Promise.all([
+  const [kennels, events, platformSupportTickets] = await Promise.all([
     restJson<KennelRow[]>("rest/v1/kennels?select=id,owner_auth_user_id,name,slug,plan,custom_domain,domain_status,contact_email,contact_phone,created_at&order=created_at.desc&limit=2000"),
     restJson<EventRow[]>("rest/v1/events?select=id,kennel_id,title,event_type,event_date,status,notes,created_at&event_type=in.%28Billing%2C%22Setup%20Request%22%2C%22Trial%20Signup%22%29&order=created_at.desc&limit=5000"),
+    listAllSupportTickets().catch(() => [] as SupportTicket[]),
   ]);
 
   const kennelById = new Map(kennels.map((kennel) => [kennel.id, kennel]));
@@ -294,6 +301,12 @@ export async function loadPlatformAdminDashboard(adminEmail: string): Promise<Pl
   });
 
   const openRequests = requests.filter((request) => !["COMPLETED", "CLOSED", "CANCELLED"].includes(request.status.toUpperCase())).length;
+  const supportTickets = platformSupportTickets.map((ticket) => ({
+    ...ticket,
+    kennelName: kennelById.get(ticket.kennelId)?.name || "Unknown kennel",
+    email: kennelById.get(ticket.kennelId)?.contact_email || "",
+  }));
+  const openSupportTickets = supportTickets.filter((ticket) => !["Resolved", "Closed"].includes(ticket.status)).length;
 
   const planCounts = new Map<string, number>([["Starter", 0], ["Professional", 0], ["Studio", 0]]);
   for (const customer of customers) planCounts.set(customer.plan, (planCounts.get(customer.plan) || 0) + 1);
@@ -320,11 +333,13 @@ export async function loadPlatformAdminDashboard(adminEmail: string): Promise<Pl
       collected,
       recurringRunRate,
       openRequests,
+      openSupportTickets,
     },
     planMix,
     customers,
     payments,
     requests,
+    supportTickets,
     activity,
   };
 }

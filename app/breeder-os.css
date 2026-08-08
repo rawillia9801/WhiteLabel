@@ -344,7 +344,7 @@
   border-top: 1px solid rgba(255, 255, 255, .10);
 }
 
-.bos-sidebar-footer > div { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.bos-sidebar-footer > div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
 .bos-sidebar-footer a { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(255,255,255,.10); border-radius: 8px; background: rgba(255,255,255,.035); color: #b8cec9; font-size: 9px; font-weight: 720; text-decoration: none; }
 .bos-sidebar-footer a:hover { background: rgba(255,255,255,.07); color: #fff; }
 .bos-sidebar-footer p { display: grid; grid-template-columns: 8px minmax(0,1fr); align-items: center; gap: 9px; margin: 0; padding: 4px 6px 0; }

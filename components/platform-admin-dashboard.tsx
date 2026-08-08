@@ -18,12 +18,14 @@ import {
   Settings2,
   ShieldCheck,
   Sparkles,
+  MessageSquareText,
   Users,
   WalletCards,
 } from "lucide-react";
 import type { PlatformAdminDashboardData } from "../lib/platform-admin";
+import { PlatformSupportTickets } from "./platform-support-tickets";
 
-type View = "overview" | "customers" | "payments" | "requests" | "activity";
+type View = "overview" | "customers" | "payments" | "requests" | "support" | "activity";
 
 function money(value: number) {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
@@ -92,6 +94,7 @@ export function PlatformAdminDashboard({ data }: { data: PlatformAdminDashboardD
     { id: "customers" as const, label: "Customers & trials", icon: Users, count: data.metrics.totalKennels },
     { id: "payments" as const, label: "Payments", icon: CreditCard, count: data.payments.length },
     { id: "requests" as const, label: "Service requests", icon: Settings2, count: data.metrics.openRequests },
+    { id: "support" as const, label: "Support tickets", icon: MessageSquareText, count: data.metrics.openSupportTickets },
     { id: "activity" as const, label: "Platform activity", icon: Activity, count: data.activity.length },
   ];
 
@@ -126,7 +129,7 @@ export function PlatformAdminDashboard({ data }: { data: PlatformAdminDashboardD
               <article><span><WalletCards size={17} /></span><div><small>ACTIVE PAID</small><b>{data.metrics.activePaid}</b><p>Software subscriptions</p></div></article>
               <article><span><CircleDollarSign size={17} /></span><div><small>COLLECTED</small><b>{money(data.metrics.collected)}</b><p>Recorded PayPal payments</p></div></article>
               <article><span><Sparkles size={17} /></span><div><small>RECURRING RUN RATE</small><b>{money(data.metrics.recurringRunRate)}</b><p>Monthly equivalent</p></div></article>
-              <article className={data.metrics.attention ? "attention" : ""}><span><AlertTriangle size={17} /></span><div><small>NEEDS ATTENTION</small><b>{data.metrics.attention + data.metrics.checkoutIncomplete}</b><p>{data.metrics.checkoutIncomplete} incomplete checkout</p></div></article>
+              <article className={data.metrics.attention || data.metrics.openSupportTickets ? "attention" : ""}><span><AlertTriangle size={17} /></span><div><small>NEEDS ATTENTION</small><b>{data.metrics.attention + data.metrics.checkoutIncomplete + data.metrics.openSupportTickets}</b><p>{data.metrics.checkoutIncomplete} checkout · {data.metrics.openSupportTickets} support</p></div></article>
             </section>
 
             <section className="admin-overview-grid">
@@ -180,6 +183,8 @@ export function PlatformAdminDashboard({ data }: { data: PlatformAdminDashboardD
             <header><div><small>SERVICE FULFILLMENT</small><h2>Setup and add-on request queue</h2><p>Hosting/email, Brand Launch, website personalization, custom website and Business Voice requests submitted during signup.</p></div><div className="filter-pills">{["Open", "All", "Completed"].map((status) => <button type="button" key={status} className={requestStatus === status ? "active" : ""} onClick={() => setRequestStatus(status)}>{status}</button>)}</div></header>
             <div className="request-cards">{requests.map((request) => <article key={request.id}><header><span><Settings2 size={15} /></span><div><small>{request.kennelName}</small><h3>{request.title}</h3></div><em className={"status " + stageClass(request.status)}>{request.status}</em></header><p>{request.details}</p><footer><span>{request.email}</span><time>{dateTime(request.createdAt)}</time></footer></article>)}{!requests.length && <div className="admin-empty">No service requests match these filters.</div>}</div>
           </section>}
+
+          {view === "support" && <PlatformSupportTickets tickets={data.supportTickets} query={query} />}
 
           {view === "activity" && <section className="admin-panel full">
             <header><div><small>AUDIT STREAM</small><h2>Recent platform activity</h2><p>Signup, billing and setup-request events across every kennel.</p></div></header>
