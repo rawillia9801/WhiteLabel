@@ -94,6 +94,20 @@ export default function SignupPage() {
   const [setupRequests, setSetupRequests] = useState<string[]>([]);
   const [websiteTemplate, setWebsiteTemplate] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<"starter" | "professional" | "studio">("professional");
+  const [founding, setFounding] = useState({ available: true, remaining: 100, limit: 100 });
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/founding-pricing", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = await response.json() as { available?: boolean; remaining?: number; limit?: number };
+        if (active && response.ok && typeof payload.available === "boolean") {
+          setFounding({ available: payload.available, remaining: Number(payload.remaining ?? 0), limit: Number(payload.limit ?? 100) });
+        }
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -191,21 +205,21 @@ export default function SignupPage() {
           </section>
 
           <section className="subscription-section" aria-labelledby="subscription-heading">
-            <header><span><WalletCards size={17} /></span><div><small>FOUNDING BREEDER PRICING · FIRST 100 KENNELS</small><h2 id="subscription-heading">Lock in your introductory rate</h2><p>The first 100 kennel accounts receive Founding Breeder pricing. Start with the 14-day $0 trial, then keep your Founding rate for as long as your subscription remains continuously active.</p></div></header>
+            <header><span><WalletCards size={17} /></span><div><small>{founding.available ? `FOUNDING BREEDER PRICING · ${founding.remaining} OF ${founding.limit} SPOTS REMAIN` : "STANDARD MYDOGPORTAL PRICING"}</small><h2 id="subscription-heading">{founding.available ? "Lock in your introductory rate" : "Choose the plan that fits your program"}</h2><p>{founding.available ? "The first 100 kennel accounts receive Founding Breeder pricing. Start with the 14-day $0 trial, then keep your Founding rate for as long as your subscription remains continuously active." : "The Founding Breeder offer has been fully claimed. Every MyDogPortal software plan still begins with a 14-day $0 trial."}</p></div></header>
             <div className="subscription-grid">
               {subscriptions.map((plan) => (
                 <article className={[plan.featured ? "featured" : "", selectedPlan === plan.id ? "selected" : ""].filter(Boolean).join(" ")} key={plan.name}>
                   {plan.featured && <em>MOST POPULAR</em>}
                   <small className="subscription-position">{plan.position}</small>
                   <h3>{plan.name}</h3>
-                  <div className="signup-founding-price"><small>REGULAR ${plan.regular}/MONTH</small><p><b>${plan.price}</b><span>/month Founding</span></p></div>
-                  <div className="subscription-annual"><b>${plan.annual}/year Founding</b><span>Regular ${plan.regularAnnual}/year</span></div>
+                  <div className="signup-founding-price">{founding.available && <small>REGULAR ${plan.regular}/MONTH</small>}<p><b>${founding.available ? plan.price : plan.regular}</b><span>/month{founding.available ? " Founding" : ""}</span></p></div>
+                  <div className="subscription-annual"><b>${founding.available ? plan.annual : plan.regularAnnual}/year{founding.available ? " Founding" : ""}</b><span>{founding.available ? `Regular ${plan.regularAnnual}/year` : "Two months free"}</span></div>
                   <small>{plan.description}</small>
                   <button type="button" aria-pressed={selectedPlan === plan.id} onClick={() => setSelectedPlan(plan.id)}>{selectedPlan === plan.id ? "Selected for checkout" : "Choose " + plan.name}</button>
                 </article>
               ))}
             </div>
-            <aside className="subscription-billing-note"><b>Founding Breeder disclaimer:</b> Founding pricing is limited to the first 100 eligible kennel accounts and is confirmed when the account is created. Your Founding rate remains locked only while that subscription stays continuously active. If you cancel or allow it to lapse, the Founding rate is forfeited and any later subscription will be at the then-current published price. Monthly or annual billing is selected on the secure billing page.</aside>
+            <aside className="subscription-billing-note">{founding.available ? <><b>Founding Breeder disclaimer:</b> Founding pricing is limited to the first 100 eligible kennel accounts and is confirmed when the account is created. Your Founding rate remains locked only while that subscription stays continuously active. If you cancel or allow it to lapse, the Founding rate is forfeited and any later subscription will be at the then-current published price.</> : <>Monthly or annual billing is selected on the secure billing page. Annual plans include two months free.</>}</aside>
           </section>
 
           <section className="setup-services" aria-labelledby="setup-services-heading">
