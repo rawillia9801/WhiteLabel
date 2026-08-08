@@ -3001,3 +3001,7 @@ body {
 .bos-profile-pill{position:fixed;top:18px;right:28px;z-index:28;min-width:184px;height:42px;display:grid;grid-template-columns:28px minmax(0,1fr) 14px;align-items:center;gap:8px;padding:6px 9px;border:1px solid #cfdad4;border-radius:11px;background:rgba(255,255,255,.96);box-shadow:0 8px 24px rgba(19,54,47,.10);color:#173f38;text-decoration:none;backdrop-filter:blur(14px)}
 .bos-profile-pill>svg:first-child{width:28px;height:28px;padding:6px;border-radius:8px;background:#e7f3ef;color:#16705e}.bos-profile-pill span{min-width:0}.bos-profile-pill b,.bos-profile-pill small{display:block;white-space:nowrap}.bos-profile-pill b{font-size:9px}.bos-profile-pill small{margin-top:2px;color:#71857e;font-size:7px}.bos-profile-pill>svg:last-child{color:#7f928c}.bos-profile-pill:hover{border-color:#a8c2b8;transform:translateY(-1px);box-shadow:0 12px 30px rgba(19,54,47,.14)}
 @media(max-width:760px){.bos-profile-pill{top:12px;right:12px;min-width:0;width:42px;grid-template-columns:1fr;padding:6px}.bos-profile-pill span,.bos-profile-pill>svg:last-child{display:none}.bos-profile-pill>svg:first-child{margin:auto}}
+
+
+/* Founding Breeder signup offer */
+.signup-founding-price>small{display:block;margin-top:12px;color:#82918c;font-size:8px;font-weight:800;text-decoration:line-through;letter-spacing:.06em}.signup-founding-price>p{margin-top:4px!important}.subscription-billing-note b{color:#765719}
