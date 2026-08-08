@@ -2,6 +2,7 @@ import "server-only";
 
 import { supabaseRequest } from "../db/supabase";
 import { findKennelById } from "./supabase-auth";
+import { isPlatformOfferingKey } from "./founding-pricing";
 
 type AccountEventRow = {
   id: number;
@@ -37,7 +38,7 @@ function parseBilling(notes: string | null) {
 }
 
 function isPlatformOffering(key: string | undefined) {
-  return Boolean(key && /^(starter|professional|studio)-(monthly|annual)$/.test(key));
+  return Boolean(key && isPlatformOfferingKey(key));
 }
 
 function activeStatus(status: string) {
