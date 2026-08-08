@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function NorthstarPoodlesTemplatePage() {
   return <main className="ns-site">
-    <div className="template-demo"><span>MYDOGPORTAL WEBSITE TEMPLATE 03 · INCLUDED KENNEL ADDRESS</span><p><b>northstar.mydogportal.site</b> demonstrates the included <b>yourkennel.mydogportal.site</b> address. Your kennel, dogs, photography, colors, policies, and content replace everything shown.</p><Link href="/signup?website_template=northstar-poodles">Choose this style <ArrowRight size={13}/></Link></div>
+    <div className="template-demo"><span>MYDOGPORTAL WEBSITE TEMPLATE 03 · INCLUDED KENNEL ADDRESS</span><p><b>northstar.mydogportal.site</b> demonstrates the included <b>yourkennel.mydogportal.site</b> address. Your kennel, dogs, photography, colors, policies, and content replace everything shown.</p><div className="template-demo-actions"><Link href="/templates/os-demo/northstar-poodles">Explore OS demo <ArrowRight size={13}/></Link><Link href="/signup?website_template=northstar-poodles">Choose this style <ArrowRight size={13}/></Link></div></div>
     <nav className="ns-nav">
       <a className="ns-brand" href="#home"><b>Northstar</b><small>STANDARD POODLES</small></a>
       <div className="ns-links"><a href="#philosophy">Philosophy</a><a href="#dogs">Our Poodles</a><a href="#health">Health</a><a href="#portal">Puppy Portal</a></div>
