@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 
-export function SubscriptionCancelButton() {
+export function SubscriptionCancelButton({ founding = false }: { founding?: boolean }) {
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState<"idle" | "working" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -37,7 +37,7 @@ export function SubscriptionCancelButton() {
     {status === "success" ? <div className="subscription-cancel-message success"><CheckCircle2 size={15}/><span>{message}</span></div> : <>
       <div className="subscription-cancel-copy">
         <span className="subscription-cancel-icon"><AlertTriangle size={15}/></span>
-        <div><b>Cancel MyDogPortal subscription?</b><span>This stops future recurring MyDogPortal subscription billing. No phone call, email, or support ticket is required.</span></div>
+        <div><b>Cancel MyDogPortal subscription?</b><span>{founding ? "This stops future recurring MyDogPortal subscription billing and permanently forfeits your locked Founding Breeder rate. Any future subscription will use the then-current published price." : "This stops future recurring MyDogPortal subscription billing. No phone call, email, or support ticket is required."}</span></div>
       </div>
       {status === "error" && <div className="subscription-cancel-message error" role="alert">{message}</div>}
       <div className="subscription-cancel-actions">
