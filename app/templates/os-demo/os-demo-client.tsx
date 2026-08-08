@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {
   Activity, ArrowLeft, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign,
-  ClipboardCheck, Clock3, Dog, FileSignature, HeartPulse, LayoutDashboard,
+  Clock3, Dog, FileSignature, HeartPulse, LayoutDashboard,
   MailCheck, Menu, PawPrint, Sparkles, UsersRound, Waypoints, X,
 } from "lucide-react";
 import { useState } from "react";
@@ -98,7 +98,7 @@ function Whelping({ kennel }: { kennel: DemoKennel }) {
   </>;
 }
 
-function CalendarView({ kennel }: { kennel: DemoKennel }) {
+function CalendarView() {
   const days=Array.from({length:31},(_,i)=>i+1);
   return <>
     <SectionTitle eyebrow="BREEDING CALENDAR" title="The breeding record builds the schedule." copy="Due dates, pregnancy milestones, puppy care, family updates, documents, and go-home work can all surface from the underlying records." />
@@ -158,7 +158,7 @@ function Portal({ kennel }: { kennel: DemoKennel }) {
   const active=tabCopy[portalTab];
   return <>
     <SectionTitle eyebrow="PRIVATE PUPPY PORTAL" title="The family's view is connected—but intentionally limited." copy="Families see their puppy journey, not the breeder's private operating records. Click the portal tabs below to see how one placed family's information is organized." />
-    <div className="osd-portal"><aside><small>{kennel.name.toUpperCase()}</small><h3>{family.name}</h3>{tabs.map(x=><button type="button" className={portalTab===x?"active":""} onClick={()=>setPortalTab(x)} key={x}>{x}</button>)}</aside><section><small>PRIVATE FAMILY PORTAL</small><h2>Welcome, {family.name.split(" ")[0]}</h2><p>Everything connected to {family.puppy}'s journey, organized around what comes next.</p><div className="osd-portal-metrics"><span><small>ASSIGNED PUPPY</small><b>{family.puppy}</b></span><span><small>PUBLISHED UPDATES</small><b>6</b></span><span><small>DOCUMENTS</small><b>4</b></span><span><small>BALANCE</small><b>{family.balance}</b></span></div><div className="osd-portal-card"><div><small>{portalTab.toUpperCase()}</small><h3>{active.title}</h3><p>{active.copy}</p></div><b>{active.metric}</b></div></section></div>
+    <div className="osd-portal"><aside><small>{kennel.name.toUpperCase()}</small><h3>{family.name}</h3>{tabs.map(x=><button type="button" className={portalTab===x?"active":""} onClick={()=>setPortalTab(x)} key={x}>{x}</button>)}</aside><section><small>PRIVATE FAMILY PORTAL</small><h2>Welcome, {family.name.split(" ")[0]}</h2><p>Everything connected to {family.puppy}&apos;s journey, organized around what comes next.</p><div className="osd-portal-metrics"><span><small>ASSIGNED PUPPY</small><b>{family.puppy}</b></span><span><small>PUBLISHED UPDATES</small><b>6</b></span><span><small>DOCUMENTS</small><b>4</b></span><span><small>BALANCE</small><b>{family.balance}</b></span></div><div className="osd-portal-card"><div><small>{portalTab.toUpperCase()}</small><h3>{active.title}</h3><p>{active.copy}</p></div><b>{active.metric}</b></div></section></div>
   </>;
 }
 
@@ -174,7 +174,7 @@ export default function OSDemoClient({ kennel }: { kennel: DemoKennel }) {
       case "litters": return <Litters kennel={kennel}/>;
       case "families": return <Families kennel={kennel}/>;
       case "whelping": return <Whelping kennel={kennel}/>;
-      case "calendar": return <CalendarView kennel={kennel}/>;
+      case "calendar": return <CalendarView/>;
       case "documents": return <Documents/>;
       case "payments": return <Payments kennel={kennel}/>;
       case "automation": return <Automation kennel={kennel}/>;
