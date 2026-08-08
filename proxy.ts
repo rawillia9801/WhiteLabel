@@ -8,6 +8,7 @@ const publicPath = (pathname: string) =>
   || pathname === "/apply"
   || pathname.startsWith("/templates/")
   || pathname.startsWith("/api/auth/")
+  || pathname === "/api/founding-pricing"
   || pathname.startsWith("/portal/")
   || pathname.startsWith("/api/portal/")
   || pathname.startsWith("/api/website/")
