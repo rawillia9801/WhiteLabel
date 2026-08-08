@@ -7,6 +7,7 @@ import {
   paypalEnvironment,
   recurringOfferings,
 } from "../../../../lib/paypal";
+import { foundingPricingStatus, isFoundingOfferingKey } from "../../../../lib/founding-pricing";
 
 export const runtime = "nodejs";
 
@@ -27,14 +28,16 @@ export async function POST(request: Request) {
   if (!["owner", "admin"].includes(session.role)) return Response.json({ error: "Owner or admin access is required." }, { status: 403 });
 
   try {
-    const planIds = await ensurePayPalCatalog();
+    const [planIds, founding] = await Promise.all([ensurePayPalCatalog(), foundingPricingStatus(session.kennelId)]);
     await ensurePayPalWebhook(webhookUrl(request));
+    const visibleRecurring = recurringOfferings.filter((offering) => offering.group !== "platform" || (founding.eligible ? isFoundingOfferingKey(offering.key) : !isFoundingOfferingKey(offering.key)));
     return Response.json({
+      founding,
       clientId: paypalClientId(),
       environment: paypalEnvironment(),
       kennelId: session.kennelId,
       currentPlan: session.plan,
-      recurring: recurringOfferings.map((offering) => ({
+      recurring: visibleRecurring.map((offering) => ({
         key: offering.key,
         group: offering.group,
         name: offering.name,
