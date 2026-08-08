@@ -22,9 +22,9 @@ const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.s
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-").slice(0, 48);
 
 const subscriptions = [
-  { id: "starter", name: "Starter", price: 29, annual: 290, position: "GET ORGANIZED", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
-  { id: "professional", name: "Professional", price: 59, annual: 590, position: "RUN YOUR BREEDING BUSINESS", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
-  { id: "studio", name: "Studio", price: 99, annual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", description: "Over $1,100.00 Added Value · Prices Locked In. Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
+  { id: "starter", name: "Starter", price: 19, annual: 190, regular: 29, regularAnnual: 290, position: "GET ORGANIZED", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
+  { id: "professional", name: "Professional", price: 39, annual: 390, regular: 59, regularAnnual: 590, position: "RUN YOUR BREEDING BUSINESS", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
+  { id: "studio", name: "Studio", price: 69, annual: 690, regular: 99, regularAnnual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", description: "Over $1,100.00 Added Value · Prices Locked In. Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
 ] as const;
 
 const websiteTemplates = [
@@ -191,21 +191,21 @@ export default function SignupPage() {
           </section>
 
           <section className="subscription-section" aria-labelledby="subscription-heading">
-            <header><span><WalletCards size={17} /></span><div><small>14-DAY PLATFORM FREE TRIAL</small><h2 id="subscription-heading">Choose the plan that fits your program</h2><p>Create your kennel first, then complete the connected PayPal checkout. The 14-day $0 trial is built into every MyDogPortal software billing plan.</p></div></header>
+            <header><span><WalletCards size={17} /></span><div><small>FOUNDING BREEDER PRICING · FIRST 100 KENNELS</small><h2 id="subscription-heading">Lock in your introductory rate</h2><p>The first 100 kennel accounts receive Founding Breeder pricing. Start with the 14-day $0 trial, then keep your Founding rate for as long as your subscription remains continuously active.</p></div></header>
             <div className="subscription-grid">
               {subscriptions.map((plan) => (
                 <article className={[plan.featured ? "featured" : "", selectedPlan === plan.id ? "selected" : ""].filter(Boolean).join(" ")} key={plan.name}>
                   {plan.featured && <em>MOST POPULAR</em>}
                   <small className="subscription-position">{plan.position}</small>
                   <h3>{plan.name}</h3>
-                  <p><b>${plan.price}</b><span>/month</span></p>
-                  <div className="subscription-annual"><b>${plan.annual}/year</b><span>Two months free</span></div>
+                  <div className="signup-founding-price"><small>REGULAR ${plan.regular}/MONTH</small><p><b>${plan.price}</b><span>/month Founding</span></p></div>
+                  <div className="subscription-annual"><b>${plan.annual}/year Founding</b><span>Regular ${plan.regularAnnual}/year</span></div>
                   <small>{plan.description}</small>
                   <button type="button" aria-pressed={selectedPlan === plan.id} onClick={() => setSelectedPlan(plan.id)}>{selectedPlan === plan.id ? "Selected for checkout" : "Choose " + plan.name}</button>
                 </article>
               ))}
             </div>
-            <aside className="subscription-billing-note">Monthly or annual billing is selected on the secure billing page after your kennel account is created. Annual plans include two months free.</aside>
+            <aside className="subscription-billing-note"><b>Founding Breeder disclaimer:</b> Founding pricing is limited to the first 100 eligible kennel accounts and is confirmed when the account is created. Your Founding rate remains locked only while that subscription stays continuously active. If you cancel or allow it to lapse, the Founding rate is forfeited and any later subscription will be at the then-current published price. Monthly or annual billing is selected on the secure billing page.</aside>
           </section>
 
           <section className="setup-services" aria-labelledby="setup-services-heading">
