@@ -6,6 +6,7 @@ import {
 } from "../../../../../lib/breeder-session";
 import { recordPayPalBillingEvent, setKennelPlan } from "../../../../../lib/paypal-billing";
 import { ensurePayPalCatalog, getPayPalSubscription, recurringOffering } from "../../../../../lib/paypal";
+import { foundingPricingStatus, isFoundingOfferingKey } from "../../../../../lib/founding-pricing";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,10 @@ export async function POST(request: Request) {
     const subscriptionId = String(body.subscription_id || "");
     const offering = recurringOffering(String(body.offering_key || ""));
     if (!offering) return Response.json({ error: "Unknown subscription offering." }, { status: 400 });
+    if (isFoundingOfferingKey(offering.key)) {
+      const founding = await foundingPricingStatus(session.kennelId);
+      if (!founding.eligible) return Response.json({ error: "Founding Breeder pricing is no longer available for this kennel." }, { status: 409 });
+    }
 
     const planIds = await ensurePayPalCatalog();
     const expectedPlanId = planIds[offering.key];
