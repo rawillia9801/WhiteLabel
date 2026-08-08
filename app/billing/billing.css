@@ -53,3 +53,7 @@
 .billing-footnote { margin:16px 0 0; color:#697d77; font-size:10px; line-height:1.55; }
 @media (max-width:960px) { .billing-plan-grid,.addon-grid { grid-template-columns:1fr; } .section-heading { align-items:start; flex-direction:column; } }
 @media (max-width:600px) { .billing-hero,.billing-shell { padding-left:18px; padding-right:18px; } .billing-hero h1 { font-size:42px; } .cycle-toggle { width:100%; } .cycle-toggle button { flex:1; } }
+
+
+/* Founding Breeder checkout */
+.founding-billing-banner{display:grid;grid-template-columns:38px minmax(0,1fr);gap:12px;align-items:start;margin:0 0 20px;padding:17px 19px;border:1px solid #d9c28e;border-radius:12px;background:#fff8e8;color:#614c22}.founding-billing-banner>svg{padding:9px;border-radius:9px;background:#f4e3b9;color:#87651d;box-sizing:content-box}.founding-billing-banner b,.founding-billing-banner span{display:block}.founding-billing-banner b{font-size:12px}.founding-billing-banner span{margin-top:4px;color:#786947;font-size:9px;line-height:1.55}.founding-plan-label{display:inline-flex;margin:10px 0 0;padding:5px 7px;border-radius:999px;background:#fff0c5;color:#7b5a17;font-size:7px;font-weight:900;letter-spacing:.09em}
