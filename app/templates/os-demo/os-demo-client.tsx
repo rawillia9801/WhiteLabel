@@ -136,7 +136,7 @@ function Automation({ kennel }: { kennel: DemoKennel }) {
       [PawPrint,"Weekly puppy update","Every Friday","Prompt breeder, then publish approved update to Puppy Portal","Active"],
       [CalendarDays,"Go-home preparation","7 days before","Send checklist and surface missing documents","Active"],
       [HeartPulse,"Breeding milestone","Timeline driven",`Alert breeder about ${kennel.breeding.dam}'s next milestone`,"Active"],
-    ].map(([Icon,title,when,action,status])=><article key={String(title)}><span><Icon size={20}/></span><div><small>{when}</small><h3>{title}</h3><p>{action}</p></div><em><i/>{status}</em></article>)}</div>
+    ] as const).map(([Icon,title,when,action,status])=><article key={String(title)}><span><Icon size={20}/></span><div><small>{when}</small><h3>{title}</h3><p>{action}</p></div><em><i/>{status}</em></article>)}</div>
   </>;
 }
 
@@ -152,6 +152,7 @@ export default function OSDemoClient({ kennel }: { kennel: DemoKennel }) {
   const [view,setView]=useState<View>("dashboard");
   const [open,setOpen]=useState(false);
   const current=nav.find(item=>item[0]===view)!;
+  const CurrentIcon=current[1];
   const render=()=> {
     switch(view){
       case "breeding": return <Breeding kennel={kennel}/>;
@@ -177,7 +178,7 @@ export default function OSDemoClient({ kennel }: { kennel: DemoKennel }) {
         <footer><PawPrint size={18}/><div><b>Powered by MyDogPortal</b><small>Read-only prospect demo</small></div></footer>
       </aside>
       <section className="osd-workspace">
-        <div className="osd-topbar"><button onClick={()=>setOpen(true)} aria-label="Open navigation"><Menu size={19}/></button><div><current[1] size={17}/><b>{current[2]}</b></div><span><Clock3 size={14}/> Sample data · Aug 7, 2026</span><Link href="/signup">Start free trial <ChevronRight size={14}/></Link></div>
+        <div className="osd-topbar"><button onClick={()=>setOpen(true)} aria-label="Open navigation"><Menu size={19}/></button><div><CurrentIcon size={17}/><b>{current[2]}</b></div><span><Clock3 size={14}/> Sample data · Aug 7, 2026</span><Link href="/signup">Start free trial <ChevronRight size={14}/></Link></div>
         <div className="osd-content">{render()}</div>
       </section>
     </div>
