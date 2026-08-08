@@ -22,6 +22,7 @@ type BillingConfig = {
   environment: "live" | "sandbox";
   kennelId: string;
   currentPlan: string;
+  founding: { limit: number; claimed: number; remaining: number; available: boolean; eligible: boolean };
   recurring: RecurringOffering[];
   oneTime: OneTimeOffering[];
 };
@@ -176,7 +177,7 @@ export default function BillingPage() {
     const payload = await response.json() as { error?: string };
     if (!response.ok) throw new Error(payload.error || "Unable to confirm the PayPal subscription.");
     setNotice("Subscription confirmed. Your MyDogPortal billing is now connected to this kennel.");
-    if (/^(starter|professional|studio)-(monthly|annual)$/.test(offeringKey)) {
+    if (/^(founding-)?(starter|professional|studio)-(monthly|annual)$/.test(offeringKey)) {
       window.setTimeout(() => window.location.assign("/"), 900);
     }
   }, []);
@@ -216,6 +217,7 @@ export default function BillingPage() {
 
         {config && <>
           <section className="plan-section" aria-labelledby="plans-heading">
+            {config.founding?.eligible && <div className="founding-billing-banner"><Sparkles size={18}/><div><b>Founding Breeder rate reserved for this kennel</b><span>You are one of the first {config.founding.limit} MyDogPortal kennel accounts. Your introductory subscription rate stays locked while the subscription remains continuously active. If it is cancelled or lapses, the Founding rate is forfeited and any future subscription uses the then-current published price.</span></div></div>}
             <div className="section-heading">
               <div><small>MYDOGPORTAL SUBSCRIPTIONS</small><h2 id="plans-heading">Choose the operating system behind your kennel</h2></div>
               <div className="cycle-toggle" role="group" aria-label="Billing cycle">
@@ -229,7 +231,7 @@ export default function BillingPage() {
                   {offering.name === "Professional" && <em>MOST POPULAR</em>}
                   <small>{offering.name === "Starter" ? "GET ORGANIZED" : offering.name === "Professional" ? "RUN YOUR BREEDING BUSINESS" : "RUN YOUR BUSINESS + YOUR BRAND"}</small>
                   <h3>{offering.name}</h3>
-                  <div className="plan-price"><b>{dollars(offering.price)}</b><span>/{offering.interval}</span></div>
+                  {config.founding?.eligible && <div className="founding-plan-label">FOUNDING BREEDER PRICE</div>}<div className="plan-price"><b>{dollars(offering.price)}</b><span>/{offering.interval}</span></div>
                   <div className="trial-chip">14 DAYS FREE · THEN {dollars(offering.price).toUpperCase()}/{offering.interval.toUpperCase()}</div>
                   {offering.name === "Studio" && <div className="studio-value">Over $1,100.00 Added Value · Prices Locked In</div>}
                   <ul>{planCopy[offering.name as keyof typeof planCopy].map((item) => <li key={item}><Check size={14} />{item}</li>)}</ul>
