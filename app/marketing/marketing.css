@@ -44,3 +44,7 @@
 .marketing-pricing .marketing-plans{align-items:stretch}.marketing-pricing .marketing-plans article{padding:30px}.marketing-pricing .marketing-plans ul{gap:9px}.marketing-pricing .marketing-plans li{align-items:flex-start;line-height:1.45}.marketing-pricing .marketing-plans li svg{flex:0 0 auto;margin-top:1px}
 @media(max-width:1100px){.marketing-feature-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.marketing-feature-detail{padding:78px 18px}.marketing-feature-detail-grid{grid-template-columns:1fr}.marketing-feature-detail-grid article{min-height:0}.marketing-feature-detail-grid article>header>div{align-items:flex-start;flex-direction:column}.marketing-feature-detail-grid em{white-space:normal}}
+
+
+/* Founding Breeder launch pricing */
+.founding-ribbon{align-self:flex-start;margin:0 0 9px;padding:6px 8px;border-radius:999px;background:#fff2cc;color:#775716;font-size:7px;font-weight:900;letter-spacing:.09em}.regular-plan-price{margin:12px 0 -10px;color:#8b9894;font-size:9px;font-weight:750;text-decoration:line-through}.marketing-pricing .marketing-plans>article>p b{color:#174d40}.marketing-pricing-note{padding:18px 21px;border:1px solid #d9c89f;border-radius:11px;background:#fffaf0}.marketing-pricing-note>b:first-child{color:#7a5b1b}
