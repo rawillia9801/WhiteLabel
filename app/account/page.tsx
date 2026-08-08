@@ -58,7 +58,7 @@ export default async function BreederAccountPage() {
             <div><small>NEXT BILLING</small><b>{date(account.subscription?.nextBillingAt || null)}</b><p>{account.subscription ? `${money(account.subscription.amount)} scheduled by PayPal` : "No PayPal subscription recorded"}</p></div>
             <div><small>TRIAL</small><b>{trialActive ? "14 days free" : "—"}</b><p>{trialActive ? `Ends ${date(account.subscription?.trialEndsAt || null)}` : "Trial period complete or not applicable"}</p></div>
           </div>
-          <footer className="subscription-footer"><div><b>Change or cancel anytime</b><span>Review plan options or cancel future recurring subscription billing here—no support ticket required.</span></div><div className="subscription-footer-actions"><Link href="/billing">Review plan options</Link>{account.subscription?.paypalId && <SubscriptionCancelButton/>}</div></footer>
+          <footer className="subscription-footer"><div><b>Change or cancel anytime</b><span>Review plan options or cancel future recurring subscription billing here—no support ticket required.</span></div><div className="subscription-footer-actions"><Link href="/billing">Review plan options</Link>{account.subscription?.paypalId && <SubscriptionCancelButton founding={account.subscription.offeringKey.startsWith("Founding " ) || account.subscription.offeringKey.startsWith("founding-")}/>}</div></footer>
         </section>
 
         <div className="account-two-column">
