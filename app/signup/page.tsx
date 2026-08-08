@@ -28,11 +28,11 @@ const subscriptions = [
 ] as const;
 
 const websiteTemplates = [
-  { id: "willow-creek", name: "Willow Creek", breed: "Chihuahua", description: "Bright, polished and boutique—with a clean presentation for a small companion-breed program.", preview: "https://willowcreekchihuahuas.com" },
-  { id: "cedar-creek", name: "Cedar & Creek", breed: "Golden Retriever", description: "Warm, editorial and outdoors-inspired—with a story-first presentation for a family sporting-breed program.", preview: "/templates/cedar-creek" },
-  { id: "northstar-poodles", name: "Northstar", breed: "Standard Poodle", description: "Luxury, minimal and editorial—with a high-end presentation centered on health, pedigree, structure, and refinement.", preview: "/templates/northstar-poodles" },
-  { id: "bluebird-aussies", name: "Bluebird", breed: "Australian Shepherd", description: "Bright, colorful and family-forward—with a modern ranch feel built for active, personality-driven programs.", preview: "/templates/bluebird-aussies" },
-  { id: "ironwood-shepherds", name: "Ironwood", breed: "German Shepherd", description: "Structured, bold and performance-led—with a serious presentation for working, sport, and purpose-bred programs.", preview: "/templates/ironwood-shepherds" },
+  { id: "willow-creek", name: "Willow Creek", breed: "Chihuahua", address: "willowcreekchihuahuas.com", addressType: "Custom .com example", description: "Bright, polished and boutique—with a clean presentation for a small companion-breed program.", preview: "https://willowcreekchihuahuas.com" },
+  { id: "cedar-creek", name: "Cedar & Creek", breed: "Golden Retriever", address: "cedar-creek.mydogportal.site", addressType: "Included kennel address", description: "Warm, editorial and outdoors-inspired—with a story-first presentation for a family sporting-breed program.", preview: "/templates/cedar-creek" },
+  { id: "northstar-poodles", name: "Northstar", breed: "Standard Poodle", address: "northstar.mydogportal.site", addressType: "Included kennel address", description: "Luxury, minimal and editorial—with a high-end presentation centered on health, pedigree, structure, and refinement.", preview: "/templates/northstar-poodles" },
+  { id: "bluebird-aussies", name: "Bluebird", breed: "Australian Shepherd", address: "bluebird.mydogportal.site", addressType: "Included kennel address", description: "Bright, colorful and family-forward—with a modern ranch feel built for active, personality-driven programs.", preview: "/templates/bluebird-aussies" },
+  { id: "ironwood-shepherds", name: "Ironwood", breed: "German Shepherd", address: "ironwood.mydogportal.site", addressType: "Included kennel address", description: "Structured, bold and performance-led—with a serious presentation for working, sport, and purpose-bred programs.", preview: "/templates/ironwood-shepherds" },
 ] as const;
 
 const setupServices = [
@@ -187,7 +187,7 @@ export default function SignupPage() {
           </form>
 
           <section className="website-template-picker" aria-labelledby="website-template-heading">
-            <header><small>WEBSITE TEMPLATE GALLERY</small><h2 id="website-template-heading">Choose the look you want to start with</h2><p>Choose from five genuinely different starting styles or leave the choice open. Every supported template can be customized with your kennel name, breed, dogs, photography, colors, policies, content, applications, and connected MyDogPortal information.</p></header>
+            <header><small>WEBSITE TEMPLATE GALLERY</small><h2 id="website-template-heading">Choose the look you want to start with</h2><p>Choose from five genuinely different starting styles or leave the choice open. Every supported template can be customized with your kennel name, breed, dogs, photography, colors, policies, content, applications, and connected MyDogPortal information. The four MyDogPortal examples show the included kennel subdomain; Willow Creek shows the same experience on a custom .com.</p></header>
             <div className="website-template-grid">
               {websiteTemplates.map((template, index) => {
                 const selected = websiteTemplate === template.id;
@@ -196,6 +196,7 @@ export default function SignupPage() {
                     <small>WEBSITE TEMPLATE {String(index + 1).padStart(2, "0")}</small>
                     <h3>{template.name}</h3>
                     <b>{template.breed} demonstration</b>
+                    <p><strong>{template.addressType}:</strong> {template.address}</p>
                     <p>{template.description}</p>
                     <div><a href={template.preview} target="_blank" rel="noreferrer">Preview template <ExternalLink size={13} /></a><button type="button" aria-pressed={selected} onClick={() => setWebsiteTemplate(selected ? "" : template.id)}>{selected ? <><Check size={14} /> Selected</> : "Choose this style"}</button></div>
                   </article>
