@@ -102,7 +102,7 @@ function CalendarView({ kennel }: { kennel: DemoKennel }) {
   const days=Array.from({length:31},(_,i)=>i+1);
   return <>
     <SectionTitle eyebrow="BREEDING CALENDAR" title="The breeding record builds the schedule." copy="Due dates, pregnancy milestones, puppy care, family updates, documents, and go-home work can all surface from the underlying records." />
-    <div className="osd-calendar"><header><button>‹</button><b>August 2026</b><button>›</button></header><div className="osd-weekdays">{["SUN","MON","TUE","WED","THU","FRI","SAT"].map(d=><span key={d}>{d}</span>)}</div><div className="osd-days">{days.map(d=><span className={[8,12,19,25].includes(d)?"event":""} key={d}>{d}{d===8&&<i>Progesterone</i>}{d===12&&<i>Family updates</i>}{d===19&&<i>Puppy care</i>}{d===25&&<i>Whelping prep</i>}</span>)}</div></div>
+    <div className="osd-calendar"><header><span>‹</span><b>August 2026</b><span>›</span></header><div className="osd-weekdays">{["SUN","MON","TUE","WED","THU","FRI","SAT"].map(d=><span key={d}>{d}</span>)}</div><div className="osd-days">{days.map(d=><span className={[8,12,19,25].includes(d)?"event":""} key={d}>{d}{d===8&&<i>Progesterone</i>}{d===12&&<i>Family updates</i>}{d===19&&<i>Puppy care</i>}{d===25&&<i>Whelping prep</i>}</span>)}</div></div>
   </>;
 }
 
@@ -114,7 +114,7 @@ function Documents() {
       ["Puppy Packet","Megan Cole · Biscuit","Ready to share"],
       ["Deposit Agreement","Ryan Miller · Maple","Signed"],
       ["Health Guarantee","Emma Harris · Clover","Signed"],
-    ].map(([name,person,status])=><article key={name}><span><FileSignature size={22}/></span><div><small>AUTO-POPULATED DOCUMENT</small><h3>{name}</h3><p>{person}</p></div><em>{status}</em><button>View sample</button></article>)}</div>
+    ].map(([name,person,status])=><article key={name}><span><FileSignature size={22}/></span><div><small>AUTO-POPULATED DOCUMENT</small><h3>{name}</h3><p>{person}</p></div><em>{status}</em><details><summary>View sample</summary><p>Preview populated from this family, puppy, placement, and health record.</p></details></article>)}</div>
   </>;
 }
 
@@ -142,9 +142,23 @@ function Automation({ kennel }: { kennel: DemoKennel }) {
 
 function Portal({ kennel }: { kennel: DemoKennel }) {
   const family=kennel.families[0];
+  const [portalTab,setPortalTab]=useState("Overview");
+  const tabs=["Overview","My Puppy","Health & Growth","Updates","Documents","Payments","Schedule","Messages","Resources"];
+  const tabCopy: Record<string,{title:string;copy:string;metric:string}> = {
+    "Overview": { title: "Prepare for go-home", copy: "Review the Puppy Packet, confirm your appointment, and complete the remaining family document.", metric: "80%" },
+    "My Puppy": { title: `${family.puppy}'s profile`, copy: "Assignment, birthday, litter, color, breeder notes, and the family-facing puppy record stay together.", metric: "1 puppy" },
+    "Health & Growth": { title: "Health record is current", copy: "Weights, vaccinations, dewormings, medications, veterinary notes, and breeder-shared health records appear here.", metric: "6 entries" },
+    "Updates": { title: "Six updates published", copy: "Weekly photos, breeder notes, developmental milestones, and approved family updates stay in one timeline.", metric: "6 posts" },
+    "Documents": { title: "Four family documents", copy: "Puppy Packet, Bill of Sale, Health Guarantee, and signed placement documents remain available to the family.", metric: "4 files" },
+    "Payments": { title: "Placement payment record", copy: "Families can see the breeder-recorded deposit, balance, due dates, and payment history without MyDogPortal processing the puppy sale.", metric: family.balance },
+    "Schedule": { title: "Go-home appointment", copy: "Pickup, delivery, veterinary, and breeder-scheduled milestones can be shared with the family here.", metric: "Aug 29" },
+    "Messages": { title: "Family communication", copy: "Keep breeder-family messages connected to the same puppy journey instead of losing context across separate inboxes.", metric: "2 new" },
+    "Resources": { title: "Breeder resources", copy: "Care guides, feeding instructions, training resources, product recommendations, and kennel-specific information remain easy to find.", metric: "8 guides" },
+  };
+  const active=tabCopy[portalTab];
   return <>
-    <SectionTitle eyebrow="PRIVATE PUPPY PORTAL" title="The family's view is connected—but intentionally limited." copy="Families see their puppy journey, not the breeder's private operating records. This example shows the information intended for one placed family." />
-    <div className="osd-portal"><aside><small>{kennel.name.toUpperCase()}</small><h3>{family.name}</h3>{["Overview","My Puppy","Health & Growth","Updates","Documents","Payments","Schedule","Messages","Resources"].map((x,i)=><span className={i===0?"active":""} key={x}>{x}</span>)}</aside><section><small>PRIVATE FAMILY PORTAL</small><h2>Welcome, {family.name.split(" ")[0]}</h2><p>Everything connected to {family.puppy}'s journey, organized around what comes next.</p><div className="osd-portal-metrics"><span><small>ASSIGNED PUPPY</small><b>{family.puppy}</b></span><span><small>PUBLISHED UPDATES</small><b>6</b></span><span><small>DOCUMENTS</small><b>4</b></span><span><small>BALANCE</small><b>{family.balance}</b></span></div><div className="osd-portal-card"><div><small>NEXT STEP</small><h3>Prepare for go-home</h3><p>Review the Puppy Packet, confirm your appointment, and complete the remaining family document.</p></div><b>80%</b></div></section></div>
+    <SectionTitle eyebrow="PRIVATE PUPPY PORTAL" title="The family's view is connected—but intentionally limited." copy="Families see their puppy journey, not the breeder's private operating records. Click the portal tabs below to see how one placed family's information is organized." />
+    <div className="osd-portal"><aside><small>{kennel.name.toUpperCase()}</small><h3>{family.name}</h3>{tabs.map(x=><button type="button" className={portalTab===x?"active":""} onClick={()=>setPortalTab(x)} key={x}>{x}</button>)}</aside><section><small>PRIVATE FAMILY PORTAL</small><h2>Welcome, {family.name.split(" ")[0]}</h2><p>Everything connected to {family.puppy}'s journey, organized around what comes next.</p><div className="osd-portal-metrics"><span><small>ASSIGNED PUPPY</small><b>{family.puppy}</b></span><span><small>PUBLISHED UPDATES</small><b>6</b></span><span><small>DOCUMENTS</small><b>4</b></span><span><small>BALANCE</small><b>{family.balance}</b></span></div><div className="osd-portal-card"><div><small>{portalTab.toUpperCase()}</small><h3>{active.title}</h3><p>{active.copy}</p></div><b>{active.metric}</b></div></section></div>
   </>;
 }
 
