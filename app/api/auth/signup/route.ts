@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { BREEDER_SESSION_COOKIE, createBreederSessionToken, tenantUrl, type BreederSession } from "../../../../lib/breeder-session";
 import { breederSessionClaims, createBreederAccount } from "../../../../lib/supabase-auth";
 import { createSupabaseResource } from "../../../../db/supabase-kennel";
+import { FOUNDING_BREEDER_LIMIT, foundingEligibilityForNewSignup } from "../../../../lib/founding-pricing";
 
 export const runtime = "nodejs";
 
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
       email: String(body.email ?? ""), password: String(body.password ?? ""),
       kennelName: String(body.kennel_name ?? ""), kennelSlug: String(body.kennel_slug ?? ""), plan,
     });
+    const foundingPricing = await foundingEligibilityForNewSignup();
     const requestedSetupIds = Array.isArray(body.setup_requests)
       ? [...new Set(body.setup_requests.map((item) => String(item)).filter((item) => setupRequestDetails[item]))]
       : [];
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
         event_type: "Trial Signup",
         event_date: eventDate,
         status: "Checkout Pending",
-        notes: JSON.stringify({ requested_plan: checkoutPlan, trial_days: 14 }),
+        notes: JSON.stringify({ requested_plan: checkoutPlan, trial_days: 14, founding_pricing: foundingPricing, founding_limit: FOUNDING_BREEDER_LIMIT }),
       }, account.kennel.id),
     ];
     for (const id of requestedSetupIds) {
