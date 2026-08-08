@@ -198,7 +198,7 @@ export default function SignupPage() {
                     <b>{template.breed} demonstration</b>
                     <p><strong>{template.addressType}:</strong> {template.address}</p>
                     <p>{template.description}</p>
-                    <div><a href={template.preview} target="_blank" rel="noreferrer">Preview template <ExternalLink size={13} /></a><button type="button" aria-pressed={selected} onClick={() => setWebsiteTemplate(selected ? "" : template.id)}>{selected ? <><Check size={14} /> Selected</> : "Choose this style"}</button></div>
+                    <div><a href={template.preview} target="_blank" rel="noreferrer">Website <ExternalLink size={13} /></a><a href={`/templates/os-demo/${template.id}`} target="_blank" rel="noreferrer">OS demo <ExternalLink size={13} /></a><button type="button" aria-pressed={selected} onClick={() => setWebsiteTemplate(selected ? "" : template.id)}>{selected ? <><Check size={14} /> Selected</> : "Choose this style"}</button></div>
                   </article>
                 );
               })}
