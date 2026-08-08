@@ -129,7 +129,7 @@ function Payments({ kennel }: { kennel: DemoKennel }) {
 function Automation({ kennel }: { kennel: DemoKennel }) {
   return <>
     <SectionTitle eyebrow="AUTOMATION CENTER" title="Follow-up that follows the record." copy="The breeder decides what should happen; MyDogPortal uses application, payment, puppy, and milestone information to keep routine communication moving." />
-    <div className="osd-automation-grid">{[
+    <div className="osd-automation-grid">{([
       [MailCheck,"Application received","Immediately","Send family acknowledgement + notify breeder","Active"],
       [UsersRound,"Application approved","On approval","Send next steps and family-access instructions","Active"],
       [CircleDollarSign,"Payment reminder","3 days before due","Email family with recorded balance and due date","Active"],
