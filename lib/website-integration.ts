@@ -260,14 +260,17 @@ export function publicPuppy(row: Record<string, unknown>) {
   const status = cleanString(row.status, 80);
   if (!status.toLowerCase().includes("avail") || row.buyer_id != null) return null;
   const priceCents = Number(row.price_cents);
+  const markerPhoto = String(row.notes ?? "").match(/\[\[SWVAOS_PROFILE_IMAGE:([^\]]+)\]\]/i)?.[1]?.trim();
   return {
     id: Number(row.id),
     name: cleanString(row.name, 160) || "Unnamed puppy",
     sex: cleanString(row.sex, 80) || null,
     color: cleanString(row.color, 160) || null,
+    markings: cleanString(row.markings, 200) || null,
+    coat_type: cleanString(row.coat_type, 120) || null,
     birth_date: cleanString(row.birth_date, 40) || null,
     status: "Available",
     price: Number.isFinite(priceCents) && priceCents >= 0 ? priceCents / 100 : null,
-    photo_url: publicUrl(row.photo_url ?? row.image_url),
+    photo_url: publicUrl(row.photo_url ?? row.image_url ?? markerPhoto),
   };
 }

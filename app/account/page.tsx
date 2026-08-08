@@ -20,7 +20,7 @@ export default async function BreederAccountPage() {
   if (!session) redirect("/login?next=/account");
 
   const account = await loadBreederAccount(session.kennelId);
-  const trialActive = Boolean(account.subscription?.trialEndsAt && new Date(account.subscription.trialEndsAt).getTime() > Date.now());
+  const trialActive = account.trialActive;
   const platform = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN?.trim() || "mydogportal.site";
   const workspaceAddress = `${account.kennel.slug}.${platform}`;
 
@@ -28,7 +28,7 @@ export default async function BreederAccountPage() {
     <aside className="account-rail">
       <header><span><CircleUserRound size={20}/></span><div><b>{account.kennel.name}</b><small>BREEDER ACCOUNT</small></div></header>
       <nav>
-        <a href="#subscription"><CreditCard size={15}/> Subscription</a>
+        <a href="#subscription"><CreditCard size={15}/> Plan & changes</a>
         <a href="#billing"><ReceiptText size={15}/> Billing & receipts</a>
         <a href="#services"><PackageCheck size={15}/> Add-ons</a>
         <a href="#profile"><CircleUserRound size={15}/> Kennel profile</a>
@@ -40,7 +40,7 @@ export default async function BreederAccountPage() {
     <section className="account-main">
       <header className="account-topbar">
         <div><small>ACCOUNT CENTER</small><h1>Breeder profile & billing</h1><p>Manage your MyDogPortal subscription, receipts, services, and kennel account from one place.</p></div>
-        <div><Link href="/"><ChevronLeft size={14}/> Back to kennel</Link><Link className="primary" href="/billing"><Sparkles size={14}/> Manage plan</Link></div>
+        <div><Link href="/"><ChevronLeft size={14}/> Back to kennel</Link><Link className="primary" href="/billing"><Sparkles size={14}/> Upgrade / downgrade</Link></div>
       </header>
 
       <div className="account-content">
@@ -58,7 +58,7 @@ export default async function BreederAccountPage() {
             <div><small>NEXT BILLING</small><b>{date(account.subscription?.nextBillingAt || null)}</b><p>{account.subscription ? `${money(account.subscription.amount)} scheduled by PayPal` : "No PayPal subscription recorded"}</p></div>
             <div><small>TRIAL</small><b>{trialActive ? "14 days free" : "—"}</b><p>{trialActive ? `Ends ${date(account.subscription?.trialEndsAt || null)}` : "Trial period complete or not applicable"}</p></div>
           </div>
-          <footer className="subscription-footer"><div><b>Change or cancel anytime</b><span>Review plan options or cancel future recurring subscription billing here—no support ticket required.</span></div><div className="subscription-footer-actions"><Link href="/billing">Review plan options</Link>{account.subscription?.paypalId && <SubscriptionCancelButton founding={account.subscription.offeringKey.startsWith("Founding " ) || account.subscription.offeringKey.startsWith("founding-")}/>}</div></footer>
+          <footer className="subscription-footer"><div><b>Change or cancel anytime</b><span>Upgrade, downgrade, change billing cycle, or cancel future recurring subscription billing here—no support ticket required.</span></div><div className="subscription-footer-actions"><Link href="/billing">Upgrade or downgrade</Link>{account.subscription?.paypalId && <SubscriptionCancelButton founding={account.subscription.offeringKey.startsWith("Founding " ) || account.subscription.offeringKey.startsWith("founding-")}/>}</div></footer>
         </section>
 
         <div className="account-two-column">

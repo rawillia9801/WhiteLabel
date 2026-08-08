@@ -1,4 +1,4 @@
-import { ensurePayPalWebhook, verifyPayPalWebhook } from "../../../../lib/paypal";
+import { cancelPayPalSubscription, ensurePayPalWebhook, verifyPayPalWebhook } from "../../../../lib/paypal";
 import { findPayPalBillingEvent, recordPayPalBillingEvent, setKennelPlan, updatePayPalBillingEventByProviderId } from "../../../../lib/paypal-billing";
 
 export const runtime = "nodejs";
@@ -49,6 +49,10 @@ export async function POST(request: Request) {
           next_billing_time: event.resource?.billing_info?.next_billing_time || existing.parsed.next_billing_time || null,
         });
         if (eventType === "BILLING.SUBSCRIPTION.ACTIVATED" && existing.parsed.entitlement_plan) {
+          if (existing.parsed.replaces_paypal_id && existing.parsed.replaces_paypal_id !== subscriptionId) {
+            await cancelPayPalSubscription(existing.parsed.replaces_paypal_id, "Replaced by an approved MyDogPortal plan change.").catch(() => undefined);
+            await updatePayPalBillingEventByProviderId(existing.parsed.replaces_paypal_id, "CANCELLED", { next_billing_time: null }).catch(() => undefined);
+          }
           await setKennelPlan(existing.kennel_id, existing.parsed.entitlement_plan);
         }
       }

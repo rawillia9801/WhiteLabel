@@ -5,9 +5,11 @@ import {
   oneTimeOfferings,
   paypalClientId,
   paypalEnvironment,
+  planChangeOfferings,
   recurringOfferings,
 } from "../../../../lib/paypal";
 import { foundingPricingStatus, isFoundingOfferingKey } from "../../../../lib/founding-pricing";
+import { loadBreederAccount } from "../../../../lib/breeder-account";
 
 export const runtime = "nodejs";
 
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
   if (!["owner", "admin"].includes(session.role)) return Response.json({ error: "Owner or admin access is required." }, { status: 403 });
 
   try {
-    const [planIds, founding] = await Promise.all([ensurePayPalCatalog(), foundingPricingStatus(session.kennelId)]);
+    const [planIds, founding, account] = await Promise.all([ensurePayPalCatalog(), foundingPricingStatus(session.kennelId), loadBreederAccount(session.kennelId)]);
     await ensurePayPalWebhook(webhookUrl(request));
     const visibleRecurring = recurringOfferings.filter((offering) => offering.group !== "platform" || (founding.eligible ? isFoundingOfferingKey(offering.key) : !isFoundingOfferingKey(offering.key)));
     return Response.json({
@@ -37,6 +39,8 @@ export async function POST(request: Request) {
       environment: paypalEnvironment(),
       kennelId: session.kennelId,
       currentPlan: session.plan,
+      currentSubscriptionId: account.subscription?.paypalId || "",
+      currentOfferingKey: account.subscription?.offeringKey || "",
       recurring: visibleRecurring.map((offering) => ({
         key: offering.key,
         group: offering.group,
@@ -48,6 +52,19 @@ export async function POST(request: Request) {
         hasTrial: Boolean(offering.trial && offering.group === "platform"),
         planId: planIds[offering.key],
       })),
+      changes: account.subscription ? planChangeOfferings
+        .filter((offering) => offering.changeOf && (founding.eligible ? isFoundingOfferingKey(offering.changeOf) : !isFoundingOfferingKey(offering.changeOf)))
+        .map((offering) => ({
+          key: offering.key,
+          group: offering.group,
+          name: offering.name,
+          description: offering.description,
+          price: offering.price,
+          interval: offering.intervalLabel,
+          setupFee: null,
+          hasTrial: false,
+          planId: planIds[offering.key],
+        })) : [],
       oneTime: oneTimeOfferings.map((offering) => ({
         key: offering.key,
         name: offering.name,

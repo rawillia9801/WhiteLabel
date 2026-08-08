@@ -18,6 +18,7 @@ export type RecurringOffering = {
   trial?: { intervalUnit: "DAY" | "YEAR"; intervalCount: number };
   setupFee?: string;
   entitlementPlan: PayPalEntitlementPlan;
+  changeOf?: string;
 };
 
 export type OneTimeOffering = {
@@ -45,6 +46,18 @@ export const recurringOfferings: readonly RecurringOffering[] = [
   { key: "business-voice-monthly", group: "service", productName: "Dog Breeder Business Voice", planName: "Business Voice Monthly", name: "Business Voice", description: "$69 setup plus a local business number at $8.99/month. Metered calling usage is billed separately.", price: "8.99", intervalUnit: "MONTH", intervalLabel: "month", setupFee: "69.00", entitlementPlan: null },
   { key: "business-voice-annual", group: "service", productName: "Dog Breeder Business Voice", planName: "Business Voice Annual", name: "Business Voice", description: "$69 setup plus a local business number at $99/year. Metered calling usage is billed separately.", price: "99.00", intervalUnit: "YEAR", intervalLabel: "year", setupFee: "69.00", entitlementPlan: null },
 ] as const;
+
+export const planChangeOfferings: readonly RecurringOffering[] = recurringOfferings
+  .filter((offering) => offering.group === "platform")
+  .map((offering) => ({
+    ...offering,
+    key: `change-${offering.key}`,
+    productName: "MyDogPortal Plan Changes",
+    planName: `Plan Change — ${offering.planName}`,
+    description: `${offering.name} plan change at ${offering.price} USD per ${offering.intervalLabel}. Plan changes do not start a new free trial.`,
+    trial: undefined,
+    changeOf: offering.key,
+  }));
 
 export const oneTimeOfferings: readonly OneTimeOffering[] = [
   { key: "website-personalization", name: "Breeder Website Personalization", description: "Personalize a supported MyDogPortal website style around the breeder's kennel, content, photography, colors, and connected information.", price: "299.00" },
@@ -216,7 +229,7 @@ async function ensurePlansForProduct(productId: string, offerings: readonly Recu
 
 export async function ensurePayPalCatalog() {
   const grouped = new Map<string, RecurringOffering[]>();
-  for (const offering of recurringOfferings) {
+  for (const offering of [...recurringOfferings, ...planChangeOfferings]) {
     const entries = grouped.get(offering.productName) || [];
     entries.push(offering);
     grouped.set(offering.productName, entries);
@@ -230,7 +243,7 @@ export async function ensurePayPalCatalog() {
 }
 
 export function recurringOffering(key: string) {
-  return recurringOfferings.find((offering) => offering.key === key) || null;
+  return [...recurringOfferings, ...planChangeOfferings].find((offering) => offering.key === key) || null;
 }
 
 export function oneTimeOffering(key: string) {

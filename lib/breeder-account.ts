@@ -100,6 +100,7 @@ export async function loadBreederAccount(kennelId: string) {
   const trialEndsAt = platformSubscription
     ? new Date(new Date(platformSubscription.event.created_at).getTime() + 14 * 86400000).toISOString()
     : null;
+  const trialActive = Boolean(trialEndsAt && new Date(trialEndsAt).getTime() > Date.now());
 
   const receipts = billing
     .filter((item) => item.billing.kind === "payment" || item.billing.kind === "order")
@@ -148,6 +149,7 @@ export async function loadBreederAccount(kennelId: string) {
       trialEndsAt,
     } : null,
     checkoutPending: Boolean(trialSignup && !platformSubscription),
+    trialActive,
     joinedAt: trialSignup?.created_at || null,
     receipts,
     services,

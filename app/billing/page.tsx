@@ -22,8 +22,11 @@ type BillingConfig = {
   environment: "live" | "sandbox";
   kennelId: string;
   currentPlan: string;
+  currentSubscriptionId: string;
+  currentOfferingKey: string;
   founding: { limit: number; claimed: number; remaining: number; available: boolean; eligible: boolean };
   recurring: RecurringOffering[];
+  changes: RecurringOffering[];
   oneTime: OneTimeOffering[];
 };
 type PayPalButtons = { render: (target: HTMLElement) => Promise<void>; close?: () => Promise<void> };
@@ -109,7 +112,10 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (!config?.clientId) return;
-    if (window.paypal) { setSdkReady(true); return; }
+    if (window.paypal) {
+      const readyTimer = window.setTimeout(() => setSdkReady(true), 0);
+      return () => window.clearTimeout(readyTimer);
+    }
     const onLoad = () => setSdkReady(true);
     const onFailure = () => setError("The secure PayPal checkout could not load.");
     const existing = document.getElementById("paypal-subscriptions-sdk") as HTMLScriptElement | null;
@@ -129,40 +135,47 @@ export default function BillingPage() {
   }, [config?.clientId]);
 
   useEffect(() => {
-    const search = new URLSearchParams(window.location.search);
-    setWelcome(search.get("welcome") === "1");
-    setRequired(search.get("required") === "1");
-    if (search.get("paypal_cancelled") === "1") {
-      setNotice("PayPal checkout was cancelled. Nothing was charged.");
-      window.history.replaceState({}, "", "/billing");
-      return;
-    }
-    const orderId = search.get("token");
-    if (search.get("paypal_capture") !== "1" || !orderId) return;
-    setBusy(true);
-    void (async () => {
-      try {
-        const response = await fetch("/api/paypal/orders/capture", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ order_id: orderId }),
-        });
-        const payload = await response.json() as { error?: string };
-        if (!response.ok) throw new Error(payload.error || "Unable to complete PayPal purchase.");
-        setNotice("Purchase complete. Your add-on is connected to this kennel.");
+    const timer = window.setTimeout(() => {
+      const search = new URLSearchParams(window.location.search);
+      setWelcome(search.get("welcome") === "1");
+      setRequired(search.get("required") === "1");
+      if (search.get("paypal_cancelled") === "1") {
+        setNotice("PayPal checkout was cancelled. Nothing was charged.");
         window.history.replaceState({}, "", "/billing");
-      } catch (failure) {
-        setError(failure instanceof Error ? failure.message : "Unable to complete PayPal purchase.");
-      } finally { setBusy(false); }
-    })();
+        return;
+      }
+      const orderId = search.get("token");
+      if (search.get("paypal_capture") !== "1" || !orderId) return;
+      setBusy(true);
+      void (async () => {
+        try {
+          const response = await fetch("/api/paypal/orders/capture", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ order_id: orderId }),
+          });
+          const payload = await response.json() as { error?: string };
+          if (!response.ok) throw new Error(payload.error || "Unable to complete PayPal purchase.");
+          setNotice("Purchase complete. Your add-on is connected to this kennel.");
+          window.history.replaceState({}, "", "/billing");
+        } catch (failure) {
+          setError(failure instanceof Error ? failure.message : "Unable to complete PayPal purchase.");
+        } finally { setBusy(false); }
+      })();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const platformOfferings = useMemo(() => {
     if (!config) return [];
+    const source = config.currentSubscriptionId ? config.changes : config.recurring;
     return ["Starter", "Professional", "Studio"]
-      .map((name) => config.recurring.find((offering) => offering.group === "platform" && offering.name === name && offering.interval === billingCycle))
+      .map((name) => source.find((offering) => offering.group === "platform" && offering.name === name && offering.interval === billingCycle))
       .filter(Boolean) as RecurringOffering[];
   }, [billingCycle, config]);
+
+  const currentPlanName = config?.currentPlan === "custom_domain" ? "Studio" : config?.currentPlan === "professional" ? "Professional" : "Starter";
+  const planRank = (name: string) => name === "Studio" ? 3 : name === "Professional" ? 2 : 1;
 
   const serviceOffering = useCallback((key: string) => config?.recurring.find((offering) => offering.key === key), [config]);
 
@@ -177,8 +190,8 @@ export default function BillingPage() {
     const payload = await response.json() as { error?: string };
     if (!response.ok) throw new Error(payload.error || "Unable to confirm the PayPal subscription.");
     setNotice("Subscription confirmed. Your MyDogPortal billing is now connected to this kennel.");
-    if (/^(founding-)?(starter|professional|studio)-(monthly|annual)$/.test(offeringKey)) {
-      window.setTimeout(() => window.location.assign("/"), 900);
+    if (/(starter|professional|studio)-(monthly|annual)$/.test(offeringKey)) {
+      window.setTimeout(() => window.location.assign("/account#subscription"), 900);
     }
   }, []);
 
@@ -219,7 +232,7 @@ export default function BillingPage() {
           <section className="plan-section" aria-labelledby="plans-heading">
             {config.founding?.eligible && <div className="founding-billing-banner"><Sparkles size={18}/><div><b>Founding Breeder rate reserved for this kennel</b><span>You are one of the first {config.founding.limit} MyDogPortal kennel accounts. Your introductory subscription rate stays locked while the subscription remains continuously active. If it is cancelled or lapses, the Founding rate is forfeited and any future subscription uses the then-current published price.</span></div></div>}
             <div className="section-heading">
-              <div><small>MYDOGPORTAL SUBSCRIPTIONS</small><h2 id="plans-heading">Choose the operating system behind your kennel</h2></div>
+              <div><small>MYDOGPORTAL SUBSCRIPTIONS</small><h2 id="plans-heading">{config.currentSubscriptionId ? "Upgrade, downgrade, or change billing cycle" : "Choose the operating system behind your kennel"}</h2>{config.currentSubscriptionId && <p>Your active {currentPlanName} subscription is protected while you choose. A plan change creates the replacement first and closes the prior PayPal subscription only after the replacement is confirmed. Plan changes do not start another free trial.</p>}</div>
               <div className="cycle-toggle" role="group" aria-label="Billing cycle">
                 <button type="button" className={billingCycle === "month" ? "active" : ""} onClick={() => setBillingCycle("month")}>Monthly</button>
                 <button type="button" className={billingCycle === "year" ? "active" : ""} onClick={() => setBillingCycle("year")}>Annual · 2 months free</button>
@@ -227,15 +240,15 @@ export default function BillingPage() {
             </div>
             <div className="billing-plan-grid">
               {platformOfferings.map((offering) => (
-                <article className={offering.name === "Professional" ? "popular" : offering.name === "Studio" ? "studio" : ""} key={offering.key}>
+                <article className={`${offering.name === "Professional" ? "popular" : offering.name === "Studio" ? "studio" : ""}${config.currentSubscriptionId && offering.name === currentPlanName ? " current-plan" : ""}`} key={offering.key}>
                   {offering.name === "Professional" && <em>MOST POPULAR</em>}
                   <small>{offering.name === "Starter" ? "GET ORGANIZED" : offering.name === "Professional" ? "RUN YOUR BREEDING BUSINESS" : "RUN YOUR BUSINESS + YOUR BRAND"}</small>
                   <h3>{offering.name}</h3>
                   {config.founding?.eligible && <div className="founding-plan-label">FOUNDING BREEDER PRICE</div>}<div className="plan-price"><b>{dollars(offering.price)}</b><span>/{offering.interval}</span></div>
-                  <div className="trial-chip">14 DAYS FREE · THEN {dollars(offering.price).toUpperCase()}/{offering.interval.toUpperCase()}</div>
+                  <div className="trial-chip">{config.currentSubscriptionId ? offering.name === currentPlanName ? "CURRENT PLAN · CHANGE BILLING CYCLE BELOW" : `${planRank(offering.name) > planRank(currentPlanName) ? "UPGRADE" : "DOWNGRADE"} · NO NEW TRIAL` : `14 DAYS FREE · THEN ${dollars(offering.price).toUpperCase()}/${offering.interval.toUpperCase()}`}</div>
                   {offering.name === "Studio" && <div className="studio-value">Over $1,100.00 Added Value · Prices Locked In</div>}
                   <ul>{planCopy[offering.name as keyof typeof planCopy].map((item) => <li key={item}><Check size={14} />{item}</li>)}</ul>
-                  <PayPalSubscriptionButton offering={offering} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} />
+                  {config.currentSubscriptionId && offering.name === currentPlanName && config.currentOfferingKey.includes(billingCycle === "month" ? "monthly" : "annual") ? <div className="current-plan-marker"><Check size={15}/> Current subscription</div> : <PayPalSubscriptionButton label={config.currentSubscriptionId ? offering.name === currentPlanName ? `Change ${currentPlanName} to ${billingCycle === "month" ? "monthly" : "annual"} billing` : `${planRank(offering.name) > planRank(currentPlanName) ? "Upgrade" : "Downgrade"} to ${offering.name}` : undefined} offering={offering} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} />}
                 </article>
               ))}
             </div>

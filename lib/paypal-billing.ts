@@ -21,6 +21,7 @@ export type PayPalBillingNotes = {
   amount?: string;
   currency?: string;
   next_billing_time?: string | null;
+  replaces_paypal_id?: string;
 };
 
 function safePayPalId(value: string) {
