@@ -12,7 +12,14 @@ import {
 
 const protectedMappings = new Set(["full_name", "email", "phone"]);
 
-export function ApplicationBuilder({ config, onSaved }: { config: ApplicationFormConfig; onSaved: (config: ApplicationFormConfig) => void }) {
+type ApplicationBuilderProps = {
+  config: ApplicationFormConfig;
+  onSaved: (config: ApplicationFormConfig) => void;
+  demoMode?: boolean;
+  demoTenant?: { slug: string; name: string; websiteUrl?: string };
+};
+
+export function ApplicationBuilder({ config, onSaved, demoMode = false, demoTenant }: ApplicationBuilderProps) {
   const tenant = useTenant();
   const [draft, setDraft] = useState(config);
   const [saving, setSaving] = useState(false);
@@ -39,6 +46,11 @@ export function ApplicationBuilder({ config, onSaved }: { config: ApplicationFor
   async function save() {
     setSaving(true); setMessage("");
     try {
+      if (demoMode) {
+        onSaved(draft);
+        setMessage("Interactive demo updated for this session. No breeder or customer data was changed.");
+        return;
+      }
       const response = await fetch("/api/applications/config", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(draft) });
       const payload = await response.json() as ApplicationFormConfig & { error?: string };
       if (!response.ok) throw new Error(payload.error || "Unable to save the application form.");
@@ -49,18 +61,26 @@ export function ApplicationBuilder({ config, onSaved }: { config: ApplicationFor
   }
 
   const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.site";
-  const applicationUrl = tenant.slug ? `https://${tenant.slug}.${platformDomain}/apply` : "/apply";
+  const tenantSlug = demoTenant?.slug || tenant.slug;
+  const applicationUrl = tenantSlug ? `https://${tenantSlug}.${platformDomain}/apply` : "/apply";
   const embedCode = `<iframe src="${applicationUrl}" title="Puppy application" loading="lazy" style="width:100%;min-height:1100px;border:0;border-radius:16px" allow="clipboard-write"></iframe>`;
-  const applicationOrigin = tenant.slug ? `https://${tenant.slug}.${platformDomain}` : "";
+  const applicationOrigin = tenantSlug ? `https://${tenantSlug}.${platformDomain}` : "";
   const configUrl = `${applicationOrigin}/api/website/application-config`;
   const submissionUrl = `${applicationOrigin}/api/website/applications`;
   const nativeEmbedCode = `<div id="mydogportal-application"></div>\n<script src="${applicationOrigin}/api/website/application-embed" data-target="mydogportal-application"></script>`;
   const headlessEndpoints = `GET  ${configUrl}\nPOST ${submissionUrl}`;
-  const copy = async (value: string) => { await navigator.clipboard.writeText(value); setMessage("Copied to clipboard."); };
+  const copy = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setMessage(demoMode ? "Sample installation code copied. Demo data remains isolated." : "Copied to clipboard.");
+    } catch {
+      setMessage("Your browser blocked clipboard access. Select and copy the text manually.");
+    }
+  };
 
   return <div className="application-builder-layout">
     <section className="applications-panel application-builder-panel">
-      <div className="panel-title builder-title"><div><span>Application builder</span><h2>Build the questions your program actually needs</h2><p>Name, email, and phone stay protected so every submission can connect to a family record.</p></div><button className="builder-save" type="button" disabled={saving} onClick={() => void save()}><Save size={16} /> {saving ? "Saving…" : "Save application"}</button></div>
+      <div className="panel-title builder-title"><div><span>{demoMode ? `${demoTenant?.name || "Sample kennel"} · application builder` : "Application builder"}</span><h2>Build the questions your program actually needs</h2><p>Name, email, and phone stay protected so every submission can connect to a family record.</p></div><button className="builder-save" type="button" disabled={saving} onClick={() => void save()}><Save size={16} /> {saving ? "Saving…" : demoMode ? "Preview changes" : "Save application"}</button></div>
       <div className="builder-settings">
         <label><span>Form title</span><input value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} /></label>
         <label className="wide"><span>Introduction</span><textarea rows={3} value={draft.introduction} onChange={(event) => setDraft((current) => ({ ...current, introduction: event.target.value }))} /></label>
@@ -95,7 +115,7 @@ export function ApplicationBuilder({ config, onSaved }: { config: ApplicationFor
       <div className="install-body">
         <div className="install-card"><small>DIRECT APPLICATION LINK</small><a href={applicationUrl} target="_blank" rel="noreferrer">{applicationUrl} <ExternalLink size={13} /></a><button type="button" onClick={() => void copy(applicationUrl)}><Copy size={14} /> Copy link</button></div>
         <div className="install-card"><small>EMBED ON AN EXISTING WEBSITE</small><p>Paste this iframe into an HTML/embed block on the breeder&apos;s website. The form stays managed by MyDogPortal.</p><textarea readOnly rows={7} value={embedCode} /><button type="button" onClick={() => void copy(embedCode)}><Copy size={14} /> Copy embed code</button></div>
-        <div className="install-card"><small>NATIVE WEBSITE INSTALL · FULLY CUSTOMIZABLE</small><p>Use this on WordPress, Wix custom code, Hostinger, Squarespace code blocks, or a custom website. The form renders into the website DOM so the breeder&apos;s CSS can restyle every .mdp-* element while MyDogPortal still owns the questions, intake, automations, and document mappings.</p><textarea readOnly rows={7} value={nativeEmbedCode} /><button type="button" onClick={() => void copy(nativeEmbedCode)}><Copy size={14} /> Copy native install code</button></div>
+        <div className="install-card"><small>NATIVE WEBSITE INSTALL · FULLY CUSTOMIZABLE</small><p>Use this on WordPress, Wix custom code, Squarespace code blocks, or a custom website. The form renders into the website DOM so the breeder&apos;s CSS can restyle every .mdp-* element while MyDogPortal still owns the questions, intake, automations, and document mappings.</p><textarea readOnly rows={7} value={nativeEmbedCode} /><button type="button" onClick={() => void copy(nativeEmbedCode)}><Copy size={14} /> Copy native install code</button></div>
         <div className="install-card"><small>HEADLESS / DEVELOPER INTEGRATION</small><p>For a completely custom form layout, build any HTML/UI you want, load the published field schema from the GET endpoint, and POST the answers to the submission endpoint. No Supabase key or private credential belongs on the breeder website.</p><textarea readOnly rows={4} value={headlessEndpoints} /><button type="button" onClick={() => void copy(headlessEndpoints)}><Copy size={14} /> Copy API endpoints</button></div>
         <div className="install-card install-flow"><small>CONNECTED WORKFLOW</small><ol><li>Family submits the hosted form.</li><li>Answers land in the application queue.</li><li>Breeder filters and reviews the answers.</li><li>Approval unlocks document preparation.</li><li>Mapped answers prefill agreements.</li></ol></div>
       </div>
