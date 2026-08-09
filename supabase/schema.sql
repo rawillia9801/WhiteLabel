@@ -232,7 +232,7 @@ create table if not exists kennels (
   website_url text,
   default_puppy_price_cents integer not null default 0 check (default_puppy_price_cents >= 0),
   default_deposit_cents integer not null default 0 check (default_deposit_cents >= 0),
-  custom_policy_notice text not null default 'Have a qualified local attorney review all customer-facing policies and contracts before use.',
+  custom_policy_notice text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

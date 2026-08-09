@@ -33,8 +33,4 @@ Set these production environment variables:
 BREEDER_PORTAL_SECRET=a-long-random-secret-different-from-other-keys
 ```
 
-Seller name, location, primary breed, colors, and policy reminder are configured per kennel in **Brand and business setup**. If `BREEDER_PORTAL_SECRET` is omitted, the server uses the Supabase service credential as a compatibility fallback. A separate portal secret is recommended so portal links can be rotated independently.
-
-## Legal review
-
-The included clauses are an editable operational template, not legal advice. Have an attorney licensed in the breeder's jurisdiction review the exact Bill of Sale, warranty period, covered conditions, exclusions, remedies, venue, and any breeding or registration terms before using the documents for real transactions.
+Seller name, location, primary breed, colors, and policy note are configured per kennel in **Brand and business setup**. If `BREEDER_PORTAL_SECRET` is omitted, the server uses the Supabase service credential as a compatibility fallback. A separate portal secret is recommended so portal links can be rotated independently.

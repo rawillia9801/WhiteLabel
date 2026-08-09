@@ -19,7 +19,7 @@ create table if not exists kennels (
   website_url text,
   default_puppy_price_cents integer not null default 0 check (default_puppy_price_cents >= 0),
   default_deposit_cents integer not null default 0 check (default_deposit_cents >= 0),
-  custom_policy_notice text not null default 'Have a qualified local attorney review all customer-facing policies and contracts before use.',
+  custom_policy_notice text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -32,7 +32,7 @@ alter table kennels add column if not exists contact_phone text;
 alter table kennels add column if not exists website_url text;
 alter table kennels add column if not exists default_puppy_price_cents integer not null default 0;
 alter table kennels add column if not exists default_deposit_cents integer not null default 0;
-alter table kennels add column if not exists custom_policy_notice text not null default 'Have a qualified local attorney review all customer-facing policies and contracts before use.';
+alter table kennels add column if not exists custom_policy_notice text not null default '';
 
 create table if not exists kennel_members (
   kennel_id uuid not null references kennels(id) on delete cascade,

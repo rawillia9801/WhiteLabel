@@ -220,7 +220,7 @@ export function menuVoiceResponse(profile: CallerCrmProfile, digit: string, call
   if (digit === "2") response.say(voice, publicPuppySpeech(profile));
   else if (digit === "3") response.say(voice, "Ground transportation is arranged after a puppy is assigned. Meeting dates are limited to one family per day across the program. Verified buyers can check eligibility and request an available date through the private account menu.");
   else if (digit === "4") response.say(voice, "Payment plans may be available for eligible puppies when approved in advance. Deposits, due dates, balances, and payment methods are documented in the buyer agreement and family account.");
-  else if (digit === "5") response.say(voice, "Pup-Lift provides emergency glucose-support information for toy-breed puppies at risk of hypoglycemia. It does not replace veterinary care. For the dedicated Pup-Lift support line, call 715-888-9526.");
+  else if (digit === "5") response.say(voice, "Pup-Lift provides emergency glucose-support information for toy-breed puppies at risk of hypoglycemia. For the dedicated Pup-Lift support line, call 715-888-9526.");
   else response.say(voice, "That selection is not available.");
   response.pause({ length: 1 });
   response.redirect(routeWithContext(incomingPath, calledNumber));

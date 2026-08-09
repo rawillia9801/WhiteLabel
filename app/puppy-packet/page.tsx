@@ -236,7 +236,7 @@ export default function PuppyPacketPage() {
       <section className="packet-section page-start">
         <h2>Table of Contents</h2>
         <ol className="toc"><li>Personalized Puppy and Family Record</li>{packet.sections.map((section) => <li key={section.title}>{section.title}</li>)}<li>Health and Care Logs</li><li>Notes and Records</li></ol>
-        <div className="notice">This complete packet is personalized for {packet.puppy.name} and {buyerName(packet.buyer)}. The signed Bill of Sale, Animal History Certificate, Health Guarantee, puppy-specific medical record, and veterinarian&apos;s directions control whenever they differ from general educational guidance.</div>
+        <div className="notice">This complete packet is personalized for {packet.puppy.name} and {buyerName(packet.buyer)} and keeps the family&apos;s Bill of Sale, Animal History Certificate, Health Guarantee, puppy-specific medical record, and care information organized in one place.</div>
       </section>
 
       <section className="packet-section page-start">

@@ -183,4 +183,4 @@ export function analyzeGeneticCompatibility(sireId: Id, damId: Id, results: Gene
   });
 }
 
-export const GENETICS_DISCLAIMER = "Compatibility warnings summarize recorded laboratory results for planning purposes. They are informational and are not veterinary advice.";
+export const GENETICS_DISCLAIMER = "Compatibility warnings summarize the laboratory results recorded for the proposed pairing.";

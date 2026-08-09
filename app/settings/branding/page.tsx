@@ -94,8 +94,8 @@ export default function BrandingSettingsPage() {
           </div>
           <label><span>Font</span><select name="font_family" defaultValue={settings.font_family}><option>Geist</option><option>Arial</option><option>Georgia</option><option>Trebuchet MS</option><option>Verdana</option></select></label>
 
-          <h2>Policy reminder</h2>
-          <label><span>Internal policy review note</span><textarea name="custom_policy_notice" rows={3} defaultValue={settings.custom_policy_notice || "Have a qualified local attorney review all customer-facing policies and contracts before use."}/></label>
+          <h2>Policy note</h2>
+          <label><span>Internal policy note</span><textarea name="custom_policy_notice" rows={3} defaultValue={settings.custom_policy_notice || ""} placeholder="Add an optional internal note for your team."/></label>
           <p className="policy-help">Edit customer-facing applications, agreements, guarantees, and email wording in Automations &amp; templates.</p>
 
           <div className="brand-preview" style={{ borderTopColor: settings.primary_color, fontFamily: settings.font_family }}>

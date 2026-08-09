@@ -24,8 +24,6 @@ export const defaultPuppyPacketTemplate = `# Welcome Home, {{puppy_name}}
 
 This personalized care packet was prepared by {{business_name}} for {{buyer_name}} and {{puppy_name}}. Keep it with the Bill of Sale, Animal History Certificate, Health Guarantee, vaccination record, registration documents, insurance information, and any puppy-specific instructions.
 
-The information in this packet is educational and does not replace veterinary care. The signed agreement, puppy-specific medical record, and instructions from a licensed veterinarian control whenever they differ from general guidance in this packet.
-
 # The First 72 Hours at Home
 
 The first three days should be quiet and predictable for {{puppy_name}}. Focus on food, water, warmth, sleep, bathroom routines, and calm bonding with {{buyer_name}}.

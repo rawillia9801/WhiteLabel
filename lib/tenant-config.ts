@@ -90,7 +90,7 @@ export const tenantConfig: TenantConfig = {
     healthExamHours: Number(env("BREEDER_HEALTH_EXAM_HOURS", "72")),
     healthGuaranteeMonths: Number(env("BREEDER_HEALTH_GUARANTEE_MONTHS", "12")),
     depositRefundable: enabled("BREEDER_DEPOSIT_REFUNDABLE", false),
-    customNotice: env("BREEDER_CUSTOM_POLICY_NOTICE", "Have a qualified local attorney review all customer-facing policies and contracts before use."),
+    customNotice: env("BREEDER_CUSTOM_POLICY_NOTICE", ""),
   },
   features: {
     phoneCenter: enabled("NEXT_PUBLIC_FEATURE_PHONE_CENTER", false), transportation: enabled("NEXT_PUBLIC_FEATURE_TRANSPORTATION", false),
@@ -101,4 +101,3 @@ export const tenantConfig: TenantConfig = {
 export const formatMoney = (valueCents: number) => new Intl.NumberFormat(tenantConfig.locale.locale, {
   style: "currency", currency: tenantConfig.locale.currency,
 }).format(valueCents / 100);
-

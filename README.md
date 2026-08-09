@@ -17,7 +17,7 @@ The platform runs as one multi-tenant Vercel application backed by one Supabase 
 5. Add the same development values to `.env.local`. Never expose the service-role key, session secret, or Vercel API token to the browser.
 6. Run `npm install`, then `npm run dev`.
 7. Replace `public/favicon.svg` and `public/og.png`, or point the branding variables to other assets.
-8. Open `/signup`, create the first kennel owner, then review **Brand and business setup** and all templates under **Automations & templates** with an attorney licensed where the breeder operates.
+8. Open `/signup`, create the first kennel owner, then review **Brand and business setup** and all templates under **Automations & templates**.
 
 ```bash
 cp .env.example .env.local
@@ -42,8 +42,6 @@ Deployment defaults come from `lib/tenant-config.ts` and `.env.example`. Each ke
 Kennels share platform infrastructure but not application records: all breeder-owned rows are scoped to a kennel, owner/staff sessions contain a signed kennel identity, and buyer portal links include the kennel identity. Do not copy production credentials or customer records from another installation.
 
 See `docs/DEPLOYMENT.md` for the complete Supabase and Vercel deployment sequence.
-
-This software provides editable operational templates, not legal advice. Pricing, sales terms, health guarantees, consumer notices, privacy disclosures, transportation rules, and breeding policies must be reviewed for the breeder's jurisdiction and practices before launch.
 
 ## Validation
 
