@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import OSDemoClient from "../os-demo-client";
+import RealOSDemoClient from "../real-os-demo-client";
 import { demoKennels } from "../demo-data";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -19,5 +19,5 @@ export default async function BreederOSDemoPage({ params }: Props) {
   const { slug } = await params;
   const kennel = demoKennels[slug];
   if (!kennel) notFound();
-  return <OSDemoClient kennel={kennel} />;
+  return <RealOSDemoClient kennel={kennel} />;
 }

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { BadgeDollarSign, ChevronLeft, CircleUserRound, CreditCard, FileText, Globe2, Mail, PackageCheck, Phone, ReceiptText, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeDollarSign, ChevronLeft, CircleUserRound, CreditCard, FileText, Globe2, Headphones, Mail, PackageCheck, Phone, ReceiptText, ShieldCheck, Sparkles, TicketCheck } from "lucide-react";
 import { BREEDER_SESSION_COOKIE, readBreederSessionToken } from "../../lib/breeder-session";
 import { loadBreederAccount } from "../../lib/breeder-account";
 import { AccountSignOut } from "../../components/account-sign-out";
+import { AccountProfileEditor } from "../../components/account-profile-editor";
 import { SubscriptionCancelButton } from "../../components/subscription-cancel-button";
 import "./account.css";
+import "./profile-editor.css";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +30,11 @@ export default async function BreederAccountPage() {
     <aside className="account-rail">
       <header><span><CircleUserRound size={20}/></span><div><b>{account.kennel.name}</b><small>BREEDER ACCOUNT</small></div></header>
       <nav>
+        <a href="#profile"><CircleUserRound size={15}/> Breeder profile</a>
         <a href="#subscription"><CreditCard size={15}/> Plan & changes</a>
         <a href="#billing"><ReceiptText size={15}/> Billing & receipts</a>
         <a href="#services"><PackageCheck size={15}/> Add-ons</a>
-        <a href="#profile"><CircleUserRound size={15}/> Kennel profile</a>
+        <a href="#support"><Headphones size={15}/> Support tickets</a>
       </nav>
       <div className="account-rail-plan"><small>CURRENT PLAN</small><b>{account.kennel.plan}</b><span>{trialActive ? "14-day trial active" : account.subscription?.status || "Billing setup"}</span></div>
       <AccountSignOut/>
@@ -39,8 +42,8 @@ export default async function BreederAccountPage() {
 
     <section className="account-main">
       <header className="account-topbar">
-        <div><small>ACCOUNT CENTER</small><h1>Breeder profile & billing</h1><p>Manage your MyDogPortal subscription, receipts, services, and kennel account from one place.</p></div>
-        <div><Link href="/"><ChevronLeft size={14}/> Back to kennel</Link><Link className="primary" href="/billing"><Sparkles size={14}/> Upgrade / downgrade</Link></div>
+        <div><small>ACCOUNT CENTER</small><h1>Breeder profile & billing</h1><p>Manage your business profile, mailing details, subscription, receipts, plan changes, services, and support from one place.</p></div>
+        <div><Link href="/"><ChevronLeft size={14}/> Back to kennel</Link><a className="account-receipts-link" href="#billing"><ReceiptText size={14}/> View receipts</a><Link className="primary" href="/billing"><Sparkles size={14}/> Upgrade / downgrade</Link></div>
       </header>
 
       <div className="account-content">
@@ -51,14 +54,16 @@ export default async function BreederAccountPage() {
           <article><span><PackageCheck size={18}/></span><div><small>ADD-ONS</small><b>{account.services.length}</b><p>Active breeder services</p></div></article>
         </section>
 
+        <AccountProfileEditor/>
+
         <section className="account-card subscription-card" id="subscription">
-          <header><div><small>SUBSCRIPTION</small><h2>Your MyDogPortal plan</h2><p>See the active subscription and review upgrades or downgrades.</p></div><span className={trialActive ? "status trial" : "status active"}>{trialActive ? "Trial active" : account.subscription?.status || "Active"}</span></header>
+          <header><div><small>SUBSCRIPTION</small><h2>Your MyDogPortal plan</h2><p>See the active subscription and review upgrades, downgrades, billing cycle changes, or cancellation.</p></div><span className={trialActive ? "status trial" : "status active"}>{trialActive ? "Trial active" : account.subscription?.status || "Active"}</span></header>
           <div className="subscription-grid">
             <div className="subscription-plan"><small>ACTIVE PLAN</small><strong>{account.kennel.plan}</strong><p>{account.subscription?.offering || "Existing MyDogPortal account"}</p>{account.subscription?.paypalId && <code>{account.subscription.paypalId}</code>}</div>
             <div><small>NEXT BILLING</small><b>{date(account.subscription?.nextBillingAt || null)}</b><p>{account.subscription ? `${money(account.subscription.amount)} scheduled by PayPal` : "No PayPal subscription recorded"}</p></div>
             <div><small>TRIAL</small><b>{trialActive ? "14 days free" : "—"}</b><p>{trialActive ? `Ends ${date(account.subscription?.trialEndsAt || null)}` : "Trial period complete or not applicable"}</p></div>
           </div>
-          <footer className="subscription-footer"><div><b>Change or cancel anytime</b><span>Upgrade, downgrade, change billing cycle, or cancel future recurring subscription billing here—no support ticket required.</span></div><div className="subscription-footer-actions"><Link href="/billing">Upgrade or downgrade</Link>{account.subscription?.paypalId && <SubscriptionCancelButton founding={account.subscription.offeringKey.startsWith("Founding " ) || account.subscription.offeringKey.startsWith("founding-")}/>}</div></footer>
+          <footer className="subscription-footer"><div><b>Change or cancel anytime</b><span>Upgrade, downgrade, change billing cycle, or cancel future recurring subscription billing here—no support ticket required.</span></div><div className="subscription-footer-actions"><Link href="/billing">Upgrade or downgrade</Link>{account.subscription?.paypalId && <SubscriptionCancelButton founding={account.subscription.offeringKey.startsWith("Founding ") || account.subscription.offeringKey.startsWith("founding-")}/>}</div></footer>
         </section>
 
         <div className="account-two-column">
@@ -81,8 +86,16 @@ export default async function BreederAccountPage() {
           </section>
         </div>
 
-        <section className="account-card profile-card" id="profile">
-          <header><div><small>KENNEL PROFILE</small><h2>{account.kennel.name}</h2><p>Your breeder workspace identity and public connection.</p></div><CircleUserRound size={20}/></header>
+        <section className="account-card" id="support">
+          <header><div><small>SUPPORT & TROUBLE TICKETS</small><h2>MyDogPortal support center</h2><p>Open a private trouble ticket, view replies, and keep account or technical issues connected to this kennel.</p></div><Headphones size={20}/></header>
+          <div className="account-support-body">
+            <div className="account-support-copy"><h3>Everything stays attached to your breeder account.</h3><p>Use tickets for billing questions, account changes, website or domain issues, email, Business Voice, Puppy Portal, data problems, or anything technical. Your kennel identity is attached automatically.</p><div className="account-support-tags"><span>Account</span><span>Billing</span><span>Technical</span><span>Website</span><span>Domain & Email</span><span>Phone</span><span>Puppy Portal</span><span>Data</span></div></div>
+            <div className="account-support-actions"><Link className="primary" href="/support"><TicketCheck size={15}/> Open or view support tickets</Link><Link href="/support"><Headphones size={15}/> Support center</Link></div>
+          </div>
+        </section>
+
+        <section className="account-card profile-card">
+          <header><div><small>ACCOUNT AT A GLANCE</small><h2>{account.kennel.name}</h2><p>Current breeder workspace identity and public connection.</p></div><CircleUserRound size={20}/></header>
           <div className="profile-grid">
             <div><span><Globe2 size={15}/></span><p><small>WORKSPACE</small><b>{workspaceAddress}</b>{account.kennel.customDomain && <em>{account.kennel.customDomain} · {account.kennel.domainStatus || "configured"}</em>}</p></div>
             <div><span><Mail size={15}/></span><p><small>EMAIL</small><b>{account.kennel.contactEmail || "Not added"}</b></p></div>

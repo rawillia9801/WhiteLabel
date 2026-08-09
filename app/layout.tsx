@@ -10,6 +10,7 @@ import { PuppyPacketEmailEnhancer } from "../components/puppy-packet-email-enhan
 import { ProfilePhotoEnhancer } from "../components/profile-photo-enhancer";
 import { BreedingDogRosterEnhancer } from "../components/breeding-dog-roster-enhancer";
 import { DataReconciliationEnhancer } from "../components/data-reconciliation-enhancer";
+import { BreederAccountLauncher } from "../components/breeder-account-launcher";
 import { TenantTheme } from "../components/tenant-theme";
 import { TenantRuntimeProvider, type RuntimeTenant } from "../components/tenant-runtime";
 import { tenantConfig } from "../lib/tenant-config";
@@ -23,6 +24,7 @@ import "./puppy-packet-email.css";
 import "./breeding-management.css";
 import "./breeder-os.css";
 import "./breeder-auth.css";
+import "./breeder-account-launcher.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -66,5 +68,5 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const tenant = await requestTenant();
   const publicSurface = (await headers()).get("x-public-surface") === "1";
-  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme primary={tenant?.primaryColor} accent={tenant?.accentColor} fontFamily={tenant?.fontFamily}/><TenantRuntimeProvider tenant={tenant}>{!publicSurface && <><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer /></>}{children}</TenantRuntimeProvider></body></html>;
+  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme primary={tenant?.primaryColor} accent={tenant?.accentColor} fontFamily={tenant?.fontFamily}/><TenantRuntimeProvider tenant={tenant}>{!publicSurface && <><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer /><BreederAccountLauncher /></>}{children}</TenantRuntimeProvider></body></html>;
 }
