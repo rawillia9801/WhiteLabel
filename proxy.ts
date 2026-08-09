@@ -16,6 +16,12 @@ const publicPath = (pathname: string) =>
   || (process.env.NEXT_PUBLIC_FEATURE_PHONE_CENTER === "true" && pathname.startsWith("/api/voice/"))
   || (process.env.NEXT_PUBLIC_FEATURE_PHONE_CENTER === "true" && pathname === "/api/caller-crm/lookup");
 
+function publicSurfaceHeaders(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  headers.set("x-public-surface", "1");
+  return headers;
+}
+
 export function isReservedMarketingHost(hostValue: string, platformValue = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.site") {
   const host = hostValue.trim().toLowerCase().split(":")[0];
   const platformDomain = platformValue.trim().toLowerCase();
@@ -33,15 +39,21 @@ export async function proxy(request: NextRequest) {
     if (pathname === "/") {
       const marketingUrl = request.nextUrl.clone();
       marketingUrl.pathname = "/marketing";
-      return NextResponse.rewrite(marketingUrl);
+      return NextResponse.rewrite(marketingUrl, {
+        request: { headers: publicSurfaceHeaders(request) },
+      });
     }
-    if (pathname === "/marketing") return NextResponse.next();
+    if (pathname === "/marketing") {
+      return NextResponse.next({
+        request: { headers: publicSurfaceHeaders(request) },
+      });
+    }
   }
 
   if (publicPath(pathname)) {
-    const headers = new Headers(request.headers);
-    headers.set("x-public-surface", "1");
-    return NextResponse.next({ request: { headers } });
+    return NextResponse.next({
+      request: { headers: publicSurfaceHeaders(request) },
+    });
   }
 
   const session = readBreederSessionToken(request.cookies.get(BREEDER_SESSION_COOKIE)?.value);
