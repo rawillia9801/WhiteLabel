@@ -190,3 +190,12 @@
   .website-template-grid { grid-template-columns: 1fr; }
   .setup-service-grid { grid-template-columns: 1fr; }
 }
+
+/* Public-brand polish */
+.breeder-auth-page,.signup-page{background:#fbf9f4;color:#102e2d}
+.breeder-auth-story,.signup-intro{background:radial-gradient(circle at 75% 20%,rgba(10,120,116,.10),transparent 30%),linear-gradient(150deg,#fbf9f4,#f1eee6);color:#102e2d}
+.breeder-auth-story::after,.signup-intro::after{background:radial-gradient(circle at 12% 88%,rgba(168,117,42,.08),transparent 25%)}
+.breeder-auth-logo,.signup-logo{position:relative;border:2px solid var(--tenant-primary);border-bottom:0;border-radius:22px 22px 4px 4px;background:transparent;color:var(--tenant-primary);box-shadow:none}.breeder-auth-logo:after,.signup-logo:after{content:"";position:absolute;right:-3px;bottom:-3px;left:-3px;height:2px;border-radius:3px;background:var(--tenant-accent)}
+.breeder-auth-story>small,.signup-intro>small{color:#8b6229}.breeder-auth-story h1,.signup-intro h1,.breeder-auth-card h2,.signup-card h2,.subscription-section h2,.website-template-picker h2,.setup-services h2,.studio-website-note h2{color:#10233a;font-family:Georgia,"Times New Roman",serif;font-weight:400}.breeder-auth-story>p,.signup-intro>p{color:#61716d}.breeder-auth-domain{border-color:#d9d5cb;background:rgba(255,255,255,.58)}.breeder-auth-domain b{color:#21413d}.breeder-auth-domain small{color:#6c7c77}.signup-points span{color:#38534d}
+.breeder-auth-card,.signup-card,.subscription-section,.setup-services,.studio-website-note{border-color:#dedbd3;border-radius:11px;background:#fff;box-shadow:0 20px 55px rgba(35,44,39,.07)}
+.breeder-auth-input,.signup-input,.breeder-auth-submit,.signup-submit,.website-template-grid article,.subscription-grid article,.setup-service-grid>article{border-radius:7px}

@@ -962,3 +962,49 @@
   .bos-shell *::before,
   .bos-shell *::after { scroll-behavior: auto; transition-duration: .01ms; animation-duration: .01ms; animation-iteration-count: 1; }
 }
+
+/* Premium light workspace — aligned with the MyDogPortal public brand */
+:root {
+  --mdp-canvas: #f7f5ef;
+  --mdp-canvas-warm: #fbf9f4;
+  --mdp-surface: #fff;
+  --mdp-surface-muted: #faf9f5;
+  --mdp-ink: #102e2d;
+  --mdp-text: #344d49;
+  --mdp-muted: #70807b;
+  --mdp-line: #e1dfd8;
+  --mdp-line-strong: #d0cec6;
+  --mdp-nav: #fff;
+  --mdp-nav-deep: #faf9f5;
+  --mdp-nav-text: #183d3a;
+  --mdp-nav-muted: #788983;
+  --mdp-accent: var(--tenant-primary, #087878);
+  --mdp-gold: var(--tenant-accent, #a8752a);
+  --mdp-radius-sm: 6px;
+  --mdp-radius: 9px;
+  --mdp-radius-lg: 12px;
+  --mdp-shadow-sm: 0 1px 2px rgba(25,39,34,.035),0 5px 15px rgba(25,39,34,.035);
+  --mdp-shadow: 0 18px 42px rgba(25,39,34,.08);
+}
+
+.bos-shell{padding-left:248px;background:var(--mdp-canvas-warm)}
+.bos-command-bar{width:248px;padding:16px 12px 12px;border-right:1px solid var(--mdp-line);background:linear-gradient(180deg,#fff,#faf9f5);color:var(--mdp-nav-text);box-shadow:5px 0 24px rgba(28,43,37,.045)}
+.bos-brand{grid-template-columns:38px minmax(0,1fr);padding:0 4px 15px;border-bottom-color:var(--mdp-line)}
+.bos-brand>span{position:relative;width:36px;height:42px;border:2px solid var(--mdp-accent);border-bottom:0;border-radius:17px 17px 3px 3px;background:transparent;color:var(--mdp-accent);box-shadow:none}
+.bos-brand>span:after{content:"";position:absolute;right:-3px;bottom:-3px;left:-3px;height:2px;border-radius:3px;background:var(--mdp-gold)}
+.bos-brand b{color:var(--mdp-ink);font-family:Georgia,"Times New Roman",serif;font-size:15px;font-weight:500}.bos-brand small{color:var(--mdp-muted);font-size:7px}
+.bos-search{margin-top:14px;border-color:var(--mdp-line-strong);background:#fff;color:#70827d}.bos-search:focus-within{border-color:var(--mdp-accent);background:#fff}.bos-search input{color:var(--mdp-ink)}.bos-search input::placeholder{color:#87948f}.bos-search kbd{border-color:var(--mdp-line);color:#7f8b87}
+.bos-global-add{border:0;border-radius:7px;background:var(--mdp-accent);box-shadow:0 7px 16px color-mix(in srgb,var(--mdp-accent) 13%,transparent)}
+.bos-sidebar-nav{gap:12px}.bos-sidebar-nav h2{color:#8a6a34;font-size:7px}.bos-sidebar-nav button{min-height:35px;border-radius:6px;color:#536862;font-size:9px}.bos-sidebar-nav button svg{color:#708680}.bos-sidebar-nav button:hover{background:#f0f5f1;color:var(--mdp-ink)}.bos-sidebar-nav button.active{background:var(--mdp-accent);color:#fff;box-shadow:0 5px 12px color-mix(in srgb,var(--mdp-accent) 15%,transparent)}.bos-sidebar-nav button.active svg{color:#fff}.bos-sidebar-nav button em{background:#edf1ee;color:#526861}.bos-sidebar-nav button.active em{background:rgba(255,255,255,.18);color:#fff}
+.bos-sidebar-footer{border-top-color:var(--mdp-line)}.bos-sidebar-footer a{border-color:var(--mdp-line);background:#fff;color:#536862}.bos-sidebar-footer a:hover{background:#f0f5f1;color:var(--mdp-ink)}.bos-sidebar-footer p b{color:var(--mdp-ink)}.bos-sidebar-footer p small{color:var(--mdp-muted)}
+.bos-main{padding:28px clamp(24px,3vw,46px) 68px;background:var(--mdp-canvas-warm)}
+.bos-profile-pill{border-color:var(--mdp-line)!important;border-radius:8px!important;background:#fff!important;color:var(--mdp-ink)!important;box-shadow:var(--mdp-shadow-sm)!important}
+.dashboard-command-header{padding:10px 0 5px;background:transparent;color:var(--mdp-ink)}.dashboard-command-header h1,.bos-view-head h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:-.045em}.dashboard-command-header h1{font-size:clamp(34px,3.2vw,48px)}.dashboard-command-header p{color:var(--mdp-muted)}
+.dashboard-day-meta>span{border-color:var(--mdp-line)!important;background:#fff!important;color:var(--mdp-text)!important}
+.dashboard-metrics{gap:10px}.dashboard-metrics>button{min-height:105px;padding:14px;border-radius:9px;background:#fff;box-shadow:none}.dashboard-metric-icon{border-radius:50%;background:#eef6f2}.dashboard-metrics b{font-family:Georgia,"Times New Roman",serif;font-size:24px;font-weight:500}.dashboard-section{border-radius:10px;box-shadow:none}.dashboard-section>header{background:#fcfbf8}.dashboard-section>header h2{font-family:Georgia,"Times New Roman",serif;font-size:17px;font-weight:500}.dashboard-business-summary{border:1px solid var(--mdp-line);border-radius:10px;background:#fff;box-shadow:none}.dashboard-business-summary button{background:#fff;color:var(--mdp-ink)}.dashboard-business-summary button:hover{background:#fafbf8}.dashboard-business-summary span,.dashboard-business-summary small{color:var(--mdp-muted)}.dashboard-business-summary b{color:var(--mdp-accent);font-family:Georgia,"Times New Roman",serif;font-weight:500}
+.bos-view-head{align-items:center}.bos-view-head h1{font-size:clamp(31px,3vw,43px)}.bos-view-head>div:last-child button,.dashboard-quick-actions button{border-radius:7px;background:#fff}.bos-shell .primary-action{border-radius:7px}
+.bos-main .panel,.bos-main .panel-wide,.bos-main .workflow-summary,.bos-main .report-card,.bos-main .breeding-panel,.bos-main .calendar-event-section,.bos-main .whelping-capture,.bos-main .whelping-roster,.bos-main .post-birth-panel,.bos-main .waitlist-panel{border-radius:10px;box-shadow:none}.bos-main .panel-head h2,.bos-main .breeding-panel h2,.bos-main .calendar-event-section h2,.bos-main .whelping-capture h2,.bos-main .whelping-roster h2{font-family:Georgia,"Times New Roman",serif;font-weight:500}
+.portal-topbar{background:rgba(255,255,255,.96)}.portal-welcome h1,.portal-journey-hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:400}.portal-welcome,.portal-journey-hero,.portal-section,.portal-metrics,.portal-account-strip,.portal-journey-band{border-radius:10px;box-shadow:none}
+
+@media(max-width:900px){.bos-shell{padding-left:0}.bos-command-bar{width:100%;background:#fff}.bos-nav-toggle{border-color:var(--mdp-line);background:#f5f4ef;color:var(--mdp-ink)}.bos-sidebar-scroll{background:linear-gradient(180deg,#fff,#f8f7f2)}.bos-brand>span{width:33px;height:38px}.bos-main{padding-top:22px}}
+@media(max-width:680px){.dashboard-command-header{padding:4px 2px 10px;border-radius:0}.bos-command-bar{height:106px}.bos-sidebar-scroll{top:106px}.bos-main{min-height:calc(100vh - 106px);padding-top:18px}.dashboard-metrics>button{border-radius:8px}.dashboard-section{border-radius:9px}}

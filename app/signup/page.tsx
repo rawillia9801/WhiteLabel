@@ -206,7 +206,7 @@ export default function SignupPage() {
           </section>
 
           <section className="subscription-section" aria-labelledby="subscription-heading">
-            <header><span><WalletCards size={17} /></span><div><small>{founding.available ? `FOUNDING BREEDER PRICING · ${founding.remaining} OF ${founding.limit} SPOTS REMAIN` : "STANDARD MYDOGPORTAL PRICING"}</small><h2 id="subscription-heading">{founding.available ? "Lock in your introductory rate" : "Choose the plan that fits your program"}</h2><p>{founding.available ? "The first 100 kennel accounts receive Founding Breeder pricing. Start with the 14-day $0 trial, then keep your Founding rate for as long as your subscription remains continuously active." : "The Founding Breeder offer has been fully claimed. Every MyDogPortal software plan still begins with a 14-day $0 trial."}</p></div></header>
+            <header><span><WalletCards size={17} /></span><div><small>14-DAY PLATFORM FREE TRIAL</small><h2 id="subscription-heading">{founding.available ? "Lock in your introductory rate" : "Choose the plan that fits your program"}</h2><p>{founding.available ? `Founding Breeder pricing · ${founding.remaining} of ${founding.limit} spots remain. Start with the 14-day $0 trial, then keep your Founding rate for as long as your subscription remains continuously active.` : "The Founding Breeder offer has been fully claimed. Every MyDogPortal software plan still begins with a 14-day $0 trial."}</p></div></header>
             <div className="subscription-grid">
               {subscriptions.map((plan) => (
                 <article className={[plan.featured ? "featured" : "", selectedPlan === plan.id ? "selected" : ""].filter(Boolean).join(" ")} key={plan.name}>
