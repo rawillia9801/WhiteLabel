@@ -7,8 +7,8 @@ import { FOUNDING_BREEDER_LIMIT, foundingEligibilityForNewSignup } from "../../.
 export const runtime = "nodejs";
 
 const setupRequestDetails: Record<string, { name: string; notes: string }> = {
-  "hosting-email": { name: "Website Hosting + Business Email", notes: "$17.95/month standalone managed website hosting exclusively for dog breeders, including SSL, two branded business email addresses, existing-domain connection, and basic hosting/email support. MyDogPortal software is not included." },
-  "brand-launch": { name: "Brand Launch", notes: "$149 setup for an available standard .com, domain/DNS/SSL configuration, and first-year registration. Managed standard .com renewal is $29/year after year one. Premium domains are priced separately." },
+  "hosting-email": { name: "Dog Breeder Web Website Service", notes: "$24.95/month standalone breeder website service including BreederWeb Designer, managed hosting, SSL, two branded business email addresses, publishing, forms, embeds, brand controls, version history, and integration readiness. MyDogPortal software is not included." },
+  "brand-launch": { name: "Brand Launch", notes: "$149 setup for an available standard .com, domain/DNS/SSL configuration, and first-year registration. Managed standard .com renewal is $39/year after year one. Premium domains are priced separately." },
   "website-personalization": { name: "Breeder Website Personalization", notes: "$299 one-time. Personalizes a supported MyDogPortal website style with the kennel identity, colors, photography, content, and connected MyDogPortal information where supported." },
   "custom-website": { name: "Custom Breeder Website", notes: "From $749. Custom layout and page planning, brand/photography/content implementation, and connected MyDogPortal information where supported. Final scope and price are confirmed before work begins." },
   "business-voice": { name: "Business Voice", notes: "$69 setup plus local number at $8.99/month or $99/year. Includes custom IVR/menu, business hours, voicemail and routing. Incoming calls are $0.03/minute and outgoing calls are $0.04/minute. SMS is not offered." },
