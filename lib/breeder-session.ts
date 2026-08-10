@@ -9,7 +9,7 @@ export type BreederSession = {
   kennelSlug: string;
   kennelName: string;
   role: "owner" | "admin" | "staff";
-  plan: "starter" | "professional" | "custom_domain";
+  plan: "website_companion" | "starter" | "professional" | "custom_domain";
   customDomain?: string;
   billingStatus?: "pending" | "active";
   expiresAt: number;
