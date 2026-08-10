@@ -11,6 +11,14 @@ type BillingEventRow = {
   notes: string | null;
 };
 
+type KennelOwnerRow = {
+  owner_auth_user_id: string | null;
+};
+
+type DogDocsPurchaseRow = {
+  id: string;
+};
+
 export type PayPalBillingNotes = {
   provider: "paypal";
   kind: "subscription" | "order" | "payment";
@@ -108,6 +116,71 @@ export async function updatePayPalBillingEventByProviderId(paypalId: string, sta
   return { ...row, status, parsed: notes };
 }
 
+async function kennelOwnerAuthUserId(kennelId: string) {
+  const response = await supabaseRequest(`rest/v1/kennels?id=eq.${encodeURIComponent(kennelId)}&select=owner_auth_user_id&limit=1`, { cache: "no-store" });
+  const payload = await response.json().catch(() => null) as KennelOwnerRow[] | { message?: string } | null;
+  if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || "Unable to read the kennel owner for document access.");
+  const userId = Array.isArray(payload) ? payload[0]?.owner_auth_user_id : null;
+  if (!userId) throw new Error("The kennel owner is not linked to an authenticated user, so DogBreederDocs access could not be granted.");
+  return userId;
+}
+
+async function syncDogBreederDocsPacket(kennelId: string, plan: Exclude<PayPalEntitlementPlan, null>) {
+  const providerReference = `mydogportal:${kennelId}`;
+  const lookup = await supabaseRequest(`rest/v1/dogdocs_purchases?provider_reference=eq.${encodeURIComponent(providerReference)}&select=id&limit=1`, { cache: "no-store" });
+  const lookupPayload = await lookup.json().catch(() => null) as DogDocsPurchaseRow[] | { message?: string } | null;
+  if (!lookup.ok) throw new Error((lookupPayload as { message?: string } | null)?.message || "Unable to read DogBreederDocs entitlement status.");
+  const existing = Array.isArray(lookupPayload) ? lookupPayload[0] : null;
+  const included = plan === "professional" || plan === "custom_domain";
+
+  if (!included) {
+    if (!existing) return;
+    const response = await supabaseRequest(`rest/v1/dogdocs_purchases?id=eq.${encodeURIComponent(existing.id)}`, {
+      method: "DELETE",
+      headers: { prefer: "return=minimal" },
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { message?: string } | null;
+      throw new Error(payload?.message || "Unable to remove the MyDogPortal document entitlement.");
+    }
+    return;
+  }
+
+  if (existing) {
+    const response = await supabaseRequest(`rest/v1/dogdocs_purchases?id=eq.${encodeURIComponent(existing.id)}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", prefer: "return=minimal" },
+      body: JSON.stringify({ product_type: "studio_included", template_id: null, amount_cents: 0, payment_status: "included" }),
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { message?: string } | null;
+      throw new Error(payload?.message || "Unable to refresh the DogBreederDocs entitlement.");
+    }
+    return;
+  }
+
+  const userId = await kennelOwnerAuthUserId(kennelId);
+  const response = await supabaseRequest("rest/v1/dogdocs_purchases", {
+    method: "POST",
+    headers: { "content-type": "application/json", prefer: "return=minimal" },
+    body: JSON.stringify({
+      user_id: userId,
+      product_type: "studio_included",
+      template_id: null,
+      amount_cents: 0,
+      payment_status: "included",
+      provider_reference: providerReference,
+    }),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null;
+    throw new Error(payload?.message || "Unable to grant the DogBreederDocs packet for this MyDogPortal plan.");
+  }
+}
+
 export async function setKennelPlan(kennelId: string, plan: Exclude<PayPalEntitlementPlan, null>) {
   const response = await supabaseRequest(`rest/v1/kennels?id=eq.${encodeURIComponent(kennelId)}`, {
     method: "PATCH",
@@ -119,4 +192,5 @@ export async function setKennelPlan(kennelId: string, plan: Exclude<PayPalEntitl
     const payload = await response.json().catch(() => null) as { message?: string } | null;
     throw new Error(payload?.message || "Unable to update the kennel subscription plan.");
   }
+  await syncDogBreederDocsPacket(kennelId, plan);
 }
