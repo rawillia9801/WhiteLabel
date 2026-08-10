@@ -45,9 +45,30 @@ declare global {
 }
 
 const planCopy = {
-  Starter: ["Breeder workspace", "Kennel subdomain", "Family Puppy Portals", "Core records and workflows"],
-  Professional: ["Everything in Starter", "Complete breeder workflow", "Documents and automation", "Expanded business tools"],
-  Studio: ["Everything in Professional", "Customizable breeder website", "Brand + domain launch package", "Business Voice + annual phone credits"],
+  Starter: [
+    "Private breeder workspace + kennel subdomain",
+    "Dogs, litters, puppies, applications, and families",
+    "Puppy health, growth, vaccinations, and care records",
+    "Private family Puppy Portals",
+    "Deposits, balances, payment history, and core calendar",
+  ],
+  Professional: [
+    "Everything in Starter",
+    "Pedigrees, COI, common ancestors, and planned matings",
+    "Heat cycles, progesterone, due dates, and pregnancy tracking",
+    "Whelping Mode, newborn records, daily weights, and warnings",
+    "Waitlist and puppy-picking workflow",
+    "Complete DogBreederDocs editable packet + e-signatures",
+    "Automated application, payment, milestone, and breeder workflows",
+  ],
+  Studio: [
+    "Everything in Professional",
+    "Five customizable breeder website starting points",
+    "BreederWeb Designer + connected puppy/litter publishing",
+    "Standard .com launch and managed renewal",
+    "Managed website service + two branded business emails",
+    "Business Voice + custom IVR + annual phone credits",
+  ],
 } as const;
 
 function dollars(value: string) {
@@ -246,7 +267,7 @@ export default function BillingPage() {
                   <h3>{offering.name}</h3>
                   {config.founding?.eligible && <div className="founding-plan-label">FOUNDING BREEDER PRICE</div>}<div className="plan-price"><b>{dollars(offering.price)}</b><span>/{offering.interval}</span></div>
                   <div className="trial-chip">{config.currentSubscriptionId ? offering.name === currentPlanName ? "CURRENT PLAN · CHANGE BILLING CYCLE BELOW" : `${planRank(offering.name) > planRank(currentPlanName) ? "UPGRADE" : "DOWNGRADE"} · NO NEW TRIAL` : `14 DAYS FREE · THEN ${dollars(offering.price).toUpperCase()}/${offering.interval.toUpperCase()}`}</div>
-                  {offering.name === "Studio" && <div className="studio-value">Over $1,100.00 Added Value · Prices Locked In</div>}
+                  {offering.name === "Studio" && <div className="studio-value">Over $1,160 in First-Year Included Service Value · Prices Locked In</div>}
                   <ul>{planCopy[offering.name as keyof typeof planCopy].map((item) => <li key={item}><Check size={14} />{item}</li>)}</ul>
                   {config.currentSubscriptionId && offering.name === currentPlanName && config.currentOfferingKey.includes(billingCycle === "month" ? "monthly" : "annual") ? <div className="current-plan-marker"><Check size={15}/> Current subscription</div> : <PayPalSubscriptionButton label={config.currentSubscriptionId ? offering.name === currentPlanName ? `Change ${currentPlanName} to ${billingCycle === "month" ? "monthly" : "annual"} billing` : `${planRank(offering.name) > planRank(currentPlanName) ? "Upgrade" : "Downgrade"} to ${offering.name}` : undefined} offering={offering} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} />}
                 </article>
@@ -257,8 +278,8 @@ export default function BillingPage() {
           <section className="addon-section" id="addons" aria-labelledby="addons-heading">
             <div className="section-heading"><div><small>À-LA-CARTE BREEDER SERVICES</small><h2 id="addons-heading">Add only what your kennel needs</h2><p>These are standalone services. The prices below are the actual add-on prices—not “value” figures.</p></div></div>
             <div className="addon-grid">
-              {serviceOffering("hosting-monthly") && <article><span><Mail size={20} /></span><h3>Website Hosting + Business Email</h3><strong>$17.95/month</strong><p>Dog-breeder website hosting, SSL, two branded business email addresses, and basic hosting/email support. No MyDogPortal software subscription included.</p><PayPalSubscriptionButton offering={serviceOffering("hosting-monthly")!} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} /></article>}
-              {serviceOffering("brand-launch-renewal") && <article><span><Globe2 size={20} /></span><h3>Brand Launch</h3><strong>$149 setup · then $29/year</strong><p>Standard .com registration, DNS and SSL setup. The first year is covered at launch; managed standard .com renewal begins after year one.</p><PayPalSubscriptionButton offering={serviceOffering("brand-launch-renewal")!} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} /></article>}
+              {serviceOffering("hosting-monthly") && <article><span><Mail size={20} /></span><h3>Dog Breeder Web Website Service</h3><strong>$24.95/month</strong><p>BreederWeb Designer, managed website hosting, SSL, two branded business email addresses, publishing, forms, embeds, brand controls, and integration readiness. No MyDogPortal software subscription included.</p><PayPalSubscriptionButton offering={serviceOffering("hosting-monthly")!} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} /></article>}
+              {serviceOffering("brand-launch-renewal") && <article><span><Globe2 size={20} /></span><h3>Brand Launch</h3><strong>$149 setup · then $39/year</strong><p>First-year standard .com registration, DNS and SSL setup. Managed standard .com renewal begins after year one.</p><PayPalSubscriptionButton offering={serviceOffering("brand-launch-renewal")!} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} /></article>}
               {config.oneTime.find((item) => item.key === "website-personalization") && <article><span><Sparkles size={20} /></span><h3>Breeder Website Personalization</h3><strong>$299 one-time</strong><p>Personalize a supported MyDogPortal website style with your kennel identity, colors, photography, and content.</p><button className="order-button" type="button" disabled={busy} onClick={() => void startOrder("website-personalization")}>Buy securely with PayPal <ExternalLink size={14} /></button></article>}
               <article><span><Globe2 size={20} /></span><h3>Custom Breeder Website</h3><strong>From $749 · Quote only</strong><p>Custom layout, page planning, branding, photography and content implementation. Final scope is confirmed before work begins.</p><Link className="quote-button" href="/signup#account-form">Request a custom website quote</Link></article>
               {voiceMonthly && voiceAnnual && <article><span><PhoneCall size={20} /></span><h3>Business Voice</h3><strong>$69 setup + local number</strong><p>Custom IVR/menu, business hours, voicemail and routing. Metered calls are billed separately.</p><PayPalSubscriptionButton label="$8.99/month" offering={voiceMonthly} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} /><PayPalSubscriptionButton label="$99/year" offering={voiceAnnual} kennelId={config.kennelId} ready={sdkReady} onApproved={confirmSubscription} onError={showError} /></article>}
