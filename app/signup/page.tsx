@@ -6,15 +6,12 @@ import {
   ArrowRight,
   Building2,
   Check,
-  ExternalLink,
   Eye,
   EyeOff,
   Globe2,
   KeyRound,
   Mail,
-  MonitorSmartphone,
   PawPrint,
-  PhoneCall,
   WalletCards,
 } from "lucide-react";
 
@@ -22,65 +19,9 @@ const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.s
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-").slice(0, 48);
 
 const subscriptions = [
-  { id: "starter", name: "Starter", price: 19, annual: 190, regular: 29, regularAnnual: 290, position: "GET ORGANIZED", description: "Essential kennel operations, applications, family records, health tracking, payments, and private Puppy Portals for a growing program.", featured: false },
-  { id: "professional", name: "Professional", price: 39, annual: 390, regular: 69, regularAnnual: 690, position: "RUN YOUR BREEDING BUSINESS", description: "Everything in Starter plus pedigrees and COI, reproduction and whelping management, waitlists, the complete DogBreederDocs packet, e-signatures, and automation.", featured: true },
-  { id: "studio", name: "Studio", price: 69, annual: 690, regular: 119, regularAnnual: 1190, position: "RUN YOUR BUSINESS + YOUR BRAND", description: "Everything in Professional plus the complete breeder website and brand system: BreederWeb Designer, website personalization, hosting, two business emails, standard .com launch and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
-] as const;
-
-const websiteTemplates = [
-  { id: "willow-creek", name: "Willow Creek", breed: "Chihuahua", address: "willowcreekchihuahuas.com", addressType: "Custom .com example", description: "Bright, polished and boutique—with a clean presentation for a small companion-breed program.", preview: "https://willowcreekchihuahuas.com" },
-  { id: "cedar-creek", name: "Cedar & Creek", breed: "Golden Retriever", address: "cedar-creek.mydogportal.site", addressType: "Included kennel address", description: "Warm, editorial and outdoors-inspired—with a story-first presentation for a family sporting-breed program.", preview: "/templates/cedar-creek" },
-  { id: "northstar-poodles", name: "Northstar", breed: "Standard Poodle", address: "northstar.mydogportal.site", addressType: "Included kennel address", description: "Luxury, minimal and editorial—with a high-end presentation centered on health, pedigree, structure, and refinement.", preview: "/templates/northstar-poodles" },
-  { id: "bluebird-aussies", name: "Bluebird", breed: "Australian Shepherd", address: "bluebird.mydogportal.site", addressType: "Included kennel address", description: "Bright, colorful and family-forward—with a modern ranch feel built for active, personality-driven programs.", preview: "/templates/bluebird-aussies" },
-  { id: "ironwood-shepherds", name: "Ironwood", breed: "German Shepherd", address: "ironwood.mydogportal.site", addressType: "Included kennel address", description: "Structured, bold and performance-led—with a serious presentation for working, sport, and purpose-bred programs.", preview: "/templates/ironwood-shepherds" },
-] as const;
-
-const setupServices = [
-  {
-    id: "hosting-email",
-    name: "Dog Breeder Web Website Service",
-    price: "$24.95/month",
-    action: "Add website service to my setup",
-    icon: Mail,
-    description: "Standalone breeder website service with BreederWeb Designer, managed hosting, professional email, publishing tools, forms, embeds, and integration readiness. No MyDogPortal software subscription is included.",
-    details: ["BreederWeb Designer", "Managed website hosting + SSL", "Two branded business email addresses", "Puppy/litter publishing, forms, and embeds", "Brand controls and version history", "MyDogPortal and DogBreederDocs integration ready"],
-  },
-  {
-    id: "brand-launch",
-    name: "Brand Launch",
-    price: "$149 setup · then $39/year renewal",
-    action: "Add Brand Launch to my setup",
-    icon: Globe2,
-    description: "Launch an available standard .com with first-year registration, DNS, and SSL configuration.",
-    details: ["Available standard .com first-year registration", "Domain, DNS, and SSL configuration", "First year registration included with launch", "Managed standard .com renewal: $39/year after year one", "Premium domains priced separately"],
-  },
-  {
-    id: "website-personalization",
-    name: "Breeder Website Personalization",
-    price: "$299 one-time",
-    action: "Request website personalization",
-    icon: MonitorSmartphone,
-    description: "Personalize a supported MyDogPortal website style around your kennel so the demonstration content becomes your brand and breeding program.",
-    details: ["Kennel identity, colors, and photography", "Your content across supported pages and layouts", "Connected MyDogPortal information where supported"],
-  },
-  {
-    id: "custom-website",
-    name: "Custom Breeder Website",
-    price: "From $749",
-    action: "Request a custom website quote",
-    icon: MonitorSmartphone,
-    description: "For breeder brands that need a website beyond the supported template system, with scope planned around the program before work begins.",
-    details: ["Custom layout and page planning", "Brand, photography, and content implementation", "Connected MyDogPortal information where supported", "Final scope and price confirmed before work begins"],
-  },
-  {
-    id: "business-voice",
-    name: "Business Voice",
-    price: "$69 setup + $8.99/month or $99/year",
-    action: "Add Business Voice to my setup",
-    icon: PhoneCall,
-    description: "A professionally configured local business voice line with your custom greeting and breeder information.",
-    details: ["Local number: $8.99/month or $99/year", "Incoming calls: $0.03/minute", "Outgoing calls: $0.04/minute", "Custom IVR/menu, business hours, voicemail, and call routing", "SMS is not offered"],
-  },
+  { id: "starter", name: "Starter", price: 19, annual: 190, regular: 29, regularAnnual: 290, position: "GET ORGANIZED", description: "Essential breeder operations, applications, family records, health tracking, payments, and private Puppy Portals for a growing program.", featured: false },
+  { id: "professional", name: "Professional", price: 39, annual: 390, regular: 69, regularAnnual: 690, position: "RUN YOUR BREEDING BUSINESS", description: "Everything in Starter plus pedigrees and COI, reproduction and whelping management, waitlists, DogBreederDocs, e-signatures, and automation.", featured: true },
+  { id: "studio", name: "Studio", price: 69, annual: 690, regular: 119, regularAnnual: 1190, position: "THE CONNECTED BREEDER SUITE", description: "Everything in Professional plus the connected DogBreederWeb website plan, standard .com domain, hosting, SSL, two branded business emails, Business Voice, and $20/month in Phone System Credits.", featured: false },
 ] as const;
 
 export default function SignupPage() {
@@ -91,8 +32,6 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [setupRequests, setSetupRequests] = useState<string[]>([]);
-  const [websiteTemplate, setWebsiteTemplate] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<"starter" | "professional" | "studio">("professional");
   const [founding, setFounding] = useState({ available: true, remaining: 100, limit: 100 });
 
@@ -111,11 +50,11 @@ export default function SignupPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const requestedTemplate = params.get("website_template") || "";
     const requestedPlan = params.get("plan") || "";
     const timer = window.setTimeout(() => {
-      if (websiteTemplates.some((template) => template.id === requestedTemplate)) setWebsiteTemplate(requestedTemplate);
-      if (["starter", "professional", "studio"].includes(requestedPlan)) setSelectedPlan(requestedPlan as "starter" | "professional" | "studio");
+      if (["starter", "professional", "studio"].includes(requestedPlan)) {
+        setSelectedPlan(requestedPlan as "starter" | "professional" | "studio");
+      }
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -136,10 +75,6 @@ export default function SignupPage() {
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, [slug]);
 
-  function toggleSetupRequest(id: string) {
-    setSetupRequests((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
-  }
-
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -149,7 +84,16 @@ export default function SignupPage() {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kennel_name: form.get("kennel_name"), kennel_slug: form.get("kennel_slug"), email: form.get("email"), password: form.get("password"), plan: "starter", requested_plan: selectedPlan, setup_requests: setupRequests, website_template: websiteTemplate }),
+        body: JSON.stringify({
+          kennel_name: form.get("kennel_name"),
+          kennel_slug: form.get("kennel_slug"),
+          email: form.get("email"),
+          password: form.get("password"),
+          plan: "starter",
+          requested_plan: selectedPlan,
+          setup_requests: [],
+          website_template: "",
+        }),
       });
       const result = await response.json() as { error?: string; redirect?: string };
       if (!response.ok) throw new Error(result.error || "Unable to create your kennel account.");
@@ -165,48 +109,35 @@ export default function SignupPage() {
       <section className="signup-intro">
         <span className="signup-logo"><PawPrint size={27} /></span>
         <small>MYDOGPORTAL</small>
-        <h1>Your breeding program. Your brand. Your families. One connected system.</h1>
-        <p>The complete business operating system for dog breeders, with a private workspace and connected family experience.</p>
-        <div className="signup-points"><span><Check size={16} />Secure individual owner login</span><span><Check size={16} />Private tenant-isolated records</span><span><Check size={16} />Family Puppy Portals you control</span><span><Check size={16} />Automation that follows your workflow</span><span><Check size={16} />Website and portal customization</span></div>
+        <h1>Your breeding program. One connected operating system.</h1>
+        <p>Start with the breeder-management platform. Add the connected website and document products only when your plan calls for them.</p>
+        <div className="signup-points">
+          <span><Check size={16} />Secure individual owner login</span>
+          <span><Check size={16} />Private tenant-isolated records</span>
+          <span><Check size={16} />Family Puppy Portals you control</span>
+          <span><Check size={16} />Automation that follows your workflow</span>
+          <span><Check size={16} />DogBreederDocs included with Professional + Studio</span>
+          <span><Check size={16} />DogBreederWeb included with Studio</span>
+        </div>
       </section>
 
       <section className="signup-panel">
         <div className="signup-stack">
           <form className="signup-card" id="account-form" onSubmit={submit}>
             <span>CREATE YOUR KENNEL</span>
-            <h2>Claim your workspace</h2>
-            <p>Start with the kennel address your team and families will recognize.</p>
+            <h2>Claim your MyDogPortal workspace</h2>
+            <p>Create the private breeder account first. Your selected MyDogPortal plan determines which connected products are included.</p>
             <label><span>1. Kennel or business name</span><div className="signup-input"><Building2 size={18} /><input name="kennel_name" value={kennelName} onChange={(event) => { const value = event.target.value; setKennelName(value); if (!slugEdited) setSlug(slugify(value)); setAvailable(null); }} autoComplete="organization" placeholder="Willow Creek Goldens" required /></div></label>
-            <label><span>2. Included kennel address</span><div className="signup-input slug"><Globe2 size={18} /><input name="kennel_slug" value={slug} onChange={(event) => { setSlugEdited(true); setSlug(slugify(event.target.value)); setAvailable(null); }} aria-describedby="slug-status" minLength={3} required /><b>.{platformDomain}</b></div><small id="slug-status" className={available === true ? "available" : available === false ? "unavailable" : ""}>{available === true ? "Available—this address is yours when signup finishes." : available === false ? "Already in use—try another kennel address." : "Use lowercase letters, numbers, and hyphens."}</small></label>
+            <label><span>2. Included MyDogPortal workspace address</span><div className="signup-input slug"><Globe2 size={18} /><input name="kennel_slug" value={slug} onChange={(event) => { setSlugEdited(true); setSlug(slugify(event.target.value)); setAvailable(null); }} aria-describedby="slug-status" minLength={3} required /><b>.{platformDomain}</b></div><small id="slug-status" className={available === true ? "available" : available === false ? "unavailable" : ""}>{available === true ? "Available—this workspace address is yours when signup finishes." : available === false ? "Already in use—try another kennel address." : "Use lowercase letters, numbers, and hyphens."}</small></label>
             <label><span>3. Owner email</span><div className="signup-input"><Mail size={18} /><input name="email" type="email" autoComplete="email" placeholder="owner@yourkennel.com" required /></div></label>
             <label><span>4. Create your password</span><div className="signup-input"><KeyRound size={18} /><input name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={10} required /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div><small>At least 10 characters with uppercase, lowercase, and a number.</small></label>
-            {setupRequests.length > 0 && <div className="signup-request-summary"><b>{setupRequests.length} optional setup request{setupRequests.length === 1 ? "" : "s"} selected</b><small>They will be added to your workspace when the account is created. No add-on payment is submitted here.</small></div>}
             {error && <div className="signup-error" role="alert">{error}</div>}
             <button className="signup-submit" disabled={busy || available === false}>{busy ? "Creating your kennel…" : "Create account and continue to secure checkout"}<ArrowRight size={17} /></button>
             <footer>Already registered? <Link href="/login">Sign in</Link></footer>
           </form>
 
-          <section className="website-template-picker" aria-labelledby="website-template-heading">
-            <header><small>WEBSITE TEMPLATE GALLERY</small><h2 id="website-template-heading">Choose the look you want to start with</h2><p>Choose from five genuinely different starting styles or leave the choice open. Every supported template can be customized with your kennel name, breed, dogs, photography, colors, policies, content, applications, and connected MyDogPortal information. The four MyDogPortal examples show the included kennel subdomain; Willow Creek shows the same experience on a custom .com.</p></header>
-            <div className="website-template-grid">
-              {websiteTemplates.map((template, index) => {
-                const selected = websiteTemplate === template.id;
-                return (
-                  <article className={selected ? "selected" : ""} key={template.id}>
-                    <small>WEBSITE TEMPLATE {String(index + 1).padStart(2, "0")}</small>
-                    <h3>{template.name}</h3>
-                    <b>{template.breed} demonstration</b>
-                    <p><strong>{template.addressType}:</strong> {template.address}</p>
-                    <p>{template.description}</p>
-                    <div><a href={template.preview} target="_blank" rel="noreferrer">Website <ExternalLink size={13} /></a><a href={`/templates/os-demo/${template.id}`} target="_blank" rel="noreferrer">OS demo <ExternalLink size={13} /></a><button type="button" aria-pressed={selected} onClick={() => setWebsiteTemplate(selected ? "" : template.id)}>{selected ? <><Check size={14} /> Selected</> : "Choose this style"}</button></div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-
           <section className="subscription-section" aria-labelledby="subscription-heading">
-            <header><span><WalletCards size={17} /></span><div><small>14-DAY PLATFORM FREE TRIAL</small><h2 id="subscription-heading">{founding.available ? "Lock in your introductory rate" : "Choose the plan that fits your program"}</h2><p>{founding.available ? `Founding Breeder pricing · ${founding.remaining} of ${founding.limit} spots remain. Start with the 14-day $0 trial, then keep your Founding rate for as long as your subscription remains continuously active.` : "The Founding Breeder offer has been fully claimed. Every MyDogPortal software plan still begins with a 14-day $0 trial."}</p></div></header>
+            <header><span><WalletCards size={17} /></span><div><small>14-DAY PLATFORM FREE TRIAL</small><h2 id="subscription-heading">{founding.available ? "Lock in your introductory MyDogPortal rate" : "Choose the MyDogPortal plan that fits your program"}</h2><p>{founding.available ? `Founding Breeder pricing · ${founding.remaining} of ${founding.limit} spots remain. Start with the 14-day $0 trial, then keep your Founding rate for as long as your subscription remains continuously active.` : "The Founding Breeder offer has been fully claimed. Every MyDogPortal software plan still begins with a 14-day $0 trial."}</p></div></header>
             <div className="subscription-grid">
               {subscriptions.map((plan) => (
                 <article className={[plan.featured ? "featured" : "", selectedPlan === plan.id ? "selected" : ""].filter(Boolean).join(" ")} key={plan.name}>
@@ -223,27 +154,9 @@ export default function SignupPage() {
             <aside className="subscription-billing-note">{founding.available ? <><b>Founding Breeder disclaimer:</b> Founding pricing is limited to the first 100 eligible kennel accounts and is confirmed when the account is created. Your Founding rate remains locked only while that subscription stays continuously active. If you cancel or allow it to lapse, the Founding rate is forfeited and any later subscription will be at the then-current published price.</> : <>Monthly or annual billing is selected on the secure billing page. Annual plans include two months free.</>}</aside>
           </section>
 
-          <section className="setup-services" aria-labelledby="setup-services-heading">
-            <header><small>À-LA-CARTE BREEDER SERVICES</small><h2 id="setup-services-heading">Build your launch package</h2><p>These five cards are standalone add-ons with their actual prices. Studio bundle value is shown separately below. No add-on payment is taken from these request buttons.</p></header>
-            <div className="setup-service-grid">
-              {setupServices.map((service) => {
-                const Icon = service.icon;
-                const selected = setupRequests.includes(service.id);
-                return (
-                  <article key={service.id}>
-                    <header><span><Icon size={19} /></span><div><h3>{service.name}</h3><strong>{service.price}</strong></div></header>
-                    <p>{service.description}</p>
-                    <ul>{service.details.map((detail) => <li key={detail}>{detail}</li>)}</ul>
-                    <button type="button" className={selected ? "selected" : ""} aria-pressed={selected} data-setup-request={service.id} onClick={() => toggleSetupRequest(service.id)}>{selected ? "Added to signup request" : service.action}</button>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-
           <section className="studio-website-note">
-            <div><small>STUDIO · COMPLETE BRAND PACKAGE · PRICES LOCKED IN</small><h2>Over $1,160 in First-Year Included Service Value</h2><p>Studio includes Brand Launch and first-year standard .com registration ($149), breeder website personalization ($299), the managed Dog Breeder Web website service with two branded business emails ($299.40/year), Business Voice setup plus the first year of the local number ($176.88), and $240/year in Phone System Credits. That is $1,164.28 in first-year included service value before counting the MyDogPortal software itself. Standard .com renewal is included while Studio remains active after year one. Your Studio subscription rate stays locked in while your Studio subscription remains continuously active. Your connected website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
-            <Link href="/#examples"><span>CONNECTED TEMPLATE GALLERY</span><b>Compare the website styles</b><small>View all live examples <ArrowRight size={13} /></small></Link>
+            <div><small>ONE PRODUCT FAMILY · CLEAR RESPONSIBILITIES</small><h2>MyDogPortal runs the kennel. The connected products do their own jobs.</h2><p><b>DogBreederWeb.Site</b> is the dedicated public website platform. <b>DogBreederDocs.Online</b> is the dedicated breeder-document platform. MyDogPortal remains the breeder operating system. Professional includes DogBreederDocs. Studio includes both DogBreederDocs and DogBreederWeb, plus Business Voice and $20/month in Phone System Credits. You are not being asked to repurchase the same service under different names.</p></div>
+            <Link href="/#products"><span>CONNECTED PRODUCT FAMILY</span><b>See what each product does</b><small>View the MyDogPortal ecosystem <ArrowRight size={13} /></small></Link>
           </section>
         </div>
       </section>
