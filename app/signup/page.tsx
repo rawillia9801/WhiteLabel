@@ -22,9 +22,9 @@ const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "mydogportal.s
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-").slice(0, 48);
 
 const subscriptions = [
-  { id: "starter", name: "Starter", price: 19, annual: 190, regular: 29, regularAnnual: 290, position: "GET ORGANIZED", description: "Essential kennel operations, tenant workspace, and Puppy Portal access for a growing program.", featured: false },
-  { id: "professional", name: "Professional", price: 39, annual: 390, regular: 59, regularAnnual: 590, position: "RUN YOUR BREEDING BUSINESS", description: "The complete breeder workflow for active programs, family operations, and automation.", featured: true },
-  { id: "studio", name: "Studio", price: 69, annual: 690, regular: 99, regularAnnual: 990, position: "RUN YOUR BUSINESS + YOUR BRAND", description: "Over $1,100.00 Added Value · Prices Locked In. Brand Launch, breeder website personalization, hosting, two business emails, standard .com registration and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
+  { id: "starter", name: "Starter", price: 19, annual: 190, regular: 29, regularAnnual: 290, position: "GET ORGANIZED", description: "Essential kennel operations, applications, family records, health tracking, payments, and private Puppy Portals for a growing program.", featured: false },
+  { id: "professional", name: "Professional", price: 39, annual: 390, regular: 69, regularAnnual: 690, position: "RUN YOUR BREEDING BUSINESS", description: "Everything in Starter plus pedigrees and COI, reproduction and whelping management, waitlists, the complete DogBreederDocs packet, e-signatures, and automation.", featured: true },
+  { id: "studio", name: "Studio", price: 69, annual: 690, regular: 119, regularAnnual: 1190, position: "RUN YOUR BUSINESS + YOUR BRAND", description: "Everything in Professional plus the complete breeder website and brand system: BreederWeb Designer, website personalization, hosting, two business emails, standard .com launch and renewal, Business Voice + custom IVR, and $240/year in Phone System Credits.", featured: false },
 ] as const;
 
 const websiteTemplates = [
@@ -38,21 +38,21 @@ const websiteTemplates = [
 const setupServices = [
   {
     id: "hosting-email",
-    name: "Website Hosting + Business Email",
-    price: "$17.95/month",
-    action: "Add hosting + email to my setup",
+    name: "Dog Breeder Web Website Service",
+    price: "$24.95/month",
+    action: "Add website service to my setup",
     icon: Mail,
-    description: "Standalone managed website hosting and professional email exclusively for dog breeders. No MyDogPortal software subscription is included.",
-    details: ["Managed website hosting + SSL", "Two branded business email addresses", "Connect an existing domain", "Basic hosting and email support"],
+    description: "Standalone breeder website service with BreederWeb Designer, managed hosting, professional email, publishing tools, forms, embeds, and integration readiness. No MyDogPortal software subscription is included.",
+    details: ["BreederWeb Designer", "Managed website hosting + SSL", "Two branded business email addresses", "Puppy/litter publishing, forms, and embeds", "Brand controls and version history", "MyDogPortal and DogBreederDocs integration ready"],
   },
   {
     id: "brand-launch",
     name: "Brand Launch",
-    price: "$149 setup · then $29/year renewal",
+    price: "$149 setup · then $39/year renewal",
     action: "Add Brand Launch to my setup",
     icon: Globe2,
-    description: "Launch an available standard .com with registration, DNS, and SSL configuration.",
-    details: ["Available standard .com registration", "Domain, DNS, and SSL configuration", "First year registration included with launch", "Managed standard .com renewal: $29/year after year one", "Premium domains priced separately"],
+    description: "Launch an available standard .com with first-year registration, DNS, and SSL configuration.",
+    details: ["Available standard .com first-year registration", "Domain, DNS, and SSL configuration", "First year registration included with launch", "Managed standard .com renewal: $39/year after year one", "Premium domains priced separately"],
   },
   {
     id: "website-personalization",
@@ -242,7 +242,7 @@ export default function SignupPage() {
           </section>
 
           <section className="studio-website-note">
-            <div><small>STUDIO · COMPLETE BRAND PACKAGE · PRICES LOCKED IN</small><h2>Over $1,100.00 Added Value</h2><p>Studio includes $869.28 in Brand Launch, breeder website personalization, standard .com registration and renewal, hosting with two branded business emails, and Business Voice system value, plus $240/year in Phone System Credits. That is $1,109.28 in added service value before counting the MyDogPortal software itself. Your Studio subscription rate stays locked in while your Studio subscription remains continuously active. Your connected website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
+            <div><small>STUDIO · COMPLETE BRAND PACKAGE · PRICES LOCKED IN</small><h2>Over $1,160 in First-Year Included Service Value</h2><p>Studio includes Brand Launch and first-year standard .com registration ($149), breeder website personalization ($299), the managed Dog Breeder Web website service with two branded business emails ($299.40/year), Business Voice setup plus the first year of the local number ($176.88), and $240/year in Phone System Credits. That is $1,164.28 in first-year included service value before counting the MyDogPortal software itself. Standard .com renewal is included while Studio remains active after year one. Your Studio subscription rate stays locked in while your Studio subscription remains continuously active. Your connected website can use breeder-maintained MyDogPortal information for puppies, litters, parent dogs, health testing, applications, policies, contact details, branding, photography, and Puppy Portal access.</p></div>
             <Link href="/#examples"><span>CONNECTED TEMPLATE GALLERY</span><b>Compare the website styles</b><small>View all live examples <ArrowRight size={13} /></small></Link>
           </section>
         </div>
