@@ -1,5 +1,6 @@
 import { cancelPayPalSubscription, ensurePayPalWebhook, verifyPayPalWebhook } from "../../../../lib/paypal";
-import { findPayPalBillingEvent, recordPayPalBillingEvent, setKennelPlan, updatePayPalBillingEventByProviderId } from "../../../../lib/paypal-billing";
+import { loadBreederAccount } from "../../../../lib/breeder-account";
+import { findPayPalBillingEvent, recordPayPalBillingEvent, removeMyDogPortalDogBreederDocsPacket, setKennelPlan, updatePayPalBillingEventByProviderId } from "../../../../lib/paypal-billing";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,12 @@ function subscriptionStatus(event: PayPalWebhookEvent) {
   return (String(event.event_type || "").split(".").pop() || "UPDATED").toUpperCase();
 }
 
+async function reconcileEndedPlatformSubscription(kennelId: string) {
+  const account = await loadBreederAccount(kennelId);
+  const activePlatformSubscription = account.subscription && account.subscription.offeringKey !== "dogbreederweb-connected";
+  if (!activePlatformSubscription) await removeMyDogPortalDogBreederDocsPacket(kennelId);
+}
+
 export async function POST(request: Request) {
   try {
     const event = await request.json() as PayPalWebhookEvent;
@@ -54,6 +61,9 @@ export async function POST(request: Request) {
             await updatePayPalBillingEventByProviderId(existing.parsed.replaces_paypal_id, "CANCELLED", { next_billing_time: null }).catch(() => undefined);
           }
           await setKennelPlan(existing.kennel_id, existing.parsed.entitlement_plan);
+        }
+        if (["BILLING.SUBSCRIPTION.CANCELLED", "BILLING.SUBSCRIPTION.SUSPENDED", "BILLING.SUBSCRIPTION.EXPIRED"].includes(eventType) && existing.parsed.entitlement_plan) {
+          await reconcileEndedPlatformSubscription(existing.kennel_id);
         }
       }
     }
