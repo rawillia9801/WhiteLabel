@@ -193,7 +193,7 @@ export async function loadBreederAccount(kennelId: string) {
       offering: "Dog Breeder Web Connected Subscription",
       offeringKey: "dogbreederweb-connected",
       paypalId: connectedWebsite.source_reference,
-      amount: 20,
+      amount: 24.95,
       nextBillingAt: null,
       trialEndsAt: null,
     } : null,
