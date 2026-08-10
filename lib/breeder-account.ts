@@ -27,6 +27,15 @@ type BillingNotes = {
   next_billing_time?: string | null;
 };
 
+type EntitlementRow = {
+  entitlement_key: string;
+  source: string;
+  source_reference: string;
+  status: string;
+  starts_at: string;
+  ends_at: string | null;
+};
+
 function parseBilling(notes: string | null) {
   if (!notes) return null;
   try {
@@ -59,8 +68,28 @@ async function accountEvents(kennelId: string) {
   return Array.isArray(payload) ? payload : [];
 }
 
+async function connectedEntitlements(kennelId: string) {
+  const filters = [
+    "select=entitlement_key,source,source_reference,status,starts_at,ends_at",
+    `kennel_id=eq.${encodeURIComponent(kennelId)}`,
+    "status=eq.active",
+    "order=created_at.desc",
+  ];
+  const response = await supabaseRequest(`rest/v1/platform_entitlements?${filters.join("&")}`, { cache: "no-store" });
+  const payload = await response.json().catch(() => null) as EntitlementRow[] | { message?: string } | null;
+  if (!response.ok) {
+    const message = (payload as { message?: string } | null)?.message || "Unable to read connected platform access.";
+    if (/platform_entitlements/i.test(message)) return [];
+    throw new Error(message);
+  }
+  return Array.isArray(payload) ? payload : [];
+}
+
 export async function breederCheckoutRequired(kennelId: string) {
-  const events = await accountEvents(kennelId);
+  const [events, entitlements] = await Promise.all([accountEvents(kennelId), connectedEntitlements(kennelId)]);
+  const connectedPortal = entitlements.some((row) => row.entitlement_key === "mydogportal" && row.status === "active");
+  if (connectedPortal) return false;
+
   const hasManagedTrialSignup = events.some((event) => event.event_type === "Trial Signup");
   if (!hasManagedTrialSignup) return false;
   return !events.some((event) => {
@@ -82,7 +111,11 @@ function offeringLabel(key: string | undefined) {
 }
 
 export async function loadBreederAccount(kennelId: string) {
-  const [kennel, events] = await Promise.all([findKennelById(kennelId), accountEvents(kennelId)]);
+  const [kennel, events, entitlements] = await Promise.all([
+    findKennelById(kennelId),
+    accountEvents(kennelId),
+    connectedEntitlements(kennelId),
+  ]);
   if (!kennel) throw new Error("Kennel account not found.");
 
   const billing = events
@@ -95,6 +128,14 @@ export async function loadBreederAccount(kennelId: string) {
     && isPlatformOffering(item.billing.offering_key)
     && activeStatus(item.event.status)
   ) || null;
+
+  const connectedWebsite = entitlements.find((row) =>
+    row.entitlement_key === "dogbreederweb"
+    && row.source === "dogbreederweb_subscription"
+    && row.status === "active"
+  ) || null;
+  const connectedPortal = entitlements.some((row) => row.entitlement_key === "mydogportal" && row.status === "active");
+  const connectedDocuments = entitlements.some((row) => row.entitlement_key === "dogbreederdocs" && row.status === "active");
 
   const trialSignup = events.find((event) => event.event_type === "Trial Signup") || null;
   const trialEndsAt = platformSubscription
@@ -147,11 +188,24 @@ export async function loadBreederAccount(kennelId: string) {
       amount: Number(platformSubscription.billing.amount || 0) || 0,
       nextBillingAt: platformSubscription.billing.next_billing_time || null,
       trialEndsAt,
+    } : connectedWebsite ? {
+      status: "ACTIVE",
+      offering: "Dog Breeder Web Connected Subscription",
+      offeringKey: "dogbreederweb-connected",
+      paypalId: connectedWebsite.source_reference,
+      amount: 20,
+      nextBillingAt: null,
+      trialEndsAt: null,
     } : null,
-    checkoutPending: Boolean(trialSignup && !platformSubscription),
+    checkoutPending: Boolean(trialSignup && !platformSubscription && !connectedPortal),
     trialActive,
-    joinedAt: trialSignup?.created_at || null,
+    joinedAt: trialSignup?.created_at || connectedWebsite?.starts_at || null,
     receipts,
     services,
+    connectedPlatform: {
+      website: Boolean(connectedWebsite),
+      portal: connectedPortal,
+      documents: connectedDocuments,
+    },
   };
 }
