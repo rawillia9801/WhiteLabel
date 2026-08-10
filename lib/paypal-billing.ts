@@ -125,25 +125,34 @@ async function kennelOwnerAuthUserId(kennelId: string) {
   return userId;
 }
 
-async function syncDogBreederDocsPacket(kennelId: string, plan: Exclude<PayPalEntitlementPlan, null>) {
+async function includedDogDocsPurchase(kennelId: string) {
   const providerReference = `mydogportal:${kennelId}`;
-  const lookup = await supabaseRequest(`rest/v1/dogdocs_purchases?provider_reference=eq.${encodeURIComponent(providerReference)}&select=id&limit=1`, { cache: "no-store" });
-  const lookupPayload = await lookup.json().catch(() => null) as DogDocsPurchaseRow[] | { message?: string } | null;
-  if (!lookup.ok) throw new Error((lookupPayload as { message?: string } | null)?.message || "Unable to read DogBreederDocs entitlement status.");
-  const existing = Array.isArray(lookupPayload) ? lookupPayload[0] : null;
+  const response = await supabaseRequest(`rest/v1/dogdocs_purchases?provider_reference=eq.${encodeURIComponent(providerReference)}&select=id&limit=1`, { cache: "no-store" });
+  const payload = await response.json().catch(() => null) as DogDocsPurchaseRow[] | { message?: string } | null;
+  if (!response.ok) throw new Error((payload as { message?: string } | null)?.message || "Unable to read DogBreederDocs entitlement status.");
+  return { providerReference, row: Array.isArray(payload) ? payload[0] || null : null };
+}
+
+export async function removeMyDogPortalDogBreederDocsPacket(kennelId: string) {
+  const { row } = await includedDogDocsPurchase(kennelId);
+  if (!row) return;
+  const response = await supabaseRequest(`rest/v1/dogdocs_purchases?id=eq.${encodeURIComponent(row.id)}`, {
+    method: "DELETE",
+    headers: { prefer: "return=minimal" },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { message?: string } | null;
+    throw new Error(payload?.message || "Unable to remove the MyDogPortal document entitlement.");
+  }
+}
+
+async function syncDogBreederDocsPacket(kennelId: string, plan: Exclude<PayPalEntitlementPlan, null>) {
+  const { providerReference, row: existing } = await includedDogDocsPurchase(kennelId);
   const included = plan === "professional" || plan === "custom_domain";
 
   if (!included) {
-    if (!existing) return;
-    const response = await supabaseRequest(`rest/v1/dogdocs_purchases?id=eq.${encodeURIComponent(existing.id)}`, {
-      method: "DELETE",
-      headers: { prefer: "return=minimal" },
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      const payload = await response.json().catch(() => null) as { message?: string } | null;
-      throw new Error(payload?.message || "Unable to remove the MyDogPortal document entitlement.");
-    }
+    await removeMyDogPortalDogBreederDocsPacket(kennelId);
     return;
   }
 
