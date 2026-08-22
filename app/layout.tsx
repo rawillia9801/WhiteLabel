@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { headers } from "next/headers";
 import { ApplicationStatusSelectEnhancer } from "../components/application-status-select-enhancer";
 import { PuppyStatusSelectEnhancer } from "../components/puppy-status-select-enhancer";
@@ -68,5 +69,5 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const tenant = await requestTenant();
   const publicSurface = (await headers()).get("x-public-surface") === "1";
-  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme primary={tenant?.primaryColor} accent={tenant?.accentColor} fontFamily={tenant?.fontFamily}/><TenantRuntimeProvider tenant={tenant}>{!publicSurface && <><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer /><BreederAccountLauncher /></>}{children}</TenantRuntimeProvider></body></html>;
+  return <html lang={tenantConfig.locale.language}><body className={`${geistSans.variable} ${geistMono.variable}`}><TenantTheme primary={tenant?.primaryColor} accent={tenant?.accentColor} fontFamily={tenant?.fontFamily}/><TenantRuntimeProvider tenant={tenant}>{!publicSurface && <><ApplicationStatusSelectEnhancer /><PuppyStatusSelectEnhancer /><BuyerEditEnhancer /><PortalJourneyEnhancer /><PuppyPacketDesignEnhancer /><PuppyPacketEmailEnhancer /><ProfilePhotoEnhancer /><BreedingDogRosterEnhancer /><DataReconciliationEnhancer /><BreederAccountLauncher /><Script src="https://dogbreederos.com/api/public/support/widget?site=dogbreederos" strategy="afterInteractive" /></>}{children}</TenantRuntimeProvider></body></html>;
 }
